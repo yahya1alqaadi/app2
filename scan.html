@@ -136,20 +136,26 @@
     .footer { text-align: center; margin-top: 1.2rem; color: var(--gray-400); font-size: 0.75rem; }
     .footer i { color: var(--danger); margin: 0 2px; }
 
-    /* Toast Notifications */
+    /* Toast Notifications - ملء الشاشة */
     #toastContainer {
-      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-      z-index: 99999; display: flex; flex-direction: column; gap: 12px;
-      pointer-events: none; width: 90%; max-width: 500px;
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 99999; display: none;
+      pointer-events: none;
     }
 
-    @keyframes slideDown {
-      from { transform: translateY(-30px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    @keyframes fadeInOverlay {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-    @keyframes fadeOut {
-      from { opacity: 1; }
-      to { opacity: 0; transform: translateY(-20px); }
+    @keyframes scaleIn {
+      from { transform: scale(0.5); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    @keyframes bounce {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
     }
 
     #reader__dashboard_section { display: none !important; }
@@ -206,6 +212,9 @@
     <div class="footer">صنع بـ <i class="fas fa-heart"></i> نظام دعوات QR</div>
   </div>
 
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
+
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
@@ -219,41 +228,80 @@
     const resultBox = document.getElementById("resultBox");
     const totalGuestsEl = document.getElementById("totalGuests");
     const checkedInCountEl = document.getElementById("checkedInCount");
+    const toastContainer = document.getElementById("toastContainer");
 
-    // ========== Toast Notification System ==========
-    function createToastContainer() {
-      const old = document.getElementById('toastContainer');
-      if (old) old.remove();
-      const c = document.createElement('div');
-      c.id = 'toastContainer';
-      document.body.appendChild(c);
-      return c;
-    }
-
+    // ========== Toast Notification - ملء الشاشة ==========
     function showToast(message, type = 'success', duration = 4000) {
-      const container = document.getElementById('toastContainer') || createToastContainer();
       const colors = {
-        success: { bg: '#10b981', icon: '✅', border: '#059669' },
-        error: { bg: '#ef4444', icon: '❌', border: '#dc2626' },
-        warning: { bg: '#f59e0b', icon: '⚠️', border: '#d97706' },
-        info: { bg: '#3b82f6', icon: 'ℹ️', border: '#2563eb' }
+        success: { bg: 'rgba(16, 185, 129, 0.97)', icon: '✅', border: '#059669', emoji: '🎉' },
+        error: { bg: 'rgba(239, 68, 68, 0.97)', icon: '❌', border: '#dc2626', emoji: '😕' },
+        warning: { bg: 'rgba(245, 158, 11, 0.97)', icon: '⚠️', border: '#d97706', emoji: '⏳' },
+        info: { bg: 'rgba(59, 130, 246, 0.97)', icon: 'ℹ️', border: '#2563eb', emoji: '📱' }
       };
       const color = colors[type] || colors.info;
 
-      const toast = document.createElement('div');
-      toast.style.cssText = `
-        background: ${color.bg}; color: white; padding: 18px 22px;
-        border-radius: 16px; font-size: 1.1rem; font-weight: 700;
-        text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.25);
-        border: 2px solid ${color.border}; pointer-events: auto;
-        animation: slideDown 0.4s ease, fadeOut 0.4s ease ${duration - 400}ms forwards;
+      // تنظيف المحتوى القديم
+      toastContainer.innerHTML = '';
+
+      // إنشاء الخلفية المعتمة
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: absolute; top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
         display: flex; align-items: center; justify-content: center;
-        gap: 10px; direction: rtl;
+        pointer-events: auto;
+        animation: fadeInOverlay 0.3s ease;
+      `;
+
+      // إنشاء بطاقة الإشعار
+      const card = document.createElement('div');
+      card.style.cssText = `
+        background: ${color.bg};
+        color: white;
+        padding: 50px 35px;
+        border-radius: 28px;
+        text-align: center;
+        box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+        border: 4px solid ${color.border};
+        max-width: 480px;
+        width: 92%;
+        animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        direction: rtl;
         font-family: 'Cairo', 'Tajawal', sans-serif;
       `;
-      toast.innerHTML = `<span style="font-size:1.5rem;">${color.icon}</span> ${message}`;
-      container.appendChild(toast);
-      setTimeout(() => { if (toast.parentNode) toast.remove(); }, duration);
+
+      const subMessage = type === 'success' ? 'تم التسجيل بنجاح' :
+                        type === 'error' ? 'يرجى التحقق من QR' :
+                        type === 'warning' ? 'تم تسجيله مسبقاً' : '';
+
+      card.innerHTML = `
+        <div style="font-size:5rem;margin-bottom:15px;animation:bounce 0.7s ease;">${color.icon}</div>
+        <div style="font-size:2rem;font-weight:800;margin-bottom:12px;line-height:1.4;">${message}</div>
+        <div style="font-size:1.1rem;opacity:0.9;">${subMessage}</div>
+        <div style="margin-top:20px;font-size:0.9rem;opacity:0.7;">سيتم الإغلاق تلقائياً...</div>
+      `;
+
+      overlay.appendChild(card);
+      toastContainer.appendChild(overlay);
+
+      // إظهار الحاوية
+      toastContainer.style.display = 'block';
+      // منع التمرير في الخلفية
+      document.body.style.overflow = 'hidden';
+
+      // إخفاء الإشعار بعد المدة المحددة
+      setTimeout(() => {
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => {
+          toastContainer.style.display = 'none';
+          toastContainer.innerHTML = '';
+          document.body.style.overflow = '';
+        }, 300);
+      }, duration);
     }
 
     function callScript(params) {
@@ -320,8 +368,8 @@
     }
 
     function startScanner() {
-      if (!currentEventId) { showToast("⚠️ اختر مناسبة أولاً", "warning"); return; }
-      if (scanner) { showToast("⚠️ الكاميرا تعمل بالفعل", "warning"); return; }
+      if (!currentEventId) { showToast("⚠️ اختر مناسبة أولاً", "warning", 2500); return; }
+      if (scanner) { showToast("⚠️ الكاميرا تعمل بالفعل", "warning", 2500); return; }
 
       scanBtn.disabled = true;
       scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التشغيل...';
@@ -334,7 +382,7 @@
           if (paused) return;
           paused = true;
           checkGuest(qrText);
-          setTimeout(() => { paused = false; }, 3500);
+          setTimeout(() => { paused = false; }, 4500);
         },
         () => {}
       ).then(() => {
@@ -353,17 +401,17 @@
     async function checkGuest(qrText) {
       const parsed = parseQrText(qrText);
       if (String(parsed.eventId) !== String(currentEventId)) {
-        showToast("❌ هذا QR تابع لمناسبة أخرى", "error");
+        showToast("❌ هذا QR تابع لمناسبة أخرى", "error", 3500);
         showError("❌ QR تابع لمناسبة أخرى");
         playErrorSound(); return;
       }
       const guest = guests.find(g => String(g.id) === String(parsed.guestId));
       if (!guest) {
-        showToast("❌ QR غير معروف", "error");
+        showToast("❌ QR غير معروف", "error", 3500);
         showError("❌ QR غير معروف"); playErrorSound(); return;
       }
       if (guest.checkedIn) {
-        showToast(`⚠️ ${guest.name} تم تسجيله مسبقاً`, "warning");
+        showToast(`⚠️ ${guest.name} تم تسجيله مسبقاً`, "warning", 3500);
         showWarning(`⚠️ ${guest.name} مكرر`); playErrorSound(); return;
       }
 
@@ -371,17 +419,17 @@
       try {
         const data = await callScript({ action:"attendance", eventId:currentEventId, id:guest.id, name:guest.name, phone:guest.phone, time });
         if (data.status === "duplicate") {
-          showToast(`⚠️ ${guest.name} مكرر`, "warning");
+          showToast(`⚠️ ${guest.name} مكرر`, "warning", 3500);
           showWarning(`⚠️ ${guest.name} مكرر`); playErrorSound(); return;
         }
         if (data.status === "success") {
-          showToast(`✅ أهلاً وسهلاً ${guest.name}`, "success", 5000);
+          showToast(`✅ أهلاً وسهلاً ${guest.name}`, "success", 4000);
           showSuccess(`✅ تم تسجيل ${guest.name}`);
           playSuccessSound();
           await loadGuests(); return;
         }
-        showToast("❌ خطأ في التسجيل", "error"); playErrorSound();
-      } catch (e) { showToast("❌ فشل الاتصال", "error"); playErrorSound(); }
+        showToast("❌ خطأ في التسجيل", "error", 3500); playErrorSound();
+      } catch (e) { showToast("❌ فشل الاتصال", "error", 3500); playErrorSound(); }
     }
 
     function playSuccessSound() { try { new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg").play().catch(()=>{}); } catch(e){} }
