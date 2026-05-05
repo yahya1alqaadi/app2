@@ -252,10 +252,16 @@ async function loadGuestsFromSheet() {
       eventId: currentEventId
     });
 
+    console.log("CURRENT EVENT ID:", currentEventId);
+    console.log("GUESTS RESULT:", result);
+
     if (result.status !== "success") {
       guestTable.innerHTML = `
         <tr>
-          <td colspan="5">فشل تحميل الضيوف من الشيت</td>
+          <td colspan="5">
+            فشل تحميل الضيوف من الشيت<br>
+            ${result.message || "لا توجد رسالة خطأ"}
+          </td>
         </tr>
       `;
       return;
@@ -274,16 +280,25 @@ async function loadGuestsFromSheet() {
     renderGuests();
 
     if (guests.length > 0) {
-      previewGuest(guests[0]);
+      try {
+        previewGuest(guests[0]);
+      } catch (previewError) {
+        console.log("Preview error:", previewError);
+      }
     } else {
-      nameBox.textContent = "اسم الضيف";
-      qrBox.innerHTML = "QR";
+      if (nameBox) nameBox.textContent = "اسم الضيف";
+      if (qrBox) qrBox.innerHTML = "QR";
     }
 
   } catch (error) {
+    console.log("LOAD GUESTS ERROR:", error);
+
     guestTable.innerHTML = `
       <tr>
-        <td colspan="5">فشل الاتصال بالشيت</td>
+        <td colspan="5">
+          فشل الاتصال بالشيت<br>
+          ${error.message || error}
+        </td>
       </tr>
     `;
   }
