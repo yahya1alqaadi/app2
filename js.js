@@ -329,6 +329,8 @@ async function addGuest() {
   addGuestBtn.disabled = true;
   addGuestBtn.textContent = "جاري الإضافة...";
 
+  let addedSuccessfully = false;
+
   try {
     const result = await callScript({
       action: "addGuest",
@@ -343,9 +345,17 @@ async function addGuest() {
       return;
     }
 
+    addedSuccessfully = true;
+
     guestName.value = "";
     guestPhone.value = "";
 
+  } catch (error) {
+    alert("فشل الاتصال بالشيت أثناء إضافة الضيف");
+    return;
+  }
+
+  try {
     await loadGuestsFromSheet();
 
     const addedGuest = guests.find(g => g.id === guest.id);
@@ -353,14 +363,16 @@ async function addGuest() {
       previewGuest(addedGuest);
     }
 
-    alert("تم إضافة الضيف في المناسبة الحالية ✅");
-
   } catch (error) {
-    alert("فشل الاتصال بالشيت. تأكد من الإنترنت أو رابط Apps Script.");
-  } finally {
-    addGuestBtn.disabled = false;
-    addGuestBtn.textContent = "إضافة الضيف";
+    console.log("تمت الإضافة لكن فشل تحديث الجدول:", error);
   }
+
+  if (addedSuccessfully) {
+    alert("تم إضافة الضيف في المناسبة الحالية ✅");
+  }
+
+  addGuestBtn.disabled = false;
+  addGuestBtn.textContent = "إضافة الضيف";
 }
 
 async function editGuest(index) {
