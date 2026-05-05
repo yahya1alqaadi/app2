@@ -2,88 +2,391 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مسح الدعوات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>مسح الدعوات | بوابة الموظف</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
   <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --success: #10b981;
+      --success-light: #d1fae5;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --dark: #0f172a;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-500: #64748b;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --radius: 20px;
+      --radius-sm: 14px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background: #f3f4f6;
+      font-family: 'Cairo', 'Tajawal', sans-serif;
+      background: linear-gradient(135deg, #f0f4ff 0%, #f8fafc 50%, #f1f5f9 100%);
+      min-height: 100vh;
       padding: 20px;
       direction: rtl;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
+    .container {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    /* ========== الهيدر ========== */
+    .header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .header-icon {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, var(--primary), #3b82f6);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 2rem;
+      color: white;
+      box-shadow: 0 15px 30px rgba(37, 99, 235, 0.25);
+    }
+
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--dark);
+      margin-bottom: 0.2rem;
+    }
+
+    .header .subtitle {
+      color: var(--gray-500);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* ========== البطاقة الرئيسية ========== */
     .card {
       background: white;
-      padding: 20px;
-      border-radius: 14px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 2rem 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+      border: 1px solid var(--gray-100);
     }
 
-    h1 {
-      text-align: center;
+    /* ========== اختيار المناسبة ========== */
+    .select-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .select-group label {
+      display: block;
+      font-weight: 700;
+      color: var(--gray-700);
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .select-group label i {
+      color: var(--primary);
+    }
+
+    .select-wrapper {
+      position: relative;
+    }
+
+    .select-wrapper i {
+      position: absolute;
+      top: 50%;
+      left: 16px;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+      pointer-events: none;
+      font-size: 0.85rem;
     }
 
     select {
       width: 100%;
-      padding: 14px;
-      font-size: 17px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
-      margin-bottom: 12px;
-    }
-
-    button {
-      width: 100%;
-      padding: 14px;
-      font-size: 18px;
-      border: 0;
-      border-radius: 10px;
-      background: #111827;
-      color: white;
+      padding: 0.95rem 1.2rem;
+      font-size: 1rem;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--gray-200);
+      background: white;
+      font-family: inherit;
+      appearance: none;
       cursor: pointer;
-      margin-top: 8px;
+      transition: all 0.2s ease;
+      color: var(--dark);
+      padding-left: 2.5rem;
     }
 
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+    }
+
+    /* ========== الأزرار ========== */
+    .btn {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      letter-spacing: 0.3px;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--dark);
+      color: white;
+      margin-bottom: 1rem;
+    }
+
+    .btn-primary:hover {
+      background: #1e293b;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);
+    }
+
+    .btn-primary:disabled {
+      background: var(--gray-300);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* ========== منطقة الكاميرا ========== */
     #reader {
-      margin-top: 15px;
+      width: 100%;
+      margin-top: 10px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 3px solid var(--gray-200);
+      background: #000;
+    }
+
+    #reader video {
+      border-radius: var(--radius-sm);
+    }
+
+    /* ========== نتيجة المسح ========== */
+    .result-box {
+      text-align: center;
+      padding: 1.2rem;
+      margin-top: 1rem;
+      border-radius: var(--radius-sm);
+      transition: all 0.3s ease;
     }
 
     #scanResult {
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      margin-top: 15px;
+      font-size: 1.2rem;
+      font-weight: 800;
+      line-height: 1.6;
     }
 
-    #countBox {
+    /* ========== عداد الضيوف ========== */
+    .stats-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 0.8rem;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: var(--gray-50);
+      padding: 1rem;
+      border-radius: var(--radius-sm);
       text-align: center;
-      font-size: 20px;
-      font-weight: bold;
+      border: 1px solid var(--gray-100);
+    }
+
+    .stat-card .stat-number {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+    }
+
+    .stat-card .stat-label {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* ========== حالة النجاح والخطأ ========== */
+    .success-animation {
+      animation: pulse 0.6s ease;
+    }
+
+    .error-animation {
+      animation: shake 0.5s ease;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      50% { transform: translateX(8px); }
+      75% { transform: translateX(-4px); }
+    }
+
+    /* ========== فوتر ========== */
+    .footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: var(--gray-400);
+      font-size: 0.8rem;
+    }
+
+    .footer i {
+      color: var(--danger);
+      margin: 0 3px;
+    }
+
+    /* ========== استجابة للجوال ========== */
+    @media (max-width: 480px) {
+      .card {
+        padding: 1.5rem 1rem;
+      }
+
+      .header h1 {
+        font-size: 1.4rem;
+      }
+
+      #scanResult {
+        font-size: 1rem;
+      }
+
+      .btn {
+        font-size: 1rem;
+        padding: 0.9rem;
+      }
+    }
+
+    /* إخفاء رسالة HTML5 QR الافتراضية */
+    #reader__dashboard_section {
+      display: none !important;
+    }
+
+    #reader__scan_region {
+      border-radius: var(--radius-sm);
     }
   </style>
 </head>
 
 <body>
 
-  <div class="card">
-    <h1>مسح الدعوات</h1>
+  <div class="container">
 
-    <label>اختر المناسبة</label>
-    <select id="eventSelect"></select>
+    <!-- الهيدر -->
+    <div class="header">
+      <div class="header-icon">
+        <i class="fas fa-qrcode"></i>
+      </div>
+      <h1>مسح الدعوات</h1>
+      <p class="subtitle">بوابة تسجيل دخول الضيوف</p>
+    </div>
 
-    <button id="scanBtn" type="button">تشغيل الكاميرا</button>
+    <!-- البطاقة الرئيسية -->
+    <div class="card">
 
-    <div id="reader"></div>
+      <!-- اختيار المناسبة -->
+      <div class="select-group">
+        <label>
+          <i class="fas fa-calendar-alt"></i> اختر المناسبة
+        </label>
+        <div class="select-wrapper">
+          <i class="fas fa-chevron-down"></i>
+          <select id="eventSelect"></select>
+        </div>
+      </div>
 
-    <p id="scanResult">جاري تحميل المناسبات...</p>
-    <p id="countBox">عدد الضيوف: 0</p>
+      <!-- زر التشغيل -->
+      <button id="scanBtn" type="button" class="btn btn-primary">
+        <i class="fas fa-camera"></i> تشغيل الكاميرا
+      </button>
+
+      <!-- منطقة الكاميرا -->
+      <div id="reader"></div>
+
+      <!-- نتيجة المسح -->
+      <div class="result-box" id="resultBox">
+        <p id="scanResult">⏳ جاري تحميل المناسبات...</p>
+      </div>
+
+      <!-- إحصائيات -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-number" id="totalGuests">0</div>
+          <div class="stat-label">إجمالي الضيوف</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="checkedInCount">—</div>
+          <div class="stat-label">تم تسجيلهم</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- الفوتر -->
+    <div class="footer">
+      صنع بـ <i class="fas fa-heart"></i> نظام دعوات QR
+    </div>
+
   </div>
 
+  <!-- مكتبة QR Scanner -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <script>
+    // ============================================
+    // إعدادات
+    // ============================================
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
 
     let events = [];
@@ -92,27 +395,33 @@
     let scanner = null;
     let paused = false;
 
+    // ============================================
+    // عناصر DOM
+    // ============================================
     const eventSelect = document.getElementById("eventSelect");
     const scanBtn = document.getElementById("scanBtn");
     const scanResult = document.getElementById("scanResult");
-    const countBox = document.getElementById("countBox");
+    const resultBox = document.getElementById("resultBox");
+    const totalGuestsEl = document.getElementById("totalGuests");
+    const checkedInCountEl = document.getElementById("checkedInCount");
 
+    // ============================================
+    // وظائف الاتصال بـ Google Sheets
+    // ============================================
     function callScript(params) {
       return new Promise((resolve, reject) => {
         const callbackName = "callback_" + Date.now() + "_" + Math.floor(Math.random() * 999999);
-
         params.callback = callbackName;
-
         const query = new URLSearchParams(params).toString();
         const script = document.createElement("script");
 
-        window[callbackName] = function (data) {
+        window[callbackName] = function(data) {
           resolve(data);
           delete window[callbackName];
           script.remove();
         };
 
-        script.onerror = function () {
+        script.onerror = function() {
           reject();
           delete window[callbackName];
           script.remove();
@@ -123,24 +432,23 @@
       });
     }
 
+    // ============================================
+    // تحميل المناسبات
+    // ============================================
     async function loadEvents() {
       try {
-        const data = await callScript({
-          action: "events"
-        });
+        const data = await callScript({ action: "events" });
 
         if (data.status !== "success") {
-          scanResult.textContent = "فشل تحميل المناسبات ❌";
-          scanResult.style.color = "red";
+          showError("❌ فشل تحميل المناسبات");
           return;
         }
 
         events = data.events || [];
 
         if (events.length === 0) {
-          eventSelect.innerHTML = `<option value="">لا توجد مناسبات مفعلة</option>`;
-          scanResult.textContent = "لا توجد مناسبات ظاهرة للموظف";
-          scanResult.style.color = "red";
+          eventSelect.innerHTML = '<option value="">لا توجد مناسبات مفعلة</option>';
+          showWarning("⚠️ لا توجد مناسبات ظاهرة للموظف");
           return;
         }
 
@@ -153,8 +461,7 @@
         await loadGuests();
 
       } catch (error) {
-        scanResult.textContent = "فشل تحميل المناسبات ❌";
-        scanResult.style.color = "red";
+        showError("❌ فشل الاتصال بالخادم");
       }
     }
 
@@ -164,7 +471,7 @@
       events.forEach(event => {
         const option = document.createElement("option");
         option.value = event.eventId;
-        option.textContent = event.eventName;
+        option.textContent = `📌 ${event.eventName}`;
 
         if (String(event.eventId) === String(currentEventId)) {
           option.selected = true;
@@ -174,15 +481,16 @@
       });
     }
 
+    // ============================================
+    // تحميل الضيوف
+    // ============================================
     async function loadGuests() {
       if (!currentEventId) {
-        scanResult.textContent = "اختر مناسبة أولاً";
-        scanResult.style.color = "red";
+        showWarning("⚠️ اختر مناسبة أولاً");
         return;
       }
 
-      scanResult.textContent = "جاري تحميل بيانات الضيوف...";
-      scanResult.style.color = "#111827";
+      showLoading("⏳ جاري تحميل بيانات الضيوف...");
 
       try {
         const data = await callScript({
@@ -191,29 +499,31 @@
         });
 
         if (data.status !== "success") {
-          scanResult.textContent = "فشل تحميل بيانات الضيوف ❌";
-          scanResult.style.color = "red";
+          showError("❌ فشل تحميل بيانات الضيوف");
           return;
         }
 
         guests = data.guests || [];
 
-        scanResult.textContent = "جاهز للمسح ✅";
-        scanResult.style.color = "green";
-        countBox.textContent = "عدد الضيوف: " + guests.length;
+        const checkedIn = guests.filter(g => g.checkedIn).length;
+
+        showSuccess("✅ جاهز للمسح");
+        totalGuestsEl.textContent = guests.length;
+        checkedInCountEl.textContent = checkedIn;
 
       } catch (error) {
-        scanResult.textContent = "فشل تحميل بيانات الضيوف ❌";
-        scanResult.style.color = "red";
+        showError("❌ فشل الاتصال بالخادم");
       }
     }
 
+    // ============================================
+    // تحليل نص QR
+    // ============================================
     function parseQrText(text) {
       const value = String(text || "").trim();
 
       if (value.includes("|")) {
         const parts = value.split("|");
-
         return {
           eventId: parts[0],
           guestId: parts[1]
@@ -226,62 +536,92 @@
       };
     }
 
+    // ============================================
+    // تشغيل الكاميرا
+    // ============================================
     function startScanner() {
       if (!currentEventId) {
-        scanResult.textContent = "اختر مناسبة أولاً";
-        scanResult.style.color = "red";
+        showWarning("⚠️ اختر مناسبة أولاً");
         return;
       }
 
       if (scanner) {
-        scanResult.textContent = "الكاميرا تعمل بالفعل";
+        showWarning("⚠️ الكاميرا تعمل بالفعل");
         return;
       }
+
+      scanBtn.disabled = true;
+      scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التشغيل...';
 
       scanner = new Html5Qrcode("reader");
 
       scanner.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
         qrText => {
           if (paused) return;
-
           paused = true;
           checkGuest(qrText);
-
           setTimeout(() => {
             paused = false;
           }, 3000);
         },
-        error => {}
-      ).catch(() => {
-        scanResult.textContent = "لم يتم تشغيل الكاميرا ❌";
-        scanResult.style.color = "red";
+        error => {
+          // أخطاء المسح المستمرة – لا نعرضها للمستخدم
+        }
+      ).then(() => {
+        scanBtn.innerHTML = '<i class="fas fa-check-circle"></i> الكاميرا تعمل';
+        scanBtn.style.background = '#10b981';
+        showSuccess("✅ الكاميرا تعمل – وجهها على QR");
+      }).catch(() => {
+        showError("❌ لم يتم تشغيل الكاميرا");
+        scanBtn.disabled = false;
+        scanBtn.innerHTML = '<i class="fas fa-camera"></i> تشغيل الكاميرا';
+        scanBtn.style.background = '#111827';
         scanner = null;
       });
     }
 
+    // ============================================
+    // فحص الضيف
+    // ============================================
     async function checkGuest(qrText) {
       const parsed = parseQrText(qrText);
 
+      // التحقق من المناسبة
       if (String(parsed.eventId) !== String(currentEventId)) {
-        scanResult.textContent = "QR تابع لمناسبة أخرى ❌";
-        scanResult.style.color = "red";
+        showError("❌ هذا QR تابع لمناسبة أخرى");
         playErrorSound();
+        animateError();
         return;
       }
 
+      // البحث عن الضيف
       const guest = guests.find(g => String(g.id) === String(parsed.guestId));
 
       if (!guest) {
-        scanResult.textContent = "QR غير معروف لهذه المناسبة ❌";
-        scanResult.style.color = "red";
+        showError("❌ QR غير معروف لهذه المناسبة");
         playErrorSound();
+        animateError();
         return;
       }
 
-      const time = new Date().toLocaleString("ar-SA");
+      // التحقق من التسجيل المسبق
+      if (guest.checkedIn) {
+        showWarning(`⚠️ ${guest.name} تم تسجيله مسبقًا`);
+        playErrorSound();
+        animateError();
+        return;
+      }
 
+      const time = new Date().toLocaleString("ar-SA", {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+
+      // تسجيل الدخول
       try {
         const data = await callScript({
           action: "attendance",
@@ -293,49 +633,121 @@
         });
 
         if (data.status === "duplicate") {
-          scanResult.textContent = "مكرر ❌ " + guest.name + " تم تسجيله مسبقًا";
-          scanResult.style.color = "red";
+          showWarning(`⚠️ ${guest.name} تم تسجيله مسبقًا`);
           playErrorSound();
+          animateError();
           return;
         }
 
         if (data.status === "success") {
-          scanResult.textContent = "تم تسجيل دخول " + guest.name + " ✅";
-          scanResult.style.color = "green";
+          showSuccess(`✅ أهلاً ${guest.name}`);
           playSuccessSound();
+          animateSuccess();
           await loadGuests();
           return;
         }
 
-        scanResult.textContent = "حدث خطأ أثناء التسجيل ❌";
-        scanResult.style.color = "red";
+        showError("❌ حدث خطأ أثناء التسجيل");
         playErrorSound();
+        animateError();
 
       } catch (error) {
-        scanResult.textContent = "فشل الاتصال بالشيت ❌";
-        scanResult.style.color = "red";
+        showError("❌ فشل الاتصال بالخادم");
         playErrorSound();
+        animateError();
       }
     }
 
+    // ============================================
+    // المؤثرات الصوتية
+    // ============================================
     function playSuccessSound() {
-      const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
-      audio.play();
+      try {
+        const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+        audio.volume = 0.5;
+        audio.play();
+      } catch (e) {
+        // المتصفح قد يمنع الصوت
+      }
     }
 
     function playErrorSound() {
-      const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg");
-      audio.play();
+      try {
+        const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg");
+        audio.volume = 0.5;
+        audio.play();
+      } catch (e) {
+        // المتصفح قد يمنع الصوت
+      }
     }
 
-    eventSelect.onchange = async function () {
+    // ============================================
+    // تأثيرات بصرية
+    // ============================================
+    function animateSuccess() {
+      resultBox.classList.add("success-animation");
+      setTimeout(() => resultBox.classList.remove("success-animation"), 600);
+    }
+
+    function animateError() {
+      resultBox.classList.add("error-animation");
+      setTimeout(() => resultBox.classList.remove("error-animation"), 500);
+    }
+
+    // ============================================
+    // عرض الرسائل
+    // ============================================
+    function showSuccess(message) {
+      scanResult.textContent = message;
+      scanResult.style.color = "#065f46";
+      resultBox.style.background = "#d1fae5";
+    }
+
+    function showError(message) {
+      scanResult.textContent = message;
+      scanResult.style.color = "#991b1b";
+      resultBox.style.background = "#fee2e2";
+    }
+
+    function showWarning(message) {
+      scanResult.textContent = message;
+      scanResult.style.color = "#92400e";
+      resultBox.style.background = "#fef3c7";
+    }
+
+    function showLoading(message) {
+      scanResult.textContent = message;
+      scanResult.style.color = "#1e40af";
+      resultBox.style.background = "#dbeafe";
+    }
+
+    // ============================================
+    // الأحداث
+    // ============================================
+    eventSelect.onchange = async function() {
       currentEventId = eventSelect.value;
       localStorage.setItem("scanCurrentEventId", currentEventId);
+      
+      // إيقاف الكاميرا عند تغيير المناسبة
+      if (scanner) {
+        scanner.stop().then(() => {
+          scanner = null;
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = '<i class="fas fa-camera"></i> تشغيل الكاميرا';
+          scanBtn.style.background = '#111827';
+        }).catch(() => {
+          scanner = null;
+        });
+      }
+      
       await loadGuests();
     };
 
     scanBtn.onclick = startScanner;
 
+    // ============================================
+    // بدء التطبيق
+    // ============================================
     loadEvents();
   </script>
 
