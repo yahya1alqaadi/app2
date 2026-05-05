@@ -1,4 +1,4 @@
-let guests = JSON.parse(localStorage.getItem("guests")) || [];
+let guests = [];
 let uploadedImage = localStorage.getItem("uploadedImage") || "";
 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
@@ -52,8 +52,50 @@ function callScript(params) {
   });
 }
 
-function saveGuests() {
-  localStorage.setItem("guests", JSON.stringify(guests));
+async function loadGuestsFromSheet() {
+  guestTable.innerHTML = `
+    <tr>
+      <td colspan="5">جاري تحميل الضيوف من الشيت...</td>
+    </tr>
+  `;
+
+  try {
+    const result = await callScript({
+      action: "guests"
+    });
+
+    if (result.status !== "success") {
+      guestTable.innerHTML = `
+        <tr>
+          <td colspan="5">فشل تحميل الضيوف من الشيت</td>
+        </tr>
+      `;
+      return;
+    }
+
+    guests = (result.guests || []).map(guest => {
+      return {
+        id: String(guest.id),
+        name: guest.name || "",
+        phone: guest.phone || "",
+        checkedIn: guest.checkedIn || false,
+        invitation: ""
+      };
+    });
+
+    renderGuests();
+
+    if (guests.length > 0) {
+      previewGuest(guests[0]);
+    }
+
+  } catch (error) {
+    guestTable.innerHTML = `
+      <tr>
+        <td colspan="5">فشل الاتصال بالشيت</td>
+      </tr>
+    `;
+  }
 }
 
 async function addGuest() {
@@ -89,19 +131,16 @@ async function addGuest() {
       return;
     }
 
-    guests.push(guest);
-    saveGuests();
-
     guestName.value = "";
     guestPhone.value = "";
 
-    renderGuests();
+    await loadGuestsFromSheet();
     previewGuest(guest);
 
-    alert("تم إضافة الضيف في الموقع والشيت ✅");
+    alert("تم إضافة الضيف في الشيت ✅");
 
   } catch (error) {
-    alert("فشل الاتصال بالشيت. تأكد من رابط Apps Script أو الإنترنت.");
+    alert("فشل الاتصال بالشيت. تأكد من الإنترنت أو رابط Apps Script.");
   } finally {
     addGuestBtn.disabled = false;
     addGuestBtn.textContent = "إضافة الضيف";
@@ -123,6 +162,16 @@ function previewGuest(guest) {
 
 function renderGuests() {
   guestTable.innerHTML = "";
+
+  if (guests.length === 0) {
+    guestTable.innerHTML = `
+      <tr>
+        <td colspan="5">لا يوجد ضيوف حتى الآن</td>
+      </tr>
+    `;
+    renderInvitationTable();
+    return;
+  }
 
   guests.forEach((guest, index) => {
     const row = document.createElement("tr");
@@ -173,19 +222,25 @@ function renderInvitationTable() {
 async function deleteGuest(index) {
   const guest = guests[index];
 
-  const ok = confirm("هل تريد حذف هذا الضيف؟");
+  const ok = confirm("هل تريد حذف هذا الضيف؟ سيتم حذفه من الشيت أيضًا.");
   if (!ok) return;
 
   try {
-    await callScript({
+    const result = await callScript({
       action: "deleteGuest",
       id: guest.id
     });
-  } catch (error) {}
 
-  guests.splice(index, 1);
-  saveGuests();
-  renderGuests();
+    if (result.status !== "success") {
+      alert("لم يتم حذف الضيف من الشيت");
+      return;
+    }
+
+    await loadGuestsFromSheet();
+
+  } catch (error) {
+    alert("فشل الاتصال بالشيت أثناء الحذف");
+  }
 }
 
 inviteUpload.addEventListener("change", function (e) {
@@ -261,7 +316,7 @@ async function generateInvitations() {
   }
 
   if (guests.length === 0) {
-    alert("أضف ضيوف أولاً");
+    alert("لا يوجد ضيوف في الشيت");
     return;
   }
 
@@ -304,7 +359,6 @@ async function generateInvitations() {
     guest.invitation = canvas.toDataURL("image/png");
   }
 
-  saveGuests();
   renderGuests();
 
   generateBtn.disabled = false;
@@ -393,9 +447,7 @@ async function checkInGuest(id) {
     }
 
     if (result.status === "success") {
-      guest.checkedIn = true;
-      saveGuests();
-      renderGuests();
+      await loadGuestsFromSheet();
 
       scanResult.textContent = `تم تسجيل دخول ${guest.name} ✅`;
       scanResult.style.color = "green";
@@ -420,4 +472,4 @@ if (scanBtn) {
 makeDraggable(nameBox);
 makeDraggable(qrBox);
 
-renderGuests();
+loadGuestsFromSheet();
