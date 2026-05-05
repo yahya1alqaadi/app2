@@ -649,8 +649,23 @@ async function generateInvitations() {
       throw new Error("صورة التصميم غير صالحة");
     }
 
+    const imageRect = inviteImage.getBoundingClientRect();
+
+    if (!imageRect.width || !imageRect.height) {
+      throw new Error("صورة التصميم غير ظاهرة");
+    }
+
+    const fontScale = baseImage.width / imageRect.width;
+
     const namePos = getPositionOnImage(nameBox, baseImage.width, baseImage.height);
     const qrPos = getPositionOnImage(qrBox, baseImage.width, baseImage.height);
+
+    const selectedFontFamily = fontFamily ? fontFamily.value : "Arial";
+    const selectedFontSize = fontSize ? Number(fontSize.value || 40) : 40;
+    const selectedFontColor = fontColor ? fontColor.value : "#000000";
+    const selectedFontWeight = fontWeight ? fontWeight.value : "bold";
+
+    const finalFontSize = Math.round(selectedFontSize * fontScale);
 
     for (const guest of guests) {
       const canvas = document.createElement("canvas");
@@ -661,15 +676,10 @@ async function generateInvitations() {
 
       ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
-const selectedFontFamily = fontFamily ? fontFamily.value : "Arial";
-const selectedFontSize = fontSize ? Number(fontSize.value || 40) : 40;
-const selectedFontColor = fontColor ? fontColor.value : "#000000";
-const selectedFontWeight = fontWeight ? fontWeight.value : "bold";
-
-ctx.font = `${selectedFontWeight} ${selectedFontSize}px ${selectedFontFamily}`;
-ctx.fillStyle = selectedFontColor;
-ctx.textAlign = "center";
-ctx.textBaseline = "middle";
+      ctx.font = `${selectedFontWeight} ${finalFontSize}px ${selectedFontFamily}`;
+      ctx.fillStyle = selectedFontColor;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
 
       ctx.fillText(
         guest.name,
@@ -677,7 +687,7 @@ ctx.textBaseline = "middle";
         namePos.y + namePos.h / 2
       );
 
-     const qrText = getQrText(guest);
+      const qrText = getQrText(guest);
       const qrImage = await createQrImage(qrText);
 
       ctx.drawImage(
