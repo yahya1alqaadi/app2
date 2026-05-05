@@ -25,6 +25,15 @@
       text-align: center;
     }
 
+    select {
+      width: 100%;
+      padding: 14px;
+      font-size: 17px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      margin-bottom: 12px;
+    }
+
     button {
       width: 100%;
       padding: 14px;
@@ -34,6 +43,7 @@
       background: #111827;
       color: white;
       cursor: pointer;
+      margin-top: 8px;
     }
 
     #reader {
@@ -59,9 +69,15 @@
 
   <div class="card">
     <h1>مسح الدعوات</h1>
+
+    <label>اختر المناسبة</label>
+    <select id="eventSelect"></select>
+
     <button id="scanBtn" type="button">تشغيل الكاميرا</button>
+
     <div id="reader"></div>
-    <p id="scanResult">جاري تحميل بيانات الضيوف...</p>
+
+    <p id="scanResult">جاري تحميل المناسبات...</p>
     <p id="countBox">عدد الضيوف: 0</p>
   </div>
 
@@ -70,10 +86,13 @@
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
 
+    let events = [];
     let guests = [];
+    let currentEventId = localStorage.getItem("scanCurrentEventId") || "";
     let scanner = null;
     let paused = false;
 
+    const eventSelect = document.getElementById("eventSelect");
     const scanBtn = document.getElementById("scanBtn");
     const scanResult = document.getElementById("scanResult");
     const countBox = document.getElementById("countBox");
@@ -104,10 +123,71 @@
       });
     }
 
-    async function loadGuests() {
+    async function loadEvents() {
       try {
         const data = await callScript({
-          action: "guests"
+          action: "events"
+        });
+
+        if (data.status !== "success") {
+          scanResult.textContent = "فشل تحميل المناسبات ❌";
+          scanResult.style.color = "red";
+          return;
+        }
+
+        events = data.events || [];
+
+        if (events.length === 0) {
+          eventSelect.innerHTML = `<option value="">لا توجد مناسبات مفعلة</option>`;
+          scanResult.textContent = "لا توجد مناسبات ظاهرة للموظف";
+          scanResult.style.color = "red";
+          return;
+        }
+
+        if (!currentEventId || !events.find(e => String(e.eventId) === String(currentEventId))) {
+          currentEventId = events[0].eventId;
+          localStorage.setItem("scanCurrentEventId", currentEventId);
+        }
+
+        renderEventSelect();
+        await loadGuests();
+
+      } catch (error) {
+        scanResult.textContent = "فشل تحميل المناسبات ❌";
+        scanResult.style.color = "red";
+      }
+    }
+
+    function renderEventSelect() {
+      eventSelect.innerHTML = "";
+
+      events.forEach(event => {
+        const option = document.createElement("option");
+        option.value = event.eventId;
+        option.textContent = event.eventName;
+
+        if (String(event.eventId) === String(currentEventId)) {
+          option.selected = true;
+        }
+
+        eventSelect.appendChild(option);
+      });
+    }
+
+    async function loadGuests() {
+      if (!currentEventId) {
+        scanResult.textContent = "اختر مناسبة أولاً";
+        scanResult.style.color = "red";
+        return;
+      }
+
+      scanResult.textContent = "جاري تحميل بيانات الضيوف...";
+      scanResult.style.color = "#111827";
+
+      try {
+        const data = await callScript({
+          action: "guests",
+          eventId: currentEventId
         });
 
         if (data.status !== "success") {
@@ -121,13 +201,38 @@
         scanResult.textContent = "جاهز للمسح ✅";
         scanResult.style.color = "green";
         countBox.textContent = "عدد الضيوف: " + guests.length;
+
       } catch (error) {
         scanResult.textContent = "فشل تحميل بيانات الضيوف ❌";
         scanResult.style.color = "red";
       }
     }
 
+    function parseQrText(text) {
+      const value = String(text || "").trim();
+
+      if (value.includes("|")) {
+        const parts = value.split("|");
+
+        return {
+          eventId: parts[0],
+          guestId: parts[1]
+        };
+      }
+
+      return {
+        eventId: currentEventId,
+        guestId: value
+      };
+    }
+
     function startScanner() {
+      if (!currentEventId) {
+        scanResult.textContent = "اختر مناسبة أولاً";
+        scanResult.style.color = "red";
+        return;
+      }
+
       if (scanner) {
         scanResult.textContent = "الكاميرا تعمل بالفعل";
         return;
@@ -156,11 +261,20 @@
       });
     }
 
-    async function checkGuest(id) {
-      const guest = guests.find(g => String(g.id) === String(id));
+    async function checkGuest(qrText) {
+      const parsed = parseQrText(qrText);
+
+      if (String(parsed.eventId) !== String(currentEventId)) {
+        scanResult.textContent = "QR تابع لمناسبة أخرى ❌";
+        scanResult.style.color = "red";
+        playErrorSound();
+        return;
+      }
+
+      const guest = guests.find(g => String(g.id) === String(parsed.guestId));
 
       if (!guest) {
-        scanResult.textContent = "QR غير معروف ❌";
+        scanResult.textContent = "QR غير معروف لهذه المناسبة ❌";
         scanResult.style.color = "red";
         playErrorSound();
         return;
@@ -171,6 +285,7 @@
       try {
         const data = await callScript({
           action: "attendance",
+          eventId: currentEventId,
           id: guest.id,
           name: guest.name,
           phone: guest.phone,
@@ -188,6 +303,7 @@
           scanResult.textContent = "تم تسجيل دخول " + guest.name + " ✅";
           scanResult.style.color = "green";
           playSuccessSound();
+          await loadGuests();
           return;
         }
 
@@ -212,9 +328,15 @@
       audio.play();
     }
 
+    eventSelect.onchange = async function () {
+      currentEventId = eventSelect.value;
+      localStorage.setItem("scanCurrentEventId", currentEventId);
+      await loadGuests();
+    };
+
     scanBtn.onclick = startScanner;
 
-    loadGuests();
+    loadEvents();
   </script>
 
 </body>
