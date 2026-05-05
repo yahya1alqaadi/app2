@@ -1,7 +1,7 @@
 let guests = JSON.parse(localStorage.getItem("guests")) || [];
 let uploadedImage = localStorage.getItem("uploadedImage") || "";
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7foR3g7hHaornI7jOeF_qTpcnr-nBJe_l3RQZtMzB0tILEryqIBq8-5Achwgj2xygaQ/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
 
 let scanner = null;
 let isScanningPaused = false;
