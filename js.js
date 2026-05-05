@@ -1,6 +1,6 @@
 let events = [];
 let guests = [];
-let currentEventId = localStorage.getItem("currentEventId") || "";
+let currentEventId = "";
 let uploadedImage = localStorage.getItem("uploadedImage") || "";
 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
