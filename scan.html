@@ -2,7 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>مسح الدعوات | بوابة الموظف</title>
 
   <!-- Google Fonts -->
@@ -34,6 +37,8 @@
       --gray-700: #334155;
       --radius: 20px;
       --radius-sm: 14px;
+      --radius-xs: 10px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     * {
@@ -42,59 +47,68 @@
       box-sizing: border-box;
     }
 
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
     body {
       font-family: 'Cairo', 'Tajawal', sans-serif;
       background: linear-gradient(135deg, #f0f4ff 0%, #f8fafc 50%, #f1f5f9 100%);
       min-height: 100vh;
-      padding: 20px;
+      min-height: 100dvh;
+      padding: 16px;
       direction: rtl;
       display: flex;
       align-items: center;
       justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     .container {
       width: 100%;
-      max-width: 520px;
+      max-width: 500px;
     }
 
     /* ========== الهيدر ========== */
     .header {
       text-align: center;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.2rem;
     }
 
     .header-icon {
-      width: 70px;
-      height: 70px;
+      width: 60px;
+      height: 60px;
       background: linear-gradient(135deg, var(--primary), #3b82f6);
-      border-radius: 20px;
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 1rem;
-      font-size: 2rem;
+      margin: 0 auto 0.8rem;
+      font-size: 1.6rem;
       color: white;
-      box-shadow: 0 15px 30px rgba(37, 99, 235, 0.25);
+      box-shadow: 0 12px 25px rgba(37, 99, 235, 0.25);
     }
 
     .header h1 {
-      font-size: 1.6rem;
+      font-size: 1.4rem;
       font-weight: 800;
       color: var(--dark);
-      margin-bottom: 0.2rem;
+      margin-bottom: 0.1rem;
     }
 
     .header .subtitle {
       color: var(--gray-500);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 500;
     }
 
     /* ========== البطاقة الرئيسية ========== */
     .card {
       background: white;
-      padding: 2rem 1.5rem;
+      padding: 1.5rem 1.2rem;
       border-radius: var(--radius);
       box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
       border: 1px solid var(--gray-100);
@@ -102,22 +116,23 @@
 
     /* ========== اختيار المناسبة ========== */
     .select-group {
-      margin-bottom: 1.2rem;
+      margin-bottom: 1rem;
     }
 
     .select-group label {
       display: block;
       font-weight: 700;
       color: var(--gray-700);
-      margin-bottom: 0.5rem;
-      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+      font-size: 0.9rem;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .select-group label i {
       color: var(--primary);
+      font-size: 0.9rem;
     }
 
     .select-wrapper {
@@ -127,18 +142,18 @@
     .select-wrapper i {
       position: absolute;
       top: 50%;
-      left: 16px;
+      left: 14px;
       transform: translateY(-50%);
       color: var(--gray-400);
       pointer-events: none;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
     }
 
     select {
       width: 100%;
-      padding: 0.95rem 1.2rem;
-      font-size: 1rem;
-      border-radius: var(--radius-sm);
+      padding: 0.85rem 1rem;
+      font-size: 0.95rem;
+      border-radius: var(--radius-xs);
       border: 2px solid var(--gray-200);
       background: white;
       font-family: inherit;
@@ -158,19 +173,21 @@
     /* ========== الأزرار ========== */
     .btn {
       width: 100%;
-      padding: 1rem;
-      font-size: 1.1rem;
+      padding: 0.9rem;
+      font-size: 1rem;
       font-weight: 700;
       border: none;
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-xs);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
       transition: all 0.2s ease;
       font-family: inherit;
       letter-spacing: 0.3px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     .btn:active {
@@ -180,12 +197,12 @@
     .btn-primary {
       background: var(--dark);
       color: white;
-      margin-bottom: 1rem;
+      margin-bottom: 0.8rem;
     }
 
     .btn-primary:hover {
       background: #1e293b;
-      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
     }
 
     .btn-primary:disabled {
@@ -194,63 +211,73 @@
       box-shadow: none;
     }
 
+    .btn-success {
+      background: var(--success);
+      color: white;
+      margin-bottom: 0.8rem;
+    }
+
     /* ========== منطقة الكاميرا ========== */
     #reader {
       width: 100%;
-      margin-top: 10px;
-      border-radius: var(--radius-sm);
+      margin-top: 8px;
+      border-radius: var(--radius-xs);
       overflow: hidden;
       border: 3px solid var(--gray-200);
       background: #000;
     }
 
     #reader video {
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-xs);
     }
 
     /* ========== نتيجة المسح ========== */
     .result-box {
       text-align: center;
-      padding: 1.2rem;
-      margin-top: 1rem;
-      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin-top: 0.8rem;
+      border-radius: var(--radius-xs);
       transition: all 0.3s ease;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     #scanResult {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 800;
-      line-height: 1.6;
+      line-height: 1.5;
     }
 
     /* ========== عداد الضيوف ========== */
     .stats-row {
       display: flex;
-      gap: 10px;
-      margin-top: 0.8rem;
+      gap: 8px;
+      margin-top: 0.6rem;
     }
 
     .stat-card {
       flex: 1;
       background: var(--gray-50);
-      padding: 1rem;
-      border-radius: var(--radius-sm);
+      padding: 0.8rem;
+      border-radius: var(--radius-xs);
       text-align: center;
       border: 1px solid var(--gray-100);
     }
 
     .stat-card .stat-number {
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       font-weight: 800;
       color: var(--primary);
-      line-height: 1;
+      line-height: 1.1;
     }
 
     .stat-card .stat-label {
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       color: var(--gray-500);
       font-weight: 600;
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     /* ========== حالة النجاح والخطأ ========== */
@@ -270,51 +297,93 @@
 
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-8px); }
-      50% { transform: translateX(8px); }
-      75% { transform: translateX(-4px); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(6px); }
+      75% { transform: translateX(-3px); }
     }
 
     /* ========== فوتر ========== */
     .footer {
       text-align: center;
-      margin-top: 1.5rem;
+      margin-top: 1.2rem;
       color: var(--gray-400);
-      font-size: 0.8rem;
+      font-size: 0.75rem;
     }
 
     .footer i {
       color: var(--danger);
-      margin: 0 3px;
+      margin: 0 2px;
     }
 
-    /* ========== استجابة للجوال ========== */
-    @media (max-width: 480px) {
+    /* ========== استجابة للجوال الصغير ========== */
+    @media (max-width: 380px) {
+      body {
+        padding: 10px;
+      }
+      
       .card {
-        padding: 1.5rem 1rem;
+        padding: 1.2rem 0.9rem;
       }
 
       .header h1 {
-        font-size: 1.4rem;
+        font-size: 1.2rem;
+      }
+
+      .header-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.3rem;
+        border-radius: 14px;
       }
 
       #scanResult {
-        font-size: 1rem;
+        font-size: 0.95rem;
       }
 
       .btn {
-        font-size: 1rem;
-        padding: 0.9rem;
+        font-size: 0.9rem;
+        padding: 0.8rem;
+      }
+
+      .stat-card .stat-number {
+        font-size: 1.3rem;
+      }
+      
+      select {
+        font-size: 0.9rem;
+        padding: 0.75rem 0.9rem;
       }
     }
 
-    /* إخفاء رسالة HTML5 QR الافتراضية */
+    /* تابلت */
+    @media (min-width: 481px) {
+      .container {
+        max-width: 480px;
+      }
+      
+      .card {
+        padding: 2rem 1.8rem;
+      }
+    }
+
+    /* دعم notch */
+    @supports (padding: env(safe-area-inset-bottom)) {
+      body {
+        padding-bottom: calc(16px + var(--safe-bottom));
+      }
+    }
+
+    /* إخفاء عناصر HTML5 QR الافتراضية */
     #reader__dashboard_section {
       display: none !important;
     }
 
     #reader__scan_region {
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-xs);
+    }
+    
+    #reader__scan_region img {
+      display: none;
     }
   </style>
 </head>
@@ -571,13 +640,13 @@
         }
       ).then(() => {
         scanBtn.innerHTML = '<i class="fas fa-check-circle"></i> الكاميرا تعمل';
-        scanBtn.style.background = '#10b981';
+        scanBtn.className = 'btn btn-success';
         showSuccess("✅ الكاميرا تعمل – وجهها على QR");
       }).catch(() => {
         showError("❌ لم يتم تشغيل الكاميرا");
         scanBtn.disabled = false;
         scanBtn.innerHTML = '<i class="fas fa-camera"></i> تشغيل الكاميرا';
-        scanBtn.style.background = '#111827';
+        scanBtn.className = 'btn btn-primary';
         scanner = null;
       });
     }
@@ -665,20 +734,16 @@
       try {
         const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
         audio.volume = 0.5;
-        audio.play();
-      } catch (e) {
-        // المتصفح قد يمنع الصوت
-      }
+        audio.play().catch(() => {});
+      } catch (e) {}
     }
 
     function playErrorSound() {
       try {
         const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg");
         audio.volume = 0.5;
-        audio.play();
-      } catch (e) {
-        // المتصفح قد يمنع الصوت
-      }
+        audio.play().catch(() => {});
+      } catch (e) {}
     }
 
     // ============================================
@@ -734,7 +799,7 @@
           scanner = null;
           scanBtn.disabled = false;
           scanBtn.innerHTML = '<i class="fas fa-camera"></i> تشغيل الكاميرا';
-          scanBtn.style.background = '#111827';
+          scanBtn.className = 'btn btn-primary';
         }).catch(() => {
           scanner = null;
         });
