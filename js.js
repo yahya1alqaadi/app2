@@ -17,6 +17,8 @@ const loginError = document.getElementById("loginError");
 function showAdmin() {
   loginScreen.style.display = "none";
   adminContent.style.display = "block";
+  // إنشاء حاوية الإشعارات عند تحميل لوحة التحكم
+  createToastContainer();
 }
 
 function checkLogin() {
@@ -57,6 +59,9 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJ
 let scanner = null;
 let isScanningPaused = false;
 
+// متغير لحجم QR النسبي (القيمة الافتراضية 100%)
+let qrScalePercent = 100;
+
 // ============================================
 // عناصر DOM
 // ============================================
@@ -90,11 +95,63 @@ const headerEventBadge = document.getElementById("headerEventBadge");
 const guestCount = document.getElementById("guestCount");
 
 // ============================================
-// نظام الإشعارات (Toast Notifications)
+// إضافة متحكم حجم QR في واجهة التصميم
+// ============================================
+
+function addQRSizeControl() {
+  // البحث عن قسم design-controls
+  const designControls = document.querySelector('.design-controls');
+  if (!designControls) return;
+
+  // التحقق من عدم وجود المتحكم مسبقاً
+  if (document.getElementById('qrSizeControl')) return;
+
+  const controlGroup = document.createElement('div');
+  controlGroup.className = 'control-group';
+  controlGroup.id = 'qrSizeControl';
+  controlGroup.innerHTML = `
+    <label><i class="fas fa-expand-arrows-alt"></i> حجم QR</label>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <input type="range" id="qrSizeSlider" min="50" max="200" value="100" step="5" style="flex:1;" />
+      <span id="qrSizeValue" style="font-weight:700;font-size:0.85rem;min-width:45px;text-align:center;">100%</span>
+    </div>
+  `;
+
+  designControls.appendChild(controlGroup);
+
+  // ربط الأحداث
+  const slider = document.getElementById('qrSizeSlider');
+  const valueDisplay = document.getElementById('qrSizeValue');
+
+  slider.addEventListener('input', function() {
+    qrScalePercent = parseInt(this.value);
+    valueDisplay.textContent = qrScalePercent + '%';
+    resizeQRBox();
+    if (guests.length > 0) {
+      previewGuest(guests[0]);
+    }
+  });
+}
+
+function resizeQRBox() {
+  if (!qrBox) return;
+  
+  // الحجم الأساسي المربع
+  const baseSize = 110;
+  // تطبيق النسبة
+  const scaledSize = Math.round(baseSize * (qrScalePercent / 100));
+  
+  // الحفاظ على الشكل المربع
+  qrBox.style.width = scaledSize + 'px';
+  qrBox.style.height = scaledSize + 'px';
+  qrBox.style.aspectRatio = '1/1';
+}
+
+// ============================================
+// نظام الإشعارات (Toast Notifications) - ملء الشاشة
 // ============================================
 
 function createToastContainer() {
-  // إزالة الحاوية القديمة إن وجدت
   const oldContainer = document.getElementById('toastContainer');
   if (oldContainer) oldContainer.remove();
 
@@ -102,16 +159,13 @@ function createToastContainer() {
   container.id = 'toastContainer';
   container.style.cssText = `
     position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     z-index: 99999;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: none;
     pointer-events: none;
-    width: 90%;
-    max-width: 500px;
   `;
   document.body.appendChild(container);
   return container;
@@ -121,64 +175,97 @@ function showToast(message, type = 'success', duration = 4000) {
   const container = document.getElementById('toastContainer') || createToastContainer();
 
   const colors = {
-    success: { bg: '#10b981', icon: '✅', border: '#059669' },
-    error: { bg: '#ef4444', icon: '❌', border: '#dc2626' },
-    warning: { bg: '#f59e0b', icon: '⚠️', border: '#d97706' },
-    info: { bg: '#3b82f6', icon: 'ℹ️', border: '#2563eb' }
+    success: { bg: 'rgba(16, 185, 129, 0.97)', icon: '✅', border: '#059669' },
+    error: { bg: 'rgba(239, 68, 68, 0.97)', icon: '❌', border: '#dc2626' },
+    warning: { bg: 'rgba(245, 158, 11, 0.97)', icon: '⚠️', border: '#d97706' },
+    info: { bg: 'rgba(59, 130, 246, 0.97)', icon: 'ℹ️', border: '#2563eb' }
   };
 
   const color = colors[type] || colors.info;
 
-  const toast = document.createElement('div');
-  toast.style.cssText = `
-    background: ${color.bg};
-    color: white;
-    padding: 18px 22px;
-    border-radius: 16px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    text-align: center;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.25);
-    border: 2px solid ${color.border};
-    pointer-events: auto;
-    animation: slideDown 0.4s ease, fadeOut 0.4s ease ${duration - 400}ms forwards;
+  // تنظيف المحتوى القديم
+  container.innerHTML = '';
+
+  // إنشاء الخلفية المعتمة
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    pointer-events: auto;
+    animation: fadeInOverlay 0.3s ease;
+  `;
+
+  // إنشاء بطاقة الإشعار
+  const card = document.createElement('div');
+  card.style.cssText = `
+    background: ${color.bg};
+    color: white;
+    padding: 40px 30px;
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+    border: 3px solid ${color.border};
+    max-width: 450px;
+    width: 90%;
+    animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     direction: rtl;
     font-family: 'Cairo', 'Tajawal', sans-serif;
   `;
 
-  toast.innerHTML = `<span style="font-size:1.5rem;">${color.icon}</span> ${message}`;
+  card.innerHTML = `
+    <div style="font-size:5rem;margin-bottom:15px;animation:bounce 0.6s ease;">${color.icon}</div>
+    <div style="font-size:1.8rem;font-weight:800;margin-bottom:10px;line-height:1.4;">${message}</div>
+    <div style="font-size:1rem;opacity:0.9;margin-top:10px;">
+      ${type === 'success' ? 'تم التسجيل بنجاح ✓' : ''}
+      ${type === 'error' ? 'يرجى التحقق من QR' : ''}
+      ${type === 'warning' ? 'تم تسجيله مسبقاً' : ''}
+    </div>
+  `;
 
-  container.appendChild(toast);
+  overlay.appendChild(card);
+  container.appendChild(overlay);
 
-  // إزالة الإشعار بعد المدة المحددة
+  // إظهار الحاوية
+  container.style.display = 'block';
+  // منع التمرير في الخلفية
+  document.body.style.overflow = 'hidden';
+
+  // إخفاء الإشعار بعد المدة المحددة
   setTimeout(() => {
-    if (toast.parentNode) {
-      toast.remove();
-    }
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => {
+      container.style.display = 'none';
+      container.innerHTML = '';
+      document.body.style.overflow = '';
+    }, 300);
   }, duration);
 }
 
-// إضافة أنيميشن CSS للإشعارات
+// إضافة الأنيميشنات
 const toastStyle = document.createElement('style');
 toastStyle.textContent = `
-  @keyframes slideDown {
-    from { transform: translateY(-30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+  @keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
   
-  @keyframes fadeOut {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(-20px); }
+  @keyframes scaleIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
   }
   
-  @keyframes scanPulse {
-    0% { transform: translateX(-50%) scale(1); }
-    50% { transform: translateX(-50%) scale(1.05); }
-    100% { transform: translateX(-50%) scale(1); }
+  @keyframes bounce {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
   }
 `;
 document.head.appendChild(toastStyle);
@@ -274,6 +361,9 @@ async function loadEvents() {
       guests = [];
       renderGuests();
     }
+    
+    // إضافة متحكم حجم QR بعد تحميل كل شيء
+    setTimeout(addQRSizeControl, 500);
   } catch (error) {
     eventStatus.textContent = "❌ فشل الاتصال بالشيت لتحميل المناسبات";
   }
@@ -411,8 +501,7 @@ async function loadGuestsFromSheet() {
       if (nameBox) nameBox.innerHTML = '<i class="fas fa-font"></i> اسم الضيف';
       if (qrBox) {
         qrBox.innerHTML = '<i class="fas fa-qrcode"></i>';
-        qrBox.style.width = '100px';
-        qrBox.style.height = '100px';
+        resizeQRBox();
       }
     }
   } catch (error) {
@@ -520,7 +609,7 @@ async function deleteGuest(index) {
 }
 
 // ============================================
-// معاينة الضيف - QR مربع دائماً
+// معاينة الضيف - QR مربع مع حجم نسبي
 // ============================================
 
 function getQrText(guest) {
@@ -536,16 +625,13 @@ function previewGuest(guest) {
   if (fontColor) nameBox.style.color = fontColor.value;
   if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
 
-  // 🔧 إصلاح: جعل QR مربع دائماً
+  // تطبيق الحجم النسبي للـ QR
+  resizeQRBox();
+  
   qrBox.innerHTML = "";
   
-  // تحديد الحجم المربع (نفس العرض والارتفاع)
-  const qrSize = Math.min(qrBox.clientWidth || 100, qrBox.clientHeight || 100);
-  
-  // فرض الشكل المربع
-  qrBox.style.width = qrSize + 'px';
-  qrBox.style.height = qrSize + 'px';
-  qrBox.style.aspectRatio = '1/1';
+  // استخدام حجم مربع متساوي
+  const qrSize = qrBox.clientWidth || 110;
   
   new QRCode(qrBox, {
     text: getQrText(guest),
@@ -674,7 +760,6 @@ function makeDraggable(el) {
     el.style.zIndex = "20";
   });
 
-  // دعم اللمس للجوال
   el.addEventListener("touchstart", e => {
     dragging = true;
     const touch = e.touches[0];
@@ -760,7 +845,7 @@ if (pickFontColorBtn) pickFontColorBtn.onclick = () => pickColor(fontColor);
 if (pickQrColorBtn) pickQrColorBtn.onclick = () => pickColor(qrColor);
 
 // ============================================
-// توليد الدعوات - QR مربع دائماً
+// توليد الدعوات - QR مربع مع حجم نسبي
 // ============================================
 
 function getPositionOnImage(box, canvasWidth, canvasHeight) {
@@ -769,11 +854,17 @@ function getPositionOnImage(box, canvasWidth, canvasHeight) {
   if (!imageRect.width || !imageRect.height) throw new Error("صورة التصميم غير ظاهرة");
   const scaleX = canvasWidth / imageRect.width;
   const scaleY = canvasHeight / imageRect.height;
+  
+  // جعل منطقة QR مربعة
+  const rawW = boxRect.width * scaleX;
+  const rawH = boxRect.height * scaleY;
+  const squareSize = Math.min(rawW, rawH);
+  
   return {
-    x: Math.max(0, (boxRect.left - imageRect.left) * scaleX),
-    y: Math.max(0, (boxRect.top - imageRect.top) * scaleY),
-    w: Math.max(20, boxRect.width * scaleX),
-    h: Math.max(20, boxRect.height * scaleY)
+    x: (boxRect.left - imageRect.left) * scaleX + (rawW - squareSize) / 2,
+    y: (boxRect.top - imageRect.top) * scaleY + (rawH - squareSize) / 2,
+    w: squareSize,
+    h: squareSize
   };
 }
 
@@ -783,7 +874,7 @@ function createQrImage(text) {
     tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
     document.body.appendChild(tempDiv);
     
-    // 🔧 إنشاء QR بحجم مربع
+    // حجم مربع للـ QR
     const qrSize = 600;
     
     new QRCode(tempDiv, {
@@ -807,7 +898,6 @@ function createQrImage(text) {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       
-      // جعل الخلفية شفافة
       for (let i = 0; i < data.length; i += 4) {
         if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) {
           data[i+3] = 0;
@@ -863,13 +953,6 @@ async function generateInvitations() {
     const qrPos = getPositionOnImage(qrBox, baseImage.width, baseImage.height);
     const finalFontSize = Math.round((fontSize ? Number(fontSize.value || 40) : 40) * fontScale);
 
-    // 🔧 جعل منطقة QR مربعة دائماً
-    const qrSquareSize = Math.min(qrPos.w, qrPos.h);
-    const qrCenterX = qrPos.x + qrPos.w / 2;
-    const qrCenterY = qrPos.y + qrPos.h / 2;
-    const qrDrawX = qrCenterX - qrSquareSize / 2;
-    const qrDrawY = qrCenterY - qrSquareSize / 2;
-
     for (const guest of guests) {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
@@ -877,17 +960,16 @@ async function generateInvitations() {
       canvas.height = baseImage.height;
       ctx.drawImage(baseImage, 0, 0);
 
-      // اسم الضيف
       ctx.font = `${fontWeight ? fontWeight.value : "bold"} ${finalFontSize}px ${fontFamily ? fontFamily.value : "Arial"}`;
       ctx.fillStyle = fontColor ? fontColor.value : "#000000";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(guest.name, namePos.x + namePos.w/2, namePos.y + namePos.h/2);
 
-      // QR Code - مربع دائماً
       const qrImage = await createQrImage(getQrText(guest));
       if (qrImage) {
-        ctx.drawImage(qrImage, qrDrawX, qrDrawY, qrSquareSize, qrSquareSize);
+        // رسم QR بشكل مربع
+        ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
       }
 
       guest.invitation = canvas.toDataURL("image/png");
@@ -915,7 +997,7 @@ async function downloadAllInvitations() {
     return;
   }
   if (typeof JSZip === "undefined") {
-    showToast("⚠️ مكتبة ZIP غير متاحة. تأكد من الاتصال بالإنترنت", "warning");
+    showToast("⚠️ مكتبة ZIP غير متاحة", "warning");
     return;
   }
 
@@ -941,7 +1023,7 @@ async function downloadAllInvitations() {
 }
 
 // ============================================
-// الماسح الضوئي مع إشعارات واضحة
+// الماسح الضوئي مع إشعارات ملء الشاشة
 // ============================================
 
 function parseQrText(text) {
@@ -968,7 +1050,7 @@ function startScanner() {
       if (isScanningPaused) return;
       isScanningPaused = true;
       checkInGuest(qrText);
-      setTimeout(() => { isScanningPaused = false; }, 3500);
+      setTimeout(() => { isScanningPaused = false; }, 4500);
     },
     error => {}
   ).catch(() => {
@@ -979,7 +1061,7 @@ function startScanner() {
 
 async function checkInGuest(qrText) {
   if (!currentEventId) {
-    showToast("⚠️ اختر مناسبة أولاً", "warning");
+    showToast("⚠️ اختر مناسبة أولاً", "warning", 3000);
     scanResult.innerHTML = '<span style="color:#ef4444;">⚠️ اختر مناسبة أولاً</span>';
     return;
   }
@@ -987,7 +1069,7 @@ async function checkInGuest(qrText) {
   const parsed = parseQrText(qrText);
   
   if (String(parsed.eventId) !== String(currentEventId)) {
-    showToast("❌ هذا QR تابع لمناسبة أخرى", "error", 4000);
+    showToast("❌ هذا QR تابع لمناسبة أخرى", "error", 3500);
     scanResult.innerHTML = '<span style="color:#ef4444;">❌ QR تابع لمناسبة أخرى</span>';
     playErrorSound();
     return;
@@ -995,14 +1077,14 @@ async function checkInGuest(qrText) {
 
   const guest = guests.find(g => String(g.id) === String(parsed.guestId));
   if (!guest) {
-    showToast("❌ QR غير معروف لهذه المناسبة", "error", 4000);
+    showToast("❌ QR غير معروف لهذه المناسبة", "error", 3500);
     scanResult.innerHTML = '<span style="color:#ef4444;">❌ QR غير معروف</span>';
     playErrorSound();
     return;
   }
 
   if (guest.checkedIn) {
-    showToast(`⚠️ ${guest.name} تم تسجيله مسبقاً`, "warning", 4000);
+    showToast(`⚠️ ${guest.name} تم تسجيله مسبقاً`, "warning", 3500);
     scanResult.innerHTML = `<span style="color:#f59e0b;">⚠️ مكرر: ${guest.name}</span>`;
     playErrorSound();
     return;
@@ -1021,35 +1103,30 @@ async function checkInGuest(qrText) {
     });
 
     if (result.status === "duplicate") {
-      showToast(`⚠️ ${guest.name} تم تسجيله مسبقاً`, "warning", 4000);
+      showToast(`⚠️ ${guest.name} تم تسجيله مسبقاً`, "warning", 3500);
       scanResult.innerHTML = `<span style="color:#f59e0b;">⚠️ مكرر: ${guest.name}</span>`;
       playErrorSound();
       return;
     }
 
     if (result.status === "success") {
-      // 🔧 إشعار كبير وواضح عند النجاح
-      showToast(`✅ أهلاً وسهلاً ${guest.name}`, "success", 5000);
+      showToast(`✅ أهلاً وسهلاً ${guest.name}`, "success", 4000);
       scanResult.innerHTML = `<span style="color:#10b981;font-size:1.3rem;">✅ تم تسجيل دخول ${guest.name}</span>`;
       playSuccessSound();
       await loadGuestsFromSheet();
       return;
     }
 
-    showToast("❌ حدث خطأ أثناء التسجيل", "error", 4000);
+    showToast("❌ حدث خطأ أثناء التسجيل", "error", 3500);
     scanResult.innerHTML = '<span style="color:#ef4444;">❌ حدث خطأ</span>';
     playErrorSound();
 
   } catch (error) {
-    showToast("❌ فشل الاتصال بالخادم", "error", 4000);
+    showToast("❌ فشل الاتصال بالخادم", "error", 3500);
     scanResult.innerHTML = '<span style="color:#ef4444;">❌ فشل الاتصال</span>';
     playErrorSound();
   }
 }
-
-// ============================================
-// المؤثرات الصوتية
-// ============================================
 
 function playSuccessSound() {
   try {
