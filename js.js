@@ -596,68 +596,79 @@ function createQrImage(text) {
 }
 
 async function generateInvitations() {
-  if (!uploadedImage) {
-    alert("ارفع التصميم أولاً");
-    return;
+  try {
+    if (!uploadedImage) {
+      alert("ارفع التصميم أولاً");
+      return;
+    }
+
+    if (!currentEventId) {
+      alert("اختر مناسبة أولاً");
+      return;
+    }
+
+    if (!guests || guests.length === 0) {
+      alert("لا يوجد ضيوف في هذه المناسبة");
+      return;
+    }
+
+    generateBtn.disabled = true;
+    generateBtn.textContent = "جاري توليد الدعوات...";
+
+    const baseImage = new Image();
+
+    const imageLoaded = new Promise((resolve, reject) => {
+      baseImage.onload = resolve;
+      baseImage.onerror = reject;
+    });
+
+    baseImage.src = uploadedImage;
+
+    await imageLoaded;
+
+    const namePos = getPositionOnImage(nameBox, baseImage.width, baseImage.height);
+    const qrPos = getPositionOnImage(qrBox, baseImage.width, baseImage.height);
+
+    for (const guest of guests) {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = baseImage.width;
+      canvas.height = baseImage.height;
+
+      ctx.drawImage(baseImage, 0, 0);
+
+      ctx.font = "bold 40px Arial";
+      ctx.fillStyle = "#000";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      ctx.fillText(
+        guest.name,
+        namePos.x + namePos.w / 2,
+        namePos.y + namePos.h / 2
+      );
+
+      const qrText = getQrText(guest);
+      const qrImage = await createQrImage(qrText);
+
+      ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
+
+      guest.invitation = canvas.toDataURL("image/png");
+    }
+
+    renderGuests();
+
+    alert("تم توليد الدعوات بنجاح ✨");
+
+  } catch (error) {
+    console.log("خطأ في توليد الدعوات:", error);
+    alert("حدث خطأ أثناء توليد الدعوات. جرّب رفع التصميم مرة ثانية.");
+  } finally {
+    generateBtn.disabled = false;
+    generateBtn.textContent = "توليد الدعوات";
   }
-
-  if (!currentEventId) {
-    alert("اختر مناسبة أولاً");
-    return;
-  }
-
-  if (guests.length === 0) {
-    alert("لا يوجد ضيوف في هذه المناسبة");
-    return;
-  }
-
-  const baseImage = new Image();
-  baseImage.src = uploadedImage;
-
-  await new Promise(resolve => {
-    baseImage.onload = resolve;
-  });
-
-  const namePos = getPositionOnImage(nameBox, baseImage.width, baseImage.height);
-  const qrPos = getPositionOnImage(qrBox, baseImage.width, baseImage.height);
-
-  generateBtn.disabled = true;
-  generateBtn.textContent = "جاري توليد الدعوات...";
-
-  for (const guest of guests) {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    canvas.width = baseImage.width;
-    canvas.height = baseImage.height;
-
-    ctx.drawImage(baseImage, 0, 0);
-
-    ctx.font = "bold 40px Arial";
-    ctx.fillStyle = "#000";
-    ctx.textAlign = "center";
-
-    ctx.fillText(
-      guest.name,
-      namePos.x + namePos.w / 2,
-      namePos.y + namePos.h / 2
-    );
-
-    const qrImage = await createQrImage(getQrText(guest));
-
-    ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
-
-    guest.invitation = canvas.toDataURL("image/png");
-  }
-
-  renderGuests();
-
-  generateBtn.disabled = false;
-  generateBtn.textContent = "توليد الدعوات";
-
-  alert("تم توليد الدعوات بنجاح ✨");
 }
-
 async function downloadAllInvitations() {
   const guestsWithInvitations = guests.filter(guest => guest.invitation);
 
