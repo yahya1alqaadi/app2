@@ -8,24 +8,17 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>مسح الدعوات | بوابة الموظف</title>
 
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet" />
-
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
   <style>
     :root {
       --primary: #2563eb;
-      --primary-dark: #1d4ed8;
       --success: #10b981;
-      --success-light: #d1fae5;
       --danger: #ef4444;
-      --danger-light: #fee2e2;
       --warning: #f59e0b;
-      --warning-light: #fef3c7;
       --dark: #0f172a;
       --gray-50: #f8fafc;
       --gray-100: #f1f5f9;
@@ -41,16 +34,9 @@
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    html {
-      font-size: 16px;
-      -webkit-text-size-adjust: 100%;
-    }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
 
     body {
       font-family: 'Cairo', 'Tajawal', sans-serif;
@@ -64,371 +50,147 @@
       justify-content: center;
       -webkit-tap-highlight-color: transparent;
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
 
-    .container {
-      width: 100%;
-      max-width: 500px;
-    }
+    .container { width: 100%; max-width: 500px; }
 
-    /* ========== الهيدر ========== */
-    .header {
-      text-align: center;
-      margin-bottom: 1.2rem;
-    }
+    .header { text-align: center; margin-bottom: 1.2rem; }
 
     .header-icon {
-      width: 60px;
-      height: 60px;
+      width: 60px; height: 60px;
       background: linear-gradient(135deg, var(--primary), #3b82f6);
       border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       margin: 0 auto 0.8rem;
-      font-size: 1.6rem;
-      color: white;
+      font-size: 1.6rem; color: white;
       box-shadow: 0 12px 25px rgba(37, 99, 235, 0.25);
     }
 
-    .header h1 {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: var(--dark);
-      margin-bottom: 0.1rem;
-    }
+    .header h1 { font-size: 1.4rem; font-weight: 800; color: var(--dark); margin-bottom: 0.1rem; }
+    .header .subtitle { color: var(--gray-500); font-size: 0.85rem; font-weight: 500; }
 
-    .header .subtitle {
-      color: var(--gray-500);
-      font-size: 0.85rem;
-      font-weight: 500;
-    }
-
-    /* ========== البطاقة الرئيسية ========== */
     .card {
-      background: white;
-      padding: 1.5rem 1.2rem;
+      background: white; padding: 1.5rem 1.2rem;
       border-radius: var(--radius);
-      box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+      box-shadow: 0 15px 40px -10px rgba(0,0,0,0.08);
       border: 1px solid var(--gray-100);
     }
 
-    /* ========== اختيار المناسبة ========== */
-    .select-group {
-      margin-bottom: 1rem;
-    }
-
+    .select-group { margin-bottom: 1rem; }
     .select-group label {
-      display: block;
-      font-weight: 700;
-      color: var(--gray-700);
-      margin-bottom: 0.4rem;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      display: block; font-weight: 700; color: var(--gray-700);
+      margin-bottom: 0.4rem; font-size: 0.9rem;
+      display: flex; align-items: center; gap: 6px;
     }
+    .select-group label i { color: var(--primary); font-size: 0.9rem; }
 
-    .select-group label i {
-      color: var(--primary);
-      font-size: 0.9rem;
-    }
-
-    .select-wrapper {
-      position: relative;
-    }
-
+    .select-wrapper { position: relative; }
     .select-wrapper i {
-      position: absolute;
-      top: 50%;
-      left: 14px;
-      transform: translateY(-50%);
-      color: var(--gray-400);
-      pointer-events: none;
-      font-size: 0.8rem;
+      position: absolute; top: 50%; left: 14px;
+      transform: translateY(-50%); color: var(--gray-400);
+      pointer-events: none; font-size: 0.8rem;
     }
 
     select {
-      width: 100%;
-      padding: 0.85rem 1rem;
-      font-size: 0.95rem;
-      border-radius: var(--radius-xs);
-      border: 2px solid var(--gray-200);
-      background: white;
-      font-family: inherit;
-      appearance: none;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      color: var(--dark);
+      width: 100%; padding: 0.85rem 1rem; font-size: 0.95rem;
+      border-radius: var(--radius-xs); border: 2px solid var(--gray-200);
+      background: white; font-family: inherit; appearance: none;
+      cursor: pointer; transition: all 0.2s; color: var(--dark);
       padding-left: 2.5rem;
     }
+    select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37,99,235,0.08); }
 
-    select:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
-    }
-
-    /* ========== الأزرار ========== */
     .btn {
-      width: 100%;
-      padding: 0.9rem;
-      font-size: 1rem;
-      font-weight: 700;
-      border: none;
-      border-radius: var(--radius-xs);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-      font-family: inherit;
-      letter-spacing: 0.3px;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
+      width: 100%; padding: 0.9rem; font-size: 1rem; font-weight: 700;
+      border: none; border-radius: var(--radius-xs); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s; font-family: inherit;
+      -webkit-tap-highlight-color: transparent; touch-action: manipulation;
     }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--dark); color: white; margin-bottom: 0.8rem; }
+    .btn-primary:hover { background: #1e293b; }
+    .btn-primary:disabled { background: var(--gray-300); cursor: not-allowed; }
+    .btn-success { background: var(--success); color: white; margin-bottom: 0.8rem; }
 
-    .btn:active {
-      transform: scale(0.97);
-    }
-
-    .btn-primary {
-      background: var(--dark);
-      color: white;
-      margin-bottom: 0.8rem;
-    }
-
-    .btn-primary:hover {
-      background: #1e293b;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
-    }
-
-    .btn-primary:disabled {
-      background: var(--gray-300);
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    .btn-success {
-      background: var(--success);
-      color: white;
-      margin-bottom: 0.8rem;
-    }
-
-    /* ========== منطقة الكاميرا ========== */
     #reader {
-      width: 100%;
-      margin-top: 8px;
-      border-radius: var(--radius-xs);
-      overflow: hidden;
-      border: 3px solid var(--gray-200);
-      background: #000;
+      width: 100%; margin-top: 8px; border-radius: var(--radius-xs);
+      overflow: hidden; border: 3px solid var(--gray-200); background: #000;
     }
 
-    #reader video {
-      border-radius: var(--radius-xs);
-    }
-
-    /* ========== نتيجة المسح ========== */
     .result-box {
-      text-align: center;
-      padding: 1rem;
-      margin-top: 0.8rem;
-      border-radius: var(--radius-xs);
-      transition: all 0.3s ease;
-      min-height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      text-align: center; padding: 1rem; margin-top: 0.8rem;
+      border-radius: var(--radius-xs); transition: all 0.3s;
+      min-height: 50px; display: flex; align-items: center; justify-content: center;
     }
+    #scanResult { font-size: 1.1rem; font-weight: 800; line-height: 1.5; }
 
-    #scanResult {
-      font-size: 1.1rem;
-      font-weight: 800;
-      line-height: 1.5;
-    }
-
-    /* ========== عداد الضيوف ========== */
-    .stats-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 0.6rem;
-    }
-
+    .stats-row { display: flex; gap: 8px; margin-top: 0.6rem; }
     .stat-card {
-      flex: 1;
-      background: var(--gray-50);
-      padding: 0.8rem;
-      border-radius: var(--radius-xs);
-      text-align: center;
-      border: 1px solid var(--gray-100);
+      flex: 1; background: var(--gray-50); padding: 0.8rem;
+      border-radius: var(--radius-xs); text-align: center; border: 1px solid var(--gray-100);
+    }
+    .stat-card .stat-number { font-size: 1.5rem; font-weight: 800; color: var(--primary); line-height: 1.1; }
+    .stat-card .stat-label { font-size: 0.72rem; color: var(--gray-500); font-weight: 600; margin-top: 2px; }
+
+    .footer { text-align: center; margin-top: 1.2rem; color: var(--gray-400); font-size: 0.75rem; }
+    .footer i { color: var(--danger); margin: 0 2px; }
+
+    /* Toast Notifications */
+    #toastContainer {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 99999; display: flex; flex-direction: column; gap: 12px;
+      pointer-events: none; width: 90%; max-width: 500px;
     }
 
-    .stat-card .stat-number {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--primary);
-      line-height: 1.1;
+    @keyframes slideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; transform: translateY(-20px); }
     }
 
-    .stat-card .stat-label {
-      font-size: 0.72rem;
-      color: var(--gray-500);
-      font-weight: 600;
-      margin-top: 2px;
-    }
+    #reader__dashboard_section { display: none !important; }
 
-    /* ========== حالة النجاح والخطأ ========== */
-    .success-animation {
-      animation: pulse 0.6s ease;
-    }
-
-    .error-animation {
-      animation: shake 0.5s ease;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.03); }
-      100% { transform: scale(1); }
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-6px); }
-      50% { transform: translateX(6px); }
-      75% { transform: translateX(-3px); }
-    }
-
-    /* ========== فوتر ========== */
-    .footer {
-      text-align: center;
-      margin-top: 1.2rem;
-      color: var(--gray-400);
-      font-size: 0.75rem;
-    }
-
-    .footer i {
-      color: var(--danger);
-      margin: 0 2px;
-    }
-
-    /* ========== استجابة للجوال الصغير ========== */
     @media (max-width: 380px) {
-      body {
-        padding: 10px;
-      }
-      
-      .card {
-        padding: 1.2rem 0.9rem;
-      }
-
-      .header h1 {
-        font-size: 1.2rem;
-      }
-
-      .header-icon {
-        width: 50px;
-        height: 50px;
-        font-size: 1.3rem;
-        border-radius: 14px;
-      }
-
-      #scanResult {
-        font-size: 0.95rem;
-      }
-
-      .btn {
-        font-size: 0.9rem;
-        padding: 0.8rem;
-      }
-
-      .stat-card .stat-number {
-        font-size: 1.3rem;
-      }
-      
-      select {
-        font-size: 0.9rem;
-        padding: 0.75rem 0.9rem;
-      }
-    }
-
-    /* تابلت */
-    @media (min-width: 481px) {
-      .container {
-        max-width: 480px;
-      }
-      
-      .card {
-        padding: 2rem 1.8rem;
-      }
-    }
-
-    /* دعم notch */
-    @supports (padding: env(safe-area-inset-bottom)) {
-      body {
-        padding-bottom: calc(16px + var(--safe-bottom));
-      }
-    }
-
-    /* إخفاء عناصر HTML5 QR الافتراضية */
-    #reader__dashboard_section {
-      display: none !important;
-    }
-
-    #reader__scan_region {
-      border-radius: var(--radius-xs);
-    }
-    
-    #reader__scan_region img {
-      display: none;
+      body { padding: 10px; }
+      .card { padding: 1.2rem 0.9rem; }
+      .header h1 { font-size: 1.2rem; }
+      #scanResult { font-size: 0.95rem; }
+      .btn { font-size: 0.9rem; padding: 0.8rem; }
     }
   </style>
 </head>
 
 <body>
-
   <div class="container">
-
-    <!-- الهيدر -->
     <div class="header">
-      <div class="header-icon">
-        <i class="fas fa-qrcode"></i>
-      </div>
+      <div class="header-icon"><i class="fas fa-qrcode"></i></div>
       <h1>مسح الدعوات</h1>
       <p class="subtitle">بوابة تسجيل دخول الضيوف</p>
     </div>
 
-    <!-- البطاقة الرئيسية -->
     <div class="card">
-
-      <!-- اختيار المناسبة -->
       <div class="select-group">
-        <label>
-          <i class="fas fa-calendar-alt"></i> اختر المناسبة
-        </label>
+        <label><i class="fas fa-calendar-alt"></i> اختر المناسبة</label>
         <div class="select-wrapper">
           <i class="fas fa-chevron-down"></i>
           <select id="eventSelect"></select>
         </div>
       </div>
 
-      <!-- زر التشغيل -->
       <button id="scanBtn" type="button" class="btn btn-primary">
         <i class="fas fa-camera"></i> تشغيل الكاميرا
       </button>
 
-      <!-- منطقة الكاميرا -->
       <div id="reader"></div>
 
-      <!-- نتيجة المسح -->
       <div class="result-box" id="resultBox">
         <p id="scanResult">⏳ جاري تحميل المناسبات...</p>
       </div>
 
-      <!-- إحصائيات -->
       <div class="stats-row">
         <div class="stat-card">
           <div class="stat-number" id="totalGuests">0</div>
@@ -439,34 +201,18 @@
           <div class="stat-label">تم تسجيلهم</div>
         </div>
       </div>
-
     </div>
 
-    <!-- الفوتر -->
-    <div class="footer">
-      صنع بـ <i class="fas fa-heart"></i> نظام دعوات QR
-    </div>
-
+    <div class="footer">صنع بـ <i class="fas fa-heart"></i> نظام دعوات QR</div>
   </div>
 
-  <!-- مكتبة QR Scanner -->
   <script src="https://unpkg.com/html5-qrcode"></script>
-
   <script>
-    // ============================================
-    // إعدادات
-    // ============================================
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
-
-    let events = [];
-    let guests = [];
+    let events = [], guests = [];
     let currentEventId = localStorage.getItem("scanCurrentEventId") || "";
-    let scanner = null;
-    let paused = false;
+    let scanner = null, paused = false;
 
-    // ============================================
-    // عناصر DOM
-    // ============================================
     const eventSelect = document.getElementById("eventSelect");
     const scanBtn = document.getElementById("scanBtn");
     const scanResult = document.getElementById("scanResult");
@@ -474,154 +220,111 @@
     const totalGuestsEl = document.getElementById("totalGuests");
     const checkedInCountEl = document.getElementById("checkedInCount");
 
-    // ============================================
-    // وظائف الاتصال بـ Google Sheets
-    // ============================================
+    // ========== Toast Notification System ==========
+    function createToastContainer() {
+      const old = document.getElementById('toastContainer');
+      if (old) old.remove();
+      const c = document.createElement('div');
+      c.id = 'toastContainer';
+      document.body.appendChild(c);
+      return c;
+    }
+
+    function showToast(message, type = 'success', duration = 4000) {
+      const container = document.getElementById('toastContainer') || createToastContainer();
+      const colors = {
+        success: { bg: '#10b981', icon: '✅', border: '#059669' },
+        error: { bg: '#ef4444', icon: '❌', border: '#dc2626' },
+        warning: { bg: '#f59e0b', icon: '⚠️', border: '#d97706' },
+        info: { bg: '#3b82f6', icon: 'ℹ️', border: '#2563eb' }
+      };
+      const color = colors[type] || colors.info;
+
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        background: ${color.bg}; color: white; padding: 18px 22px;
+        border-radius: 16px; font-size: 1.1rem; font-weight: 700;
+        text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+        border: 2px solid ${color.border}; pointer-events: auto;
+        animation: slideDown 0.4s ease, fadeOut 0.4s ease ${duration - 400}ms forwards;
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; direction: rtl;
+        font-family: 'Cairo', 'Tajawal', sans-serif;
+      `;
+      toast.innerHTML = `<span style="font-size:1.5rem;">${color.icon}</span> ${message}`;
+      container.appendChild(toast);
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, duration);
+    }
+
     function callScript(params) {
       return new Promise((resolve, reject) => {
-        const callbackName = "callback_" + Date.now() + "_" + Math.floor(Math.random() * 999999);
-        params.callback = callbackName;
-        const query = new URLSearchParams(params).toString();
-        const script = document.createElement("script");
-
-        window[callbackName] = function(data) {
-          resolve(data);
-          delete window[callbackName];
-          script.remove();
-        };
-
-        script.onerror = function() {
-          reject();
-          delete window[callbackName];
-          script.remove();
-        };
-
-        script.src = SCRIPT_URL + "?" + query;
-        document.body.appendChild(script);
+        const cb = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 999999);
+        params.callback = cb;
+        const q = new URLSearchParams(params).toString();
+        const s = document.createElement("script");
+        window[cb] = d => { resolve(d); delete window[cb]; s.remove(); };
+        s.onerror = () => { reject(); delete window[cb]; s.remove(); };
+        s.src = SCRIPT_URL + "?" + q;
+        document.body.appendChild(s);
       });
     }
 
-    // ============================================
-    // تحميل المناسبات
-    // ============================================
     async function loadEvents() {
       try {
         const data = await callScript({ action: "events" });
-
-        if (data.status !== "success") {
-          showError("❌ فشل تحميل المناسبات");
-          return;
-        }
-
+        if (data.status !== "success") { showError("❌ فشل تحميل المناسبات"); return; }
         events = data.events || [];
-
         if (events.length === 0) {
-          eventSelect.innerHTML = '<option value="">لا توجد مناسبات مفعلة</option>';
-          showWarning("⚠️ لا توجد مناسبات ظاهرة للموظف");
+          eventSelect.innerHTML = '<option value="">لا توجد مناسبات</option>';
+          showWarning("⚠️ لا توجد مناسبات ظاهرة");
           return;
         }
-
         if (!currentEventId || !events.find(e => String(e.eventId) === String(currentEventId))) {
           currentEventId = events[0].eventId;
           localStorage.setItem("scanCurrentEventId", currentEventId);
         }
-
         renderEventSelect();
         await loadGuests();
-
-      } catch (error) {
-        showError("❌ فشل الاتصال بالخادم");
-      }
+      } catch (e) { showError("❌ فشل الاتصال"); }
     }
 
     function renderEventSelect() {
       eventSelect.innerHTML = "";
-
-      events.forEach(event => {
-        const option = document.createElement("option");
-        option.value = event.eventId;
-        option.textContent = `📌 ${event.eventName}`;
-
-        if (String(event.eventId) === String(currentEventId)) {
-          option.selected = true;
-        }
-
-        eventSelect.appendChild(option);
+      events.forEach(ev => {
+        const opt = document.createElement("option");
+        opt.value = ev.eventId;
+        opt.textContent = `📌 ${ev.eventName}`;
+        if (String(ev.eventId) === String(currentEventId)) opt.selected = true;
+        eventSelect.appendChild(opt);
       });
     }
 
-    // ============================================
-    // تحميل الضيوف
-    // ============================================
     async function loadGuests() {
-      if (!currentEventId) {
-        showWarning("⚠️ اختر مناسبة أولاً");
-        return;
-      }
-
+      if (!currentEventId) { showWarning("⚠️ اختر مناسبة"); return; }
       showLoading("⏳ جاري تحميل بيانات الضيوف...");
-
       try {
-        const data = await callScript({
-          action: "guests",
-          eventId: currentEventId
-        });
-
-        if (data.status !== "success") {
-          showError("❌ فشل تحميل بيانات الضيوف");
-          return;
-        }
-
+        const data = await callScript({ action: "guests", eventId: currentEventId });
+        if (data.status !== "success") { showError("❌ فشل التحميل"); return; }
         guests = data.guests || [];
-
         const checkedIn = guests.filter(g => g.checkedIn).length;
-
         showSuccess("✅ جاهز للمسح");
         totalGuestsEl.textContent = guests.length;
         checkedInCountEl.textContent = checkedIn;
-
-      } catch (error) {
-        showError("❌ فشل الاتصال بالخادم");
-      }
+      } catch (e) { showError("❌ فشل الاتصال"); }
     }
 
-    // ============================================
-    // تحليل نص QR
-    // ============================================
     function parseQrText(text) {
-      const value = String(text || "").trim();
-
-      if (value.includes("|")) {
-        const parts = value.split("|");
-        return {
-          eventId: parts[0],
-          guestId: parts[1]
-        };
-      }
-
-      return {
-        eventId: currentEventId,
-        guestId: value
-      };
+      const v = String(text || "").trim();
+      if (v.includes("|")) { const p = v.split("|"); return { eventId: p[0], guestId: p[1] }; }
+      return { eventId: currentEventId, guestId: v };
     }
 
-    // ============================================
-    // تشغيل الكاميرا
-    // ============================================
     function startScanner() {
-      if (!currentEventId) {
-        showWarning("⚠️ اختر مناسبة أولاً");
-        return;
-      }
-
-      if (scanner) {
-        showWarning("⚠️ الكاميرا تعمل بالفعل");
-        return;
-      }
+      if (!currentEventId) { showToast("⚠️ اختر مناسبة أولاً", "warning"); return; }
+      if (scanner) { showToast("⚠️ الكاميرا تعمل بالفعل", "warning"); return; }
 
       scanBtn.disabled = true;
       scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التشغيل...';
-
       scanner = new Html5Qrcode("reader");
 
       scanner.start(
@@ -631,13 +334,9 @@
           if (paused) return;
           paused = true;
           checkGuest(qrText);
-          setTimeout(() => {
-            paused = false;
-          }, 3000);
+          setTimeout(() => { paused = false; }, 3500);
         },
-        error => {
-          // أخطاء المسح المستمرة – لا نعرضها للمستخدم
-        }
+        () => {}
       ).then(() => {
         scanBtn.innerHTML = '<i class="fas fa-check-circle"></i> الكاميرا تعمل';
         scanBtn.className = 'btn btn-success';
@@ -651,170 +350,57 @@
       });
     }
 
-    // ============================================
-    // فحص الضيف
-    // ============================================
     async function checkGuest(qrText) {
       const parsed = parseQrText(qrText);
-
-      // التحقق من المناسبة
       if (String(parsed.eventId) !== String(currentEventId)) {
-        showError("❌ هذا QR تابع لمناسبة أخرى");
-        playErrorSound();
-        animateError();
-        return;
+        showToast("❌ هذا QR تابع لمناسبة أخرى", "error");
+        showError("❌ QR تابع لمناسبة أخرى");
+        playErrorSound(); return;
       }
-
-      // البحث عن الضيف
       const guest = guests.find(g => String(g.id) === String(parsed.guestId));
-
       if (!guest) {
-        showError("❌ QR غير معروف لهذه المناسبة");
-        playErrorSound();
-        animateError();
-        return;
+        showToast("❌ QR غير معروف", "error");
+        showError("❌ QR غير معروف"); playErrorSound(); return;
       }
-
-      // التحقق من التسجيل المسبق
       if (guest.checkedIn) {
-        showWarning(`⚠️ ${guest.name} تم تسجيله مسبقًا`);
-        playErrorSound();
-        animateError();
-        return;
+        showToast(`⚠️ ${guest.name} تم تسجيله مسبقاً`, "warning");
+        showWarning(`⚠️ ${guest.name} مكرر`); playErrorSound(); return;
       }
 
-      const time = new Date().toLocaleString("ar-SA", {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true
-      });
-
-      // تسجيل الدخول
+      const time = new Date().toLocaleString("ar-SA", { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
       try {
-        const data = await callScript({
-          action: "attendance",
-          eventId: currentEventId,
-          id: guest.id,
-          name: guest.name,
-          phone: guest.phone,
-          time: time
-        });
-
+        const data = await callScript({ action:"attendance", eventId:currentEventId, id:guest.id, name:guest.name, phone:guest.phone, time });
         if (data.status === "duplicate") {
-          showWarning(`⚠️ ${guest.name} تم تسجيله مسبقًا`);
-          playErrorSound();
-          animateError();
-          return;
+          showToast(`⚠️ ${guest.name} مكرر`, "warning");
+          showWarning(`⚠️ ${guest.name} مكرر`); playErrorSound(); return;
         }
-
         if (data.status === "success") {
-          showSuccess(`✅ أهلاً ${guest.name}`);
+          showToast(`✅ أهلاً وسهلاً ${guest.name}`, "success", 5000);
+          showSuccess(`✅ تم تسجيل ${guest.name}`);
           playSuccessSound();
-          animateSuccess();
-          await loadGuests();
-          return;
+          await loadGuests(); return;
         }
-
-        showError("❌ حدث خطأ أثناء التسجيل");
-        playErrorSound();
-        animateError();
-
-      } catch (error) {
-        showError("❌ فشل الاتصال بالخادم");
-        playErrorSound();
-        animateError();
-      }
+        showToast("❌ خطأ في التسجيل", "error"); playErrorSound();
+      } catch (e) { showToast("❌ فشل الاتصال", "error"); playErrorSound(); }
     }
 
-    // ============================================
-    // المؤثرات الصوتية
-    // ============================================
-    function playSuccessSound() {
-      try {
-        const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
-        audio.volume = 0.5;
-        audio.play().catch(() => {});
-      } catch (e) {}
-    }
+    function playSuccessSound() { try { new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg").play().catch(()=>{}); } catch(e){} }
+    function playErrorSound() { try { new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg").play().catch(()=>{}); } catch(e){} }
 
-    function playErrorSound() {
-      try {
-        const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg");
-        audio.volume = 0.5;
-        audio.play().catch(() => {});
-      } catch (e) {}
-    }
+    function showSuccess(m) { scanResult.textContent = m; scanResult.style.color = "#065f46"; resultBox.style.background = "#d1fae5"; }
+    function showError(m) { scanResult.textContent = m; scanResult.style.color = "#991b1b"; resultBox.style.background = "#fee2e2"; }
+    function showWarning(m) { scanResult.textContent = m; scanResult.style.color = "#92400e"; resultBox.style.background = "#fef3c7"; }
+    function showLoading(m) { scanResult.textContent = m; scanResult.style.color = "#1e40af"; resultBox.style.background = "#dbeafe"; }
 
-    // ============================================
-    // تأثيرات بصرية
-    // ============================================
-    function animateSuccess() {
-      resultBox.classList.add("success-animation");
-      setTimeout(() => resultBox.classList.remove("success-animation"), 600);
-    }
-
-    function animateError() {
-      resultBox.classList.add("error-animation");
-      setTimeout(() => resultBox.classList.remove("error-animation"), 500);
-    }
-
-    // ============================================
-    // عرض الرسائل
-    // ============================================
-    function showSuccess(message) {
-      scanResult.textContent = message;
-      scanResult.style.color = "#065f46";
-      resultBox.style.background = "#d1fae5";
-    }
-
-    function showError(message) {
-      scanResult.textContent = message;
-      scanResult.style.color = "#991b1b";
-      resultBox.style.background = "#fee2e2";
-    }
-
-    function showWarning(message) {
-      scanResult.textContent = message;
-      scanResult.style.color = "#92400e";
-      resultBox.style.background = "#fef3c7";
-    }
-
-    function showLoading(message) {
-      scanResult.textContent = message;
-      scanResult.style.color = "#1e40af";
-      resultBox.style.background = "#dbeafe";
-    }
-
-    // ============================================
-    // الأحداث
-    // ============================================
     eventSelect.onchange = async function() {
       currentEventId = eventSelect.value;
       localStorage.setItem("scanCurrentEventId", currentEventId);
-      
-      // إيقاف الكاميرا عند تغيير المناسبة
-      if (scanner) {
-        scanner.stop().then(() => {
-          scanner = null;
-          scanBtn.disabled = false;
-          scanBtn.innerHTML = '<i class="fas fa-camera"></i> تشغيل الكاميرا';
-          scanBtn.className = 'btn btn-primary';
-        }).catch(() => {
-          scanner = null;
-        });
-      }
-      
+      if (scanner) { scanner.stop().then(()=>{scanner=null;scanBtn.disabled=false;scanBtn.innerHTML='<i class="fas fa-camera"></i> تشغيل الكاميرا';scanBtn.className='btn btn-primary';}).catch(()=>{scanner=null;}); }
       await loadGuests();
     };
 
     scanBtn.onclick = startScanner;
-
-    // ============================================
-    // بدء التطبيق
-    // ============================================
     loadEvents();
   </script>
-
 </body>
 </html>
