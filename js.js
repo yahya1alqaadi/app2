@@ -29,6 +29,14 @@ const inviteImage = document.getElementById("inviteImage");
 const nameBox = document.getElementById("nameBox");
 const qrBox = document.getElementById("qrBox");
 
+const fontFamily = document.getElementById("fontFamily");
+const fontSize = document.getElementById("fontSize");
+const fontColor = document.getElementById("fontColor");
+const qrColor = document.getElementById("qrColor");
+const fontWeight = document.getElementById("fontWeight");
+const pickFontColorBtn = document.getElementById("pickFontColorBtn");
+const pickQrColorBtn = document.getElementById("pickQrColorBtn");
+
 const scanResult = document.getElementById("scanResult");
 
 if (uploadedImage && inviteImage) {
