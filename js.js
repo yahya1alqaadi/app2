@@ -1,8 +1,7 @@
 let guests = JSON.parse(localStorage.getItem("guests")) || [];
 let uploadedImage = localStorage.getItem("uploadedImage") || "";
-let attendance = JSON.parse(localStorage.getItem("attendance")) || [];
 
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycby_5Hs7hJiy4L3xG4TB3cBZ_oI8yVHkxaqkYVpF7zdG58-NKWdb5a5qemjMIJ4XZGyOsw/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7foR3g7hHaornI7jOeF_qTpcnr-nBJe_l3RQZtMzB0tILEryqIBq8-5Achwgj2xygaQ/exec";
 
 let scanner = null;
 let isScanningPaused = false;
@@ -15,48 +14,49 @@ const scanBtn = document.getElementById("scanBtn");
 
 const guestTable = document.getElementById("guestTable");
 const invitationTable = document.getElementById("invitationTable");
-const attendanceTable = document.getElementById("attendanceTable");
 
 const inviteUpload = document.getElementById("inviteUpload");
 const inviteImage = document.getElementById("inviteImage");
-const editor = document.getElementById("editor");
 const nameBox = document.getElementById("nameBox");
 const qrBox = document.getElementById("qrBox");
 
 const scanResult = document.getElementById("scanResult");
 
-if (uploadedImage) inviteImage.src = uploadedImage;
+if (uploadedImage) {
+  inviteImage.src = uploadedImage;
+}
+
+function callScript(params) {
+  return new Promise((resolve, reject) => {
+    const callbackName = "callback_" + Date.now() + "_" + Math.floor(Math.random() * 999999);
+
+    params.callback = callbackName;
+
+    const query = new URLSearchParams(params).toString();
+    const script = document.createElement("script");
+
+    window[callbackName] = function (data) {
+      resolve(data);
+      delete window[callbackName];
+      script.remove();
+    };
+
+    script.onerror = function () {
+      reject();
+      delete window[callbackName];
+      script.remove();
+    };
+
+    script.src = SCRIPT_URL + "?" + query;
+    document.body.appendChild(script);
+  });
+}
 
 function saveGuests() {
   localStorage.setItem("guests", JSON.stringify(guests));
 }
 
-function saveAttendance() {
-  localStorage.setItem("attendance", JSON.stringify(attendance));
-}
-
-function playSuccessSound() {
-  const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
-  audio.play();
-}
-
-function playErrorSound() {
-  const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg");
-  audio.play();
-}
-
-function sendAttendanceToGoogleSheet(row) {
-  fetch(GOOGLE_SHEET_URL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(row)
-  });
-}
-
-function addGuest() {
+async function addGuest() {
   const name = guestName.value.trim();
   const phone = guestPhone.value.trim();
 
@@ -67,20 +67,45 @@ function addGuest() {
 
   const guest = {
     id: "GUEST-" + Date.now() + "-" + Math.floor(Math.random() * 999999),
-    name,
-    phone,
+    name: name,
+    phone: phone,
     checkedIn: false,
     invitation: ""
   };
 
-  guests.push(guest);
-  saveGuests();
+  addGuestBtn.disabled = true;
+  addGuestBtn.textContent = "جاري الإضافة...";
 
-  guestName.value = "";
-  guestPhone.value = "";
+  try {
+    const result = await callScript({
+      action: "addGuest",
+      id: guest.id,
+      name: guest.name,
+      phone: guest.phone
+    });
 
-  renderGuests();
-  previewGuest(guest);
+    if (result.status !== "success" && result.status !== "duplicate") {
+      alert("حدث خطأ أثناء إضافة الضيف في الشيت");
+      return;
+    }
+
+    guests.push(guest);
+    saveGuests();
+
+    guestName.value = "";
+    guestPhone.value = "";
+
+    renderGuests();
+    previewGuest(guest);
+
+    alert("تم إضافة الضيف في الموقع والشيت ✅");
+
+  } catch (error) {
+    alert("فشل الاتصال بالشيت. تأكد من رابط Apps Script أو الإنترنت.");
+  } finally {
+    addGuestBtn.disabled = false;
+    addGuestBtn.textContent = "إضافة الضيف";
+  }
 }
 
 function previewGuest(guest) {
@@ -121,7 +146,6 @@ function renderGuests() {
   });
 
   renderInvitationTable();
-  updateAttendanceCount();
 }
 
 function renderInvitationTable() {
@@ -146,37 +170,22 @@ function renderInvitationTable() {
   });
 }
 
-function renderAttendance() {
-  if (!attendanceTable) return;
+async function deleteGuest(index) {
+  const guest = guests[index];
 
-  attendanceTable.innerHTML = "";
+  const ok = confirm("هل تريد حذف هذا الضيف؟");
+  if (!ok) return;
 
-  attendance.forEach(row => {
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${row.name}</td>
-      <td>${row.phone}</td>
-      <td>${row.time}</td>
-    `;
-
-    attendanceTable.appendChild(tr);
-  });
-
-  updateAttendanceCount();
-}
-
-function deleteGuest(index) {
-  const guestId = guests[index].id;
+  try {
+    await callScript({
+      action: "deleteGuest",
+      id: guest.id
+    });
+  } catch (error) {}
 
   guests.splice(index, 1);
-  attendance = attendance.filter(item => item.id !== guestId);
-
   saveGuests();
-  saveAttendance();
-
   renderGuests();
-  renderAttendance();
 }
 
 inviteUpload.addEventListener("change", function (e) {
@@ -251,13 +260,23 @@ async function generateInvitations() {
     return;
   }
 
+  if (guests.length === 0) {
+    alert("أضف ضيوف أولاً");
+    return;
+  }
+
   const baseImage = new Image();
   baseImage.src = uploadedImage;
 
-  await new Promise(r => baseImage.onload = r);
+  await new Promise(resolve => {
+    baseImage.onload = resolve;
+  });
 
   const namePos = getPositionOnImage(nameBox, baseImage.width, baseImage.height);
   const qrPos = getPositionOnImage(qrBox, baseImage.width, baseImage.height);
+
+  generateBtn.disabled = true;
+  generateBtn.textContent = "جاري توليد الدعوات...";
 
   for (const guest of guests) {
     const canvas = document.createElement("canvas");
@@ -279,6 +298,7 @@ async function generateInvitations() {
     );
 
     const qrImage = await createQrImage(guest.id);
+
     ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
 
     guest.invitation = canvas.toDataURL("image/png");
@@ -286,6 +306,9 @@ async function generateInvitations() {
 
   saveGuests();
   renderGuests();
+
+  generateBtn.disabled = false;
+  generateBtn.textContent = "توليد الدعوات";
 
   alert("تم توليد الدعوات بنجاح ✨");
 }
@@ -308,10 +331,14 @@ function makeDraggable(el) {
     el.style.top = (e.clientY - offsetY) + "px";
   });
 
-  document.addEventListener("mouseup", () => dragging = false);
+  document.addEventListener("mouseup", () => {
+    dragging = false;
+  });
 }
 
 function startScanner() {
+  if (!scanBtn) return;
+
   if (scanner) {
     scanResult.textContent = "الكاميرا تعمل بالفعل";
     return;
@@ -322,155 +349,75 @@ function startScanner() {
   scanner.start(
     { facingMode: "environment" },
     { fps: 10, qrbox: 250 },
-    txt => {
+    qrText => {
       if (isScanningPaused) return;
 
       isScanningPaused = true;
-      checkInGuest(txt);
+      checkInGuest(qrText);
 
       setTimeout(() => {
         isScanningPaused = false;
-      }, 2500);
+      }, 3000);
     },
     error => {}
   ).catch(() => {
-    scanResult.textContent = "لم يتم تشغيل الكاميرا، تأكد من السماح باستخدام الكاميرا";
+    scanResult.textContent = "لم يتم تشغيل الكاميرا ❌";
     scanner = null;
   });
 }
 
-function checkInGuest(id) {
-  const guest = guests.find(g => g.id === id);
+async function checkInGuest(id) {
+  const guest = guests.find(g => String(g.id) === String(id));
 
   if (!guest) {
     scanResult.textContent = "QR غير معروف ❌";
-    playErrorSound();
+    scanResult.style.color = "red";
     return;
   }
 
-  if (guest.checkedIn) {
-    scanResult.textContent = `مكرر ❌ ${guest.name} تم تسجيل دخوله مسبقًا`;
-    playErrorSound();
-    return;
+  const time = new Date().toLocaleString("ar-SA");
+
+  try {
+    const result = await callScript({
+      action: "attendance",
+      id: guest.id,
+      name: guest.name,
+      phone: guest.phone,
+      time: time
+    });
+
+    if (result.status === "duplicate") {
+      scanResult.textContent = `مكرر ❌ ${guest.name} تم تسجيله مسبقًا`;
+      scanResult.style.color = "red";
+      return;
+    }
+
+    if (result.status === "success") {
+      guest.checkedIn = true;
+      saveGuests();
+      renderGuests();
+
+      scanResult.textContent = `تم تسجيل دخول ${guest.name} ✅`;
+      scanResult.style.color = "green";
+      return;
+    }
+
+    scanResult.textContent = "حدث خطأ أثناء التسجيل ❌";
+    scanResult.style.color = "red";
+  } catch (error) {
+    scanResult.textContent = "فشل الاتصال بالشيت ❌";
+    scanResult.style.color = "red";
   }
-
-  guest.checkedIn = true;
-
-  const row = {
-    name: guest.name,
-    phone: guest.phone,
-    id: guest.id,
-    time: new Date().toLocaleString("ar-SA")
-  };
-
-  attendance.push(row);
-
-  saveGuests();
-  saveAttendance();
-
-  renderGuests();
-  renderAttendance();
-
-  sendAttendanceToGoogleSheet(row);
-
-  scanResult.textContent = `تم تسجيل دخول ${guest.name} ✅`;
-  playSuccessSound();
-}
-
-function downloadAttendance() {
-  if (attendance.length === 0) {
-    alert("لا يوجد حضور حتى الآن");
-    return;
-  }
-
-  let csv = "الاسم,الجوال,رقم QR,وقت الحضور\n";
-
-  attendance.forEach(row => {
-    csv += `"${row.name}","${row.phone}","${row.id}","${row.time}"\n`;
-  });
-
-  const blob = new Blob(["\uFEFF" + csv], {
-    type: "text/csv;charset=utf-8;"
-  });
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-
-  a.href = url;
-  a.download = "كشف-الحضور.csv";
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
-
-function clearAttendance() {
-  const ok = confirm("هل أنت متأكد من تصفير الحضور؟ سيتم حذف سجل الحضور من الموقع فقط.");
-
-  if (!ok) return;
-
-  attendance = [];
-
-  guests.forEach(guest => {
-    guest.checkedIn = false;
-  });
-
-  saveGuests();
-  saveAttendance();
-
-  renderGuests();
-  renderAttendance();
-
-  scanResult.textContent = "تم تصفير الحضور ✅";
-}
-
-function updateAttendanceCount() {
-  const countBox = document.getElementById("attendanceCountBox");
-
-  if (countBox) {
-    countBox.textContent = `عدد الحضور: ${attendance.length}`;
-  }
-}
-
-function createControlButtons() {
-  if (!scanResult) return;
-
-  const box = document.createElement("div");
-  box.style.marginTop = "15px";
-  box.style.display = "flex";
-  box.style.gap = "10px";
-  box.style.flexWrap = "wrap";
-
-  const count = document.createElement("p");
-  count.id = "attendanceCountBox";
-  count.style.fontWeight = "bold";
-  count.textContent = `عدد الحضور: ${attendance.length}`;
-
-  const downloadBtn = document.createElement("button");
-  downloadBtn.type = "button";
-  downloadBtn.textContent = "تحميل كشف الحضور Excel";
-  downloadBtn.onclick = downloadAttendance;
-
-  const clearBtn = document.createElement("button");
-  clearBtn.type = "button";
-  clearBtn.textContent = "تصفير الحضور";
-  clearBtn.style.background = "#b91c1c";
-  clearBtn.style.color = "#fff";
-  clearBtn.onclick = clearAttendance;
-
-  box.appendChild(downloadBtn);
-  box.appendChild(clearBtn);
-
-  scanResult.insertAdjacentElement("afterend", box);
-  box.insertAdjacentElement("beforebegin", count);
 }
 
 addGuestBtn.onclick = addGuest;
 generateBtn.onclick = generateInvitations;
-scanBtn.onclick = startScanner;
+
+if (scanBtn) {
+  scanBtn.onclick = startScanner;
+}
 
 makeDraggable(nameBox);
 makeDraggable(qrBox);
 
-createControlButtons();
 renderGuests();
-renderAttendance();
