@@ -585,7 +585,9 @@ function createQrImage(text) {
     new QRCode(tempDiv, {
       text: text,
       width: 600,
-      height: 600
+      height: 600,
+      colorDark: qrColor ? qrColor.value : "#000000",
+      colorLight: "#ffffff"
     });
 
     setTimeout(() => {
@@ -613,7 +615,6 @@ function createQrImage(text) {
     }, 200);
   });
 }
-
 async function generateInvitations() {
   try {
     if (!uploadedImage) {
