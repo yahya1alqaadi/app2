@@ -19,7 +19,7 @@ const inviteUpload = document.getElementById("inviteUpload");
 const inviteImage = document.getElementById("inviteImage");
 const nameBox = document.getElementById("nameBox");
 const qrBox = document.getElementById("qrBox");
-
+const downloadAllBtn = document.getElementById("downloadAllBtn");
 const scanResult = document.getElementById("scanResult");
 
 if (uploadedImage) {
@@ -524,7 +524,39 @@ generateBtn.onclick = generateInvitations;
 if (scanBtn) {
   scanBtn.onclick = startScanner;
 }
+async function downloadAllInvitations() {
+  const guestsWithInvitations = guests.filter(guest => guest.invitation);
 
+  if (guestsWithInvitations.length === 0) {
+    alert("لا توجد دعوات مولدة. اضغط أولاً على توليد الدعوات.");
+    return;
+  }
+
+  const zip = new JSZip();
+
+  guestsWithInvitations.forEach(guest => {
+    const base64Data = guest.invitation.split(",")[1];
+    const safeName = guest.name.replace(/[\\/:*?"<>|]/g, "-");
+
+    zip.file(`دعوة-${safeName}.png`, base64Data, {
+      base64: true
+    });
+  });
+
+  const content = await zip.generateAsync({
+    type: "blob"
+  });
+
+  const url = URL.createObjectURL(content);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = "كل-الدعوات.zip";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+downloadAllBtn.onclick = downloadAllInvitations;
 makeDraggable(nameBox);
 makeDraggable(qrBox);
 
