@@ -661,10 +661,15 @@ async function generateInvitations() {
 
       ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
-      ctx.font = "bold 40px Arial";
-      ctx.fillStyle = "#000";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
+const selectedFontFamily = fontFamily ? fontFamily.value : "Arial";
+const selectedFontSize = fontSize ? Number(fontSize.value || 40) : 40;
+const selectedFontColor = fontColor ? fontColor.value : "#000000";
+const selectedFontWeight = fontWeight ? fontWeight.value : "bold";
+
+ctx.font = `${selectedFontWeight} ${selectedFontSize}px ${selectedFontFamily}`;
+ctx.fillStyle = selectedFontColor;
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
 
       ctx.fillText(
         guest.name,
@@ -888,5 +893,64 @@ if (scanBtn) {
 
 makeDraggable(nameBox);
 makeDraggable(qrBox);
+function updateNamePreviewStyle() {
+  if (!nameBox) return;
 
+  if (fontFamily) nameBox.style.fontFamily = fontFamily.value;
+  if (fontSize) nameBox.style.fontSize = fontSize.value + "px";
+  if (fontColor) nameBox.style.color = fontColor.value;
+  if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
+}
+
+function refreshQrPreview() {
+  if (guests.length > 0) {
+    previewGuest(guests[0]);
+  }
+}
+
+[fontFamily, fontSize, fontColor, fontWeight].forEach(input => {
+  if (!input) return;
+
+  input.addEventListener("input", () => {
+    updateNamePreviewStyle();
+  });
+});
+
+if (qrColor) {
+  qrColor.addEventListener("input", () => {
+    refreshQrPreview();
+  });
+}
+
+async function pickColor(targetInput) {
+  if (!window.EyeDropper) {
+    alert("أداة اختيار اللون من الصورة غير مدعومة في هذا المتصفح. جرّب Chrome أو Edge.");
+    return;
+  }
+
+  try {
+    const eyeDropper = new EyeDropper();
+    const result = await eyeDropper.open();
+
+    targetInput.value = result.sRGBHex;
+
+    updateNamePreviewStyle();
+    refreshQrPreview();
+
+  } catch (error) {
+    console.log("تم إلغاء اختيار اللون");
+  }
+}
+
+if (pickFontColorBtn) {
+  pickFontColorBtn.onclick = function () {
+    pickColor(fontColor);
+  };
+}
+
+if (pickQrColorBtn) {
+  pickQrColorBtn.onclick = function () {
+    pickColor(qrColor);
+  };
+}
 loadEvents();
