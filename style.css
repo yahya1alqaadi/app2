@@ -1,0 +1,122 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  color: #222;
+}
+
+header {
+  background: #111827;
+  color: white;
+  padding: 25px;
+  text-align: center;
+}
+
+main {
+  width: 95%;
+  max-width: 1100px;
+  margin: 25px auto;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 14px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+input, button {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+.danger {
+  background: #dc2626;
+}
+
+.editor {
+  position: relative;
+  width: 400px;
+  max-width: 100%;
+  min-height: 500px;
+  border: 2px dashed #aaa;
+  margin-top: 15px;
+  overflow: hidden;
+  background: #eee;
+}
+
+#inviteImage {
+  width: 100%;
+  display: block;
+}
+
+.draggable {
+  position: absolute;
+  top: 80px;
+  left: 80px;
+  padding: 8px 15px;
+  background: rgba(255,255,255,0.8);
+  border: 2px dashed #2563eb;
+  cursor: move;
+  font-weight: bold;
+  user-select: none;
+}
+
+.qr-placeholder {
+  top: 160px;
+  width: 100px;
+  height: 100px;
+  display: grid;
+  place-items: center;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border-bottom: 1px solid #ddd;
+  padding: 12px;
+  text-align: center;
+}
+
+#reader {
+  width: 320px;
+  max-width: 100%;
+  margin-top: 15px;
+}
+
+.success {
+  color: green;
+  font-weight: bold;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+}

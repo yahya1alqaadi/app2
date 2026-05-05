@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نظام دعوات QR</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header>
+    <h1>نظام دعوات QR</h1>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>إضافة ضيف</h2>
+      <div class="form">
+        <input id="guestName" type="text" placeholder="اسم الضيف" />
+        <input id="guestPhone" type="text" placeholder="رقم الجوال" />
+        <button id="addGuestBtn" type="button">إضافة الضيف</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>تصميم الدعوة</h2>
+
+      <input id="inviteUpload" type="file" accept="image/*" />
+
+      <div class="editor" id="editor">
+        <img id="inviteImage" alt="تصميم الدعوة" />
+        <div id="nameBox" class="draggable">اسم الضيف</div>
+        <div id="qrBox" class="draggable qr-placeholder">QR</div>
+      </div>
+
+      <button id="generateBtn" type="button">توليد الدعوات</button>
+    </section>
+
+    <section class="card">
+      <h2>قائمة الضيوف</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>الاسم</th>
+            <th>الجوال</th>
+            <th>الحالة</th>
+            <th>الدعوة</th>
+            <th>حذف</th>
+          </tr>
+        </thead>
+        <tbody id="guestTable"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>الدعوات المولدة</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>الضيف</th>
+            <th>معاينة الدعوة</th>
+            <th>تحميل</th>
+          </tr>
+        </thead>
+        <tbody id="invitationTable"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>تسجيل الدخول بالمسح</h2>
+      <button id="scanBtn" type="button">تشغيل الكاميرا</button>
+      <div id="reader"></div>
+      <p id="scanResult"></p>
+    </section>
+  </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="js.js"></script>
+</body>
+</html>

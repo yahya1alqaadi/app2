@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مسح الدعوات</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      padding: 20px;
+      direction: rtl;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 18px;
+      border: 0;
+      border-radius: 10px;
+      background: #111827;
+      color: white;
+      cursor: pointer;
+    }
+
+    #reader {
+      margin-top: 15px;
+    }
+
+    #scanResult {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    #countBox {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    <h1>مسح الدعوات</h1>
+    <button id="scanBtn" type="button">تشغيل الكاميرا</button>
+    <div id="reader"></div>
+    <p id="scanResult">جاري تحميل بيانات الضيوف...</p>
+    <p id="countBox">عدد الضيوف: 0</p>
+  </div>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7foR3g7hHaornI7jOeF_qTpcnr-nBJe_l3RQZtMzB0tILEryqIBq8-5Achwgj2xygaQ/exec";
+
+    let guests = [];
+    let scanner = null;
+    let paused = false;
+
+    const scanBtn = document.getElementById("scanBtn");
+    const scanResult = document.getElementById("scanResult");
+    const countBox = document.getElementById("countBox");
+
+    async function loadGuests() {
+      try {
+        const res = await fetch(SCRIPT_URL + "?action=guests");
+        const data = await res.json();
+
+        guests = data.guests || [];
+
+        scanResult.textContent = "جاهز للمسح ✅";
+        scanResult.style.color = "green";
+        countBox.textContent = "عدد الضيوف: " + guests.length;
+      } catch (error) {
+        scanResult.textContent = "فشل تحميل بيانات الضيوف ❌";
+        scanResult.style.color = "red";
+      }
+    }
+
+    function startScanner() {
+      if (scanner) {
+        scanResult.textContent = "الكاميرا تعمل بالفعل";
+        return;
+      }
+
+      scanner = new Html5Qrcode("reader");
+
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        qrText => {
+          if (paused) return;
+
+          paused = true;
+          checkGuest(qrText);
+
+          setTimeout(() => {
+            paused = false;
+          }, 3000);
+        },
+        error => {}
+      ).catch(() => {
+        scanResult.textContent = "لم يتم تشغيل الكاميرا ❌";
+        scanResult.style.color = "red";
+        scanner = null;
+      });
+    }
+
+    async function checkGuest(id) {
+      const guest = guests.find(g => String(g.id) === String(id));
+
+      if (!guest) {
+        scanResult.textContent = "QR غير معروف ❌";
+        scanResult.style.color = "red";
+        playErrorSound();
+        return;
+      }
+
+      const time = new Date().toLocaleString("ar-SA");
+
+      const url =
+        SCRIPT_URL +
+        "?action=attendance" +
+        "&id=" + encodeURIComponent(guest.id) +
+        "&name=" + encodeURIComponent(guest.name) +
+        "&phone=" + encodeURIComponent(guest.phone) +
+        "&time=" + encodeURIComponent(time);
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.status === "duplicate") {
+          scanResult.textContent = "مكرر ❌ " + guest.name + " تم تسجيله مسبقًا";
+          scanResult.style.color = "red";
+          playErrorSound();
+          return;
+        }
+
+        if (data.status === "success") {
+          scanResult.textContent = "تم تسجيل دخول " + guest.name + " ✅";
+          scanResult.style.color = "green";
+          playSuccessSound();
+          return;
+        }
+
+        scanResult.textContent = "حدث خطأ أثناء التسجيل ❌";
+        scanResult.style.color = "red";
+        playErrorSound();
+
+      } catch (error) {
+        scanResult.textContent = "فشل الاتصال بالشيت ❌";
+        scanResult.style.color = "red";
+        playErrorSound();
+      }
+    }
+
+    function playSuccessSound() {
+      const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+      audio.play();
+    }
+
+    function playErrorSound() {
+      const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg");
+      audio.play();
+    }
+
+    scanBtn.onclick = startScanner;
+
+    loadGuests();
+  </script>
+
+</body>
+</html>
