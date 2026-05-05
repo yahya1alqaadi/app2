@@ -148,7 +148,35 @@
         <h2>تصميم الدعوة</h2>
 
         <input id="inviteUpload" type="file" accept="image/*" />
+<div class="form" style="margin-top:10px;">
+  <select id="fontFamily">
+    <option value="Arial">Arial</option>
+    <option value="Tahoma">Tahoma</option>
+    <option value="Times New Roman">Times New Roman</option>
+    <option value="Cairo">Cairo</option>
+  </select>
 
+  <input id="fontSize" type="number" value="40" min="10" max="150" placeholder="حجم الخط" />
+
+  <label>
+    لون النص
+    <input id="fontColor" type="color" value="#000000" />
+  </label>
+
+  <button id="pickFontColorBtn" type="button">اختيار لون النص من الصورة</button>
+
+  <label>
+    لون QR
+    <input id="qrColor" type="color" value="#000000" />
+  </label>
+
+  <button id="pickQrColorBtn" type="button">اختيار لون QR من الصورة</button>
+
+  <select id="fontWeight">
+    <option value="normal">عادي</option>
+    <option value="bold" selected>عريض</option>
+  </select>
+</div>
         <div class="editor" id="editor">
           <img id="inviteImage" alt="تصميم الدعوة" />
           <div id="nameBox" class="draggable">اسم الضيف</div>
