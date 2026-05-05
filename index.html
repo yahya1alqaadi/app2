@@ -26,10 +26,6 @@
       text-align: center;
     }
 
-    .login-box h2 {
-      margin-bottom: 20px;
-    }
-
     .login-box input {
       width: 100%;
       padding: 14px;
@@ -74,12 +70,34 @@
       padding: 10px 14px;
       cursor: pointer;
     }
+
+    .event-tools {
+      display: grid;
+      gap: 10px;
+    }
+
+    .event-tools select,
+    .event-tools input {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+    }
+
+    .event-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .event-buttons button {
+      flex: 1;
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- شاشة تسجيل الدخول -->
   <div id="loginScreen">
     <div class="login-box">
       <h2>دخول الإدارة</h2>
@@ -89,7 +107,6 @@
     </div>
   </div>
 
-  <!-- محتوى الإدارة -->
   <div id="adminContent">
 
     <button class="logout-btn" type="button" onclick="logoutAdmin()">خروج</button>
@@ -99,6 +116,25 @@
     </header>
 
     <main>
+
+      <section class="card">
+        <h2>إدارة المناسبات</h2>
+
+        <div class="event-tools">
+          <label>اختر المناسبة الحالية</label>
+          <select id="eventSelect"></select>
+
+          <input id="newEventName" type="text" placeholder="اسم مناسبة جديدة" />
+
+          <div class="event-buttons">
+            <button id="addEventBtn" type="button">إضافة مناسبة</button>
+            <button id="toggleEventBtn" type="button">إخفاء / إظهار للموظف</button>
+          </div>
+
+          <p id="eventStatus"></p>
+        </div>
+      </section>
+
       <section class="card">
         <h2>إضافة ضيف</h2>
         <div class="form">
@@ -119,8 +155,8 @@
           <div id="qrBox" class="draggable qr-placeholder">QR</div>
         </div>
 
-       <button id="generateBtn" type="button">توليد الدعوات</button>
-<button id="downloadAllBtn" type="button">تحميل كل الدعوات مرة واحدة</button>
+        <button id="generateBtn" type="button">توليد الدعوات</button>
+        <button id="downloadAllBtn" type="button">تحميل كل الدعوات مرة واحدة</button>
       </section>
 
       <section class="card">
@@ -159,6 +195,7 @@
         <div id="reader"></div>
         <p id="scanResult"></p>
       </section>
+
     </main>
 
   </div>
