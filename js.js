@@ -135,7 +135,11 @@ async function addGuest() {
     guestPhone.value = "";
 
     await loadGuestsFromSheet();
-    previewGuest(guest);
+
+    const addedGuest = guests.find(g => g.id === guest.id);
+    if (addedGuest) {
+      previewGuest(addedGuest);
+    }
 
     alert("تم إضافة الضيف في الشيت ✅");
 
@@ -144,6 +148,50 @@ async function addGuest() {
   } finally {
     addGuestBtn.disabled = false;
     addGuestBtn.textContent = "إضافة الضيف";
+  }
+}
+
+async function editGuest(index) {
+  const guest = guests[index];
+
+  const newName = prompt("عدّل اسم الضيف:", guest.name);
+  if (newName === null) return;
+
+  const newPhone = prompt("عدّل رقم الجوال:", guest.phone);
+  if (newPhone === null) return;
+
+  const name = newName.trim();
+  const phone = newPhone.trim();
+
+  if (!name || !phone) {
+    alert("الاسم ورقم الجوال مطلوبة");
+    return;
+  }
+
+  try {
+    const result = await callScript({
+      action: "updateGuest",
+      id: guest.id,
+      name: name,
+      phone: phone
+    });
+
+    if (result.status !== "success") {
+      alert("لم يتم تعديل بيانات الضيف في الشيت");
+      return;
+    }
+
+    await loadGuestsFromSheet();
+
+    const updatedGuest = guests.find(g => g.id === guest.id);
+    if (updatedGuest) {
+      previewGuest(updatedGuest);
+    }
+
+    alert("تم تعديل بيانات الضيف ✅");
+
+  } catch (error) {
+    alert("فشل الاتصال بالشيت أثناء التعديل");
   }
 }
 
@@ -181,12 +229,20 @@ function renderGuests() {
       <td>${guest.phone}</td>
       <td>${guest.checkedIn ? "تم الدخول ✅" : "لم يدخل"}</td>
       <td>${guest.invitation ? "تم توليدها" : "لم تولد"}</td>
-      <td><button type="button">حذف</button></td>
+      <td>
+        <button type="button" class="edit-btn">تعديل</button>
+        <button type="button" class="delete-btn">حذف</button>
+      </td>
     `;
 
     row.addEventListener("click", () => previewGuest(guest));
 
-    row.querySelector("button").addEventListener("click", function (e) {
+    row.querySelector(".edit-btn").addEventListener("click", function (e) {
+      e.stopPropagation();
+      editGuest(index);
+    });
+
+    row.querySelector(".delete-btn").addEventListener("click", function (e) {
       e.stopPropagation();
       deleteGuest(index);
     });
