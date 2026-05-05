@@ -446,9 +446,8 @@ async function deleteGuest(index) {
 }
 
 function getQrText(guest) {
-  return String(currentEventId) + "|" + String(guest.id);
+  return String(guest.id);
 }
-
 function previewGuest(guest) {
   if (!guest) return;
 
