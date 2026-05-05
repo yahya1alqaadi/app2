@@ -619,16 +619,19 @@ async function generateInvitations() {
     generateBtn.disabled = true;
     generateBtn.textContent = "جاري توليد الدعوات...";
 
+    await new Promise(resolve => setTimeout(resolve, 300));
+
     const baseImage = new Image();
 
-    const imageLoaded = new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       baseImage.onload = resolve;
-      baseImage.onerror = reject;
+      baseImage.onerror = () => reject(new Error("فشل تحميل صورة التصميم"));
+      baseImage.src = uploadedImage;
     });
 
-    baseImage.src = uploadedImage;
-
-    await imageLoaded;
+    if (!baseImage.width || !baseImage.height) {
+      throw new Error("صورة التصميم غير صالحة");
+    }
 
     const namePos = getPositionOnImage(nameBox, baseImage.width, baseImage.height);
     const qrPos = getPositionOnImage(qrBox, baseImage.width, baseImage.height);
@@ -640,7 +643,7 @@ async function generateInvitations() {
       canvas.width = baseImage.width;
       canvas.height = baseImage.height;
 
-      ctx.drawImage(baseImage, 0, 0);
+      ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
       ctx.font = "bold 40px Arial";
       ctx.fillStyle = "#000";
@@ -653,10 +656,16 @@ async function generateInvitations() {
         namePos.y + namePos.h / 2
       );
 
-      const qrText = getQrText(guest);
+      const qrText = String(currentEventId) + "|" + String(guest.id);
       const qrImage = await createQrImage(qrText);
 
-      ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
+      ctx.drawImage(
+        qrImage,
+        qrPos.x,
+        qrPos.y,
+        qrPos.w,
+        qrPos.h
+      );
 
       guest.invitation = canvas.toDataURL("image/png");
     }
@@ -666,8 +675,8 @@ async function generateInvitations() {
     alert("تم توليد الدعوات بنجاح ✨");
 
   } catch (error) {
-    console.log("خطأ في توليد الدعوات:", error);
-    alert("حدث خطأ أثناء توليد الدعوات. جرّب رفع التصميم مرة ثانية.");
+    console.log("خطأ توليد الدعوات:", error);
+    alert("سبب الخطأ: " + (error.message || error));
   } finally {
     generateBtn.disabled = false;
     generateBtn.textContent = "توليد الدعوات";
