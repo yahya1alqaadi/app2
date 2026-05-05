@@ -655,7 +655,7 @@ async function generateInvitations() {
         namePos.y + namePos.h / 2
       );
 
-      const qrText = String(currentEventId) + "|" + String(guest.id);
+     const qrText = getQrText(guest);
       const qrImage = await createQrImage(qrText);
 
       ctx.drawImage(
