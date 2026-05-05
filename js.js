@@ -1,4 +1,6 @@
+let events = [];
 let guests = [];
+let currentEventId = localStorage.getItem("currentEventId") || "";
 let uploadedImage = localStorage.getItem("uploadedImage") || "";
 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
@@ -6,10 +8,17 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJ
 let scanner = null;
 let isScanningPaused = false;
 
+const eventSelect = document.getElementById("eventSelect");
+const newEventName = document.getElementById("newEventName");
+const addEventBtn = document.getElementById("addEventBtn");
+const toggleEventBtn = document.getElementById("toggleEventBtn");
+const eventStatus = document.getElementById("eventStatus");
+
 const guestName = document.getElementById("guestName");
 const guestPhone = document.getElementById("guestPhone");
 const addGuestBtn = document.getElementById("addGuestBtn");
 const generateBtn = document.getElementById("generateBtn");
+const downloadAllBtn = document.getElementById("downloadAllBtn");
 const scanBtn = document.getElementById("scanBtn");
 
 const guestTable = document.getElementById("guestTable");
@@ -19,10 +28,10 @@ const inviteUpload = document.getElementById("inviteUpload");
 const inviteImage = document.getElementById("inviteImage");
 const nameBox = document.getElementById("nameBox");
 const qrBox = document.getElementById("qrBox");
-const downloadAllBtn = document.getElementById("downloadAllBtn");
+
 const scanResult = document.getElementById("scanResult");
 
-if (uploadedImage) {
+if (uploadedImage && inviteImage) {
   inviteImage.src = uploadedImage;
 }
 
@@ -52,7 +61,185 @@ function callScript(params) {
   });
 }
 
+function escapeHtml(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function getCurrentEvent() {
+  return events.find(event => String(event.eventId) === String(currentEventId));
+}
+
+function createEventId(name) {
+  const clean = String(name || "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\u0600-\u06FFa-zA-Z0-9-_]/g, "");
+
+  return "EVENT-" + Date.now() + "-" + clean;
+}
+
+async function loadEvents() {
+  try {
+    const result = await callScript({
+      action: "events",
+      admin: "yes"
+    });
+
+    if (result.status !== "success") {
+      eventStatus.textContent = "فشل تحميل المناسبات";
+      return;
+    }
+
+    events = result.events || [];
+
+    if (!currentEventId && events.length > 0) {
+      currentEventId = events[0].eventId;
+      localStorage.setItem("currentEventId", currentEventId);
+    }
+
+    if (currentEventId && !events.find(e => String(e.eventId) === String(currentEventId))) {
+      currentEventId = events.length > 0 ? events[0].eventId : "";
+      localStorage.setItem("currentEventId", currentEventId);
+    }
+
+    renderEventSelect();
+    updateEventStatus();
+
+    if (currentEventId) {
+      await loadGuestsFromSheet();
+    } else {
+      guests = [];
+      renderGuests();
+    }
+
+  } catch (error) {
+    eventStatus.textContent = "فشل الاتصال بالشيت لتحميل المناسبات";
+  }
+}
+
+function renderEventSelect() {
+  eventSelect.innerHTML = "";
+
+  if (events.length === 0) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "لا توجد مناسبات";
+    eventSelect.appendChild(option);
+    return;
+  }
+
+  events.forEach(event => {
+    const option = document.createElement("option");
+    option.value = event.eventId;
+    option.textContent = `${event.eventName} - ${event.active === "yes" ? "ظاهرة" : "مخفية"}`;
+
+    if (String(event.eventId) === String(currentEventId)) {
+      option.selected = true;
+    }
+
+    eventSelect.appendChild(option);
+  });
+}
+
+function updateEventStatus() {
+  const event = getCurrentEvent();
+
+  if (!event) {
+    eventStatus.textContent = "أضف مناسبة أولاً";
+    toggleEventBtn.textContent = "إخفاء / إظهار للموظف";
+    return;
+  }
+
+  eventStatus.textContent = `المناسبة الحالية: ${event.eventName} - ${event.active === "yes" ? "ظاهرة للموظف" : "مخفية عن الموظف"}`;
+  toggleEventBtn.textContent = event.active === "yes" ? "إخفاء المناسبة عن الموظف" : "إظهار المناسبة للموظف";
+}
+
+async function addEvent() {
+  const name = newEventName.value.trim();
+
+  if (!name) {
+    alert("اكتب اسم المناسبة");
+    return;
+  }
+
+  const eventId = createEventId(name);
+
+  addEventBtn.disabled = true;
+  addEventBtn.textContent = "جاري الإضافة...";
+
+  try {
+    const result = await callScript({
+      action: "addEvent",
+      eventId: eventId,
+      eventName: name,
+      active: "yes"
+    });
+
+    if (result.status !== "success" && result.status !== "duplicate") {
+      alert("حدث خطأ أثناء إضافة المناسبة");
+      return;
+    }
+
+    newEventName.value = "";
+    currentEventId = eventId;
+    localStorage.setItem("currentEventId", currentEventId);
+
+    await loadEvents();
+
+    alert("تم إضافة المناسبة ✅");
+
+  } catch (error) {
+    alert("فشل الاتصال بالشيت أثناء إضافة المناسبة");
+  } finally {
+    addEventBtn.disabled = false;
+    addEventBtn.textContent = "إضافة مناسبة";
+  }
+}
+
+async function toggleCurrentEvent() {
+  const event = getCurrentEvent();
+
+  if (!event) {
+    alert("اختر مناسبة أولاً");
+    return;
+  }
+
+  const newActive = event.active === "yes" ? "no" : "yes";
+
+  try {
+    const result = await callScript({
+      action: "updateEvent",
+      eventId: event.eventId,
+      active: newActive
+    });
+
+    if (result.status !== "success") {
+      alert("لم يتم تعديل حالة المناسبة");
+      return;
+    }
+
+    await loadEvents();
+
+  } catch (error) {
+    alert("فشل الاتصال بالشيت أثناء تعديل حالة المناسبة");
+  }
+}
+
 async function loadGuestsFromSheet() {
+  if (!currentEventId) {
+    guestTable.innerHTML = `
+      <tr>
+        <td colspan="5">اختر مناسبة أولاً</td>
+      </tr>
+    `;
+    return;
+  }
+
   guestTable.innerHTML = `
     <tr>
       <td colspan="5">جاري تحميل الضيوف من الشيت...</td>
@@ -61,7 +248,8 @@ async function loadGuestsFromSheet() {
 
   try {
     const result = await callScript({
-      action: "guests"
+      action: "guests",
+      eventId: currentEventId
     });
 
     if (result.status !== "success") {
@@ -87,6 +275,9 @@ async function loadGuestsFromSheet() {
 
     if (guests.length > 0) {
       previewGuest(guests[0]);
+    } else {
+      nameBox.textContent = "اسم الضيف";
+      qrBox.innerHTML = "QR";
     }
 
   } catch (error) {
@@ -101,6 +292,11 @@ async function loadGuestsFromSheet() {
 async function addGuest() {
   const name = guestName.value.trim();
   const phone = guestPhone.value.trim();
+
+  if (!currentEventId) {
+    alert("اختر أو أضف مناسبة أولاً");
+    return;
+  }
 
   if (!name || !phone) {
     alert("اكتب الاسم ورقم الجوال");
@@ -121,6 +317,7 @@ async function addGuest() {
   try {
     const result = await callScript({
       action: "addGuest",
+      eventId: currentEventId,
       id: guest.id,
       name: guest.name,
       phone: guest.phone
@@ -141,7 +338,7 @@ async function addGuest() {
       previewGuest(addedGuest);
     }
 
-    alert("تم إضافة الضيف في الشيت ✅");
+    alert("تم إضافة الضيف في المناسبة الحالية ✅");
 
   } catch (error) {
     alert("فشل الاتصال بالشيت. تأكد من الإنترنت أو رابط Apps Script.");
@@ -171,6 +368,7 @@ async function editGuest(index) {
   try {
     const result = await callScript({
       action: "updateGuest",
+      eventId: currentEventId,
       id: guest.id,
       name: name,
       phone: phone
@@ -195,6 +393,35 @@ async function editGuest(index) {
   }
 }
 
+async function deleteGuest(index) {
+  const guest = guests[index];
+
+  const ok = confirm("هل تريد حذف هذا الضيف؟ سيتم حذفه من الشيت ومن سجل الحضور.");
+  if (!ok) return;
+
+  try {
+    const result = await callScript({
+      action: "deleteGuest",
+      eventId: currentEventId,
+      id: guest.id
+    });
+
+    if (result.status !== "success") {
+      alert("لم يتم حذف الضيف من الشيت");
+      return;
+    }
+
+    await loadGuestsFromSheet();
+
+  } catch (error) {
+    alert("فشل الاتصال بالشيت أثناء الحذف");
+  }
+}
+
+function getQrText(guest) {
+  return currentEventId + "|" + guest.id;
+}
+
 function previewGuest(guest) {
   if (!guest) return;
 
@@ -202,7 +429,7 @@ function previewGuest(guest) {
   qrBox.innerHTML = "";
 
   new QRCode(qrBox, {
-    text: guest.id,
+    text: getQrText(guest),
     width: qrBox.clientWidth || 100,
     height: qrBox.clientHeight || 100
   });
@@ -214,7 +441,7 @@ function renderGuests() {
   if (guests.length === 0) {
     guestTable.innerHTML = `
       <tr>
-        <td colspan="5">لا يوجد ضيوف حتى الآن</td>
+        <td colspan="5">لا يوجد ضيوف في هذه المناسبة</td>
       </tr>
     `;
     renderInvitationTable();
@@ -225,8 +452,8 @@ function renderGuests() {
     const row = document.createElement("tr");
 
     row.innerHTML = `
-      <td>${guest.name}</td>
-      <td>${guest.phone}</td>
+      <td>${escapeHtml(guest.name)}</td>
+      <td>${escapeHtml(guest.phone)}</td>
       <td>${guest.checkedIn ? "تم الدخول ✅" : "لم يدخل"}</td>
       <td>${guest.invitation ? "تم توليدها" : "لم تولد"}</td>
       <td>
@@ -262,41 +489,17 @@ function renderInvitationTable() {
     const row = document.createElement("tr");
 
     row.innerHTML = `
-      <td>${guest.name}</td>
+      <td>${escapeHtml(guest.name)}</td>
       <td>
         <img src="${guest.invitation}" style="width:180px;border-radius:8px;" />
       </td>
       <td>
-        <a href="${guest.invitation}" download="دعوة-${guest.name}.png">تحميل</a>
+        <a href="${guest.invitation}" download="دعوة-${escapeHtml(guest.name)}.png">تحميل</a>
       </td>
     `;
 
     invitationTable.appendChild(row);
   });
-}
-
-async function deleteGuest(index) {
-  const guest = guests[index];
-
-  const ok = confirm("هل تريد حذف هذا الضيف؟ سيتم حذفه من الشيت أيضًا.");
-  if (!ok) return;
-
-  try {
-    const result = await callScript({
-      action: "deleteGuest",
-      id: guest.id
-    });
-
-    if (result.status !== "success") {
-      alert("لم يتم حذف الضيف من الشيت");
-      return;
-    }
-
-    await loadGuestsFromSheet();
-
-  } catch (error) {
-    alert("فشل الاتصال بالشيت أثناء الحذف");
-  }
 }
 
 inviteUpload.addEventListener("change", function (e) {
@@ -371,8 +574,13 @@ async function generateInvitations() {
     return;
   }
 
+  if (!currentEventId) {
+    alert("اختر مناسبة أولاً");
+    return;
+  }
+
   if (guests.length === 0) {
-    alert("لا يوجد ضيوف في الشيت");
+    alert("لا يوجد ضيوف في هذه المناسبة");
     return;
   }
 
@@ -408,7 +616,7 @@ async function generateInvitations() {
       namePos.y + namePos.h / 2
     );
 
-    const qrImage = await createQrImage(guest.id);
+    const qrImage = await createQrImage(getQrText(guest));
 
     ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
 
@@ -423,7 +631,49 @@ async function generateInvitations() {
   alert("تم توليد الدعوات بنجاح ✨");
 }
 
+async function downloadAllInvitations() {
+  const guestsWithInvitations = guests.filter(guest => guest.invitation);
+
+  if (guestsWithInvitations.length === 0) {
+    alert("لا توجد دعوات مولدة. اضغط أولاً على توليد الدعوات.");
+    return;
+  }
+
+  if (typeof JSZip === "undefined") {
+    alert("مكتبة ZIP لم تعمل. تأكد من الاتصال بالإنترنت.");
+    return;
+  }
+
+  const zip = new JSZip();
+  const event = getCurrentEvent();
+  const eventName = event ? event.eventName : "الدعوات";
+
+  guestsWithInvitations.forEach(guest => {
+    const base64Data = guest.invitation.split(",")[1];
+    const safeName = String(guest.name).replace(/[\\/:*?"<>|]/g, "-");
+
+    zip.file(`دعوة-${safeName}.png`, base64Data, {
+      base64: true
+    });
+  });
+
+  const content = await zip.generateAsync({
+    type: "blob"
+  });
+
+  const url = URL.createObjectURL(content);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = `دعوات-${eventName}.zip`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
 function makeDraggable(el) {
+  if (!el) return;
+
   let dragging = false;
   let offsetX = 0;
   let offsetY = 0;
@@ -444,6 +694,24 @@ function makeDraggable(el) {
   document.addEventListener("mouseup", () => {
     dragging = false;
   });
+}
+
+function parseQrText(text) {
+  const value = String(text || "").trim();
+
+  if (value.includes("|")) {
+    const parts = value.split("|");
+
+    return {
+      eventId: parts[0],
+      guestId: parts[1]
+    };
+  }
+
+  return {
+    eventId: currentEventId,
+    guestId: value
+  };
 }
 
 function startScanner() {
@@ -476,11 +744,25 @@ function startScanner() {
   });
 }
 
-async function checkInGuest(id) {
-  const guest = guests.find(g => String(g.id) === String(id));
+async function checkInGuest(qrText) {
+  if (!currentEventId) {
+    scanResult.textContent = "اختر مناسبة أولاً";
+    scanResult.style.color = "red";
+    return;
+  }
+
+  const parsed = parseQrText(qrText);
+
+  if (String(parsed.eventId) !== String(currentEventId)) {
+    scanResult.textContent = "QR تابع لمناسبة أخرى ❌";
+    scanResult.style.color = "red";
+    return;
+  }
+
+  const guest = guests.find(g => String(g.id) === String(parsed.guestId));
 
   if (!guest) {
-    scanResult.textContent = "QR غير معروف ❌";
+    scanResult.textContent = "QR غير معروف لهذه المناسبة ❌";
     scanResult.style.color = "red";
     return;
   }
@@ -490,6 +772,7 @@ async function checkInGuest(id) {
   try {
     const result = await callScript({
       action: "attendance",
+      eventId: currentEventId,
       id: guest.id,
       name: guest.name,
       phone: guest.phone,
@@ -518,46 +801,25 @@ async function checkInGuest(id) {
   }
 }
 
+eventSelect.onchange = async function () {
+  currentEventId = eventSelect.value;
+  localStorage.setItem("currentEventId", currentEventId);
+
+  updateEventStatus();
+  await loadGuestsFromSheet();
+};
+
+addEventBtn.onclick = addEvent;
+toggleEventBtn.onclick = toggleCurrentEvent;
 addGuestBtn.onclick = addGuest;
 generateBtn.onclick = generateInvitations;
+downloadAllBtn.onclick = downloadAllInvitations;
 
 if (scanBtn) {
   scanBtn.onclick = startScanner;
 }
-async function downloadAllInvitations() {
-  const guestsWithInvitations = guests.filter(guest => guest.invitation);
 
-  if (guestsWithInvitations.length === 0) {
-    alert("لا توجد دعوات مولدة. اضغط أولاً على توليد الدعوات.");
-    return;
-  }
-
-  const zip = new JSZip();
-
-  guestsWithInvitations.forEach(guest => {
-    const base64Data = guest.invitation.split(",")[1];
-    const safeName = guest.name.replace(/[\\/:*?"<>|]/g, "-");
-
-    zip.file(`دعوة-${safeName}.png`, base64Data, {
-      base64: true
-    });
-  });
-
-  const content = await zip.generateAsync({
-    type: "blob"
-  });
-
-  const url = URL.createObjectURL(content);
-  const a = document.createElement("a");
-
-  a.href = url;
-  a.download = "كل-الدعوات.zip";
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
-downloadAllBtn.onclick = downloadAllInvitations;
 makeDraggable(nameBox);
 makeDraggable(qrBox);
 
-loadGuestsFromSheet();
+loadEvents();
