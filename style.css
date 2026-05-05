@@ -1039,3 +1039,11 @@ tr:hover td {
     padding-top: env(safe-area-inset-top, 0.8rem);
   }
 }
+
+
+/* my style */
+
+.form input {
+    padding: 0.9rem 2rem 0.9rem 2.8rem;
+   
+}
