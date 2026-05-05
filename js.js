@@ -548,14 +548,18 @@ function getPositionOnImage(box, canvasWidth, canvasHeight) {
   const imageRect = inviteImage.getBoundingClientRect();
   const boxRect = box.getBoundingClientRect();
 
+  if (!imageRect.width || !imageRect.height) {
+    throw new Error("صورة التصميم غير ظاهرة أو لم يتم تحميلها");
+  }
+
   const scaleX = canvasWidth / imageRect.width;
   const scaleY = canvasHeight / imageRect.height;
 
   return {
-    x: (boxRect.left - imageRect.left) * scaleX,
-    y: (boxRect.top - imageRect.top) * scaleY,
-    w: boxRect.width * scaleX,
-    h: boxRect.height * scaleY
+    x: Math.max(0, (boxRect.left - imageRect.left) * scaleX),
+    y: Math.max(0, (boxRect.top - imageRect.top) * scaleY),
+    w: Math.max(20, boxRect.width * scaleX),
+    h: Math.max(20, boxRect.height * scaleY)
   };
 }
 
