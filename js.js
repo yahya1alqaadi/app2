@@ -90,6 +90,100 @@ const headerEventBadge = document.getElementById("headerEventBadge");
 const guestCount = document.getElementById("guestCount");
 
 // ============================================
+// نظام الإشعارات (Toast Notifications)
+// ============================================
+
+function createToastContainer() {
+  // إزالة الحاوية القديمة إن وجدت
+  const oldContainer = document.getElementById('toastContainer');
+  if (oldContainer) oldContainer.remove();
+
+  const container = document.createElement('div');
+  container.id = 'toastContainer';
+  container.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+    width: 90%;
+    max-width: 500px;
+  `;
+  document.body.appendChild(container);
+  return container;
+}
+
+function showToast(message, type = 'success', duration = 4000) {
+  const container = document.getElementById('toastContainer') || createToastContainer();
+
+  const colors = {
+    success: { bg: '#10b981', icon: '✅', border: '#059669' },
+    error: { bg: '#ef4444', icon: '❌', border: '#dc2626' },
+    warning: { bg: '#f59e0b', icon: '⚠️', border: '#d97706' },
+    info: { bg: '#3b82f6', icon: 'ℹ️', border: '#2563eb' }
+  };
+
+  const color = colors[type] || colors.info;
+
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    background: ${color.bg};
+    color: white;
+    padding: 18px 22px;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+    border: 2px solid ${color.border};
+    pointer-events: auto;
+    animation: slideDown 0.4s ease, fadeOut 0.4s ease ${duration - 400}ms forwards;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    direction: rtl;
+    font-family: 'Cairo', 'Tajawal', sans-serif;
+  `;
+
+  toast.innerHTML = `<span style="font-size:1.5rem;">${color.icon}</span> ${message}`;
+
+  container.appendChild(toast);
+
+  // إزالة الإشعار بعد المدة المحددة
+  setTimeout(() => {
+    if (toast.parentNode) {
+      toast.remove();
+    }
+  }, duration);
+}
+
+// إضافة أنيميشن CSS للإشعارات
+const toastStyle = document.createElement('style');
+toastStyle.textContent = `
+  @keyframes slideDown {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-20px); }
+  }
+  
+  @keyframes scanPulse {
+    0% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.05); }
+    100% { transform: translateX(-50%) scale(1); }
+  }
+`;
+document.head.appendChild(toastStyle);
+
+// ============================================
 // تحميل الصورة المخزنة
 // ============================================
 
@@ -232,7 +326,10 @@ function updateHeaderBadge() {
 
 async function addEvent() {
   const name = newEventName.value.trim();
-  if (!name) { alert("⚠️ اكتب اسم المناسبة"); return; }
+  if (!name) { 
+    showToast("⚠️ اكتب اسم المناسبة", "warning");
+    return; 
+  }
 
   const eventId = createEventId(name);
   addEventBtn.disabled = true;
@@ -241,16 +338,16 @@ async function addEvent() {
   try {
     const result = await callScript({ action: "addEvent", eventId, eventName: name, active: "yes" });
     if (result.status !== "success" && result.status !== "duplicate") {
-      alert("❌ حدث خطأ أثناء إضافة المناسبة");
+      showToast("❌ حدث خطأ أثناء إضافة المناسبة", "error");
       return;
     }
     newEventName.value = "";
     currentEventId = eventId;
     localStorage.setItem("currentEventId", currentEventId);
     await loadEvents();
-    alert("✅ تم إضافة المناسبة بنجاح");
+    showToast("✅ تم إضافة المناسبة بنجاح", "success");
   } catch (error) {
-    alert("❌ فشل الاتصال بالشيت أثناء إضافة المناسبة");
+    showToast("❌ فشل الاتصال بالشيت", "error");
   } finally {
     addEventBtn.disabled = false;
     addEventBtn.innerHTML = '<i class="fas fa-plus-circle"></i> إضافة مناسبة';
@@ -259,15 +356,22 @@ async function addEvent() {
 
 async function toggleCurrentEvent() {
   const event = getCurrentEvent();
-  if (!event) { alert("⚠️ اختر مناسبة أولاً"); return; }
+  if (!event) { 
+    showToast("⚠️ اختر مناسبة أولاً", "warning");
+    return; 
+  }
 
   const newActive = event.active === "yes" ? "no" : "yes";
   try {
     const result = await callScript({ action: "updateEvent", eventId: event.eventId, active: newActive });
-    if (result.status !== "success") { alert("❌ لم يتم تعديل حالة المناسبة"); return; }
+    if (result.status !== "success") { 
+      showToast("❌ لم يتم تعديل حالة المناسبة", "error");
+      return; 
+    }
     await loadEvents();
+    showToast(`✅ تم ${newActive === "yes" ? "إظهار" : "إخفاء"} المناسبة`, "success");
   } catch (error) {
-    alert("❌ فشل الاتصال بالشيت أثناء تعديل حالة المناسبة");
+    showToast("❌ فشل الاتصال بالشيت", "error");
   }
 }
 
@@ -305,7 +409,11 @@ async function loadGuestsFromSheet() {
       try { previewGuest(guests[0]); } catch (e) { console.log("Preview error:", e); }
     } else {
       if (nameBox) nameBox.innerHTML = '<i class="fas fa-font"></i> اسم الضيف';
-      if (qrBox) qrBox.innerHTML = '<i class="fas fa-qrcode"></i>';
+      if (qrBox) {
+        qrBox.innerHTML = '<i class="fas fa-qrcode"></i>';
+        qrBox.style.width = '100px';
+        qrBox.style.height = '100px';
+      }
     }
   } catch (error) {
     guestTable.innerHTML = `<tr><td colspan="5">❌ فشل الاتصال بالشيت<br>${error.message || error}</td></tr>`;
@@ -316,8 +424,14 @@ async function addGuest() {
   const name = guestName.value.trim();
   const phone = guestPhone.value.trim();
 
-  if (!currentEventId) { alert("⚠️ اختر أو أضف مناسبة أولاً"); return; }
-  if (!name || !phone) { alert("⚠️ اكتب الاسم ورقم الجوال"); return; }
+  if (!currentEventId) { 
+    showToast("⚠️ اختر أو أضف مناسبة أولاً", "warning");
+    return; 
+  }
+  if (!name || !phone) { 
+    showToast("⚠️ اكتب الاسم ورقم الجوال", "warning");
+    return; 
+  }
 
   const guest = {
     id: "GUEST-" + Date.now() + "-" + Math.floor(Math.random() * 999999),
@@ -334,7 +448,7 @@ async function addGuest() {
     });
 
     if (result.status !== "success" && result.status !== "duplicate") {
-      alert("❌ حدث خطأ أثناء إضافة الضيف في الشيت");
+      showToast("❌ حدث خطأ أثناء إضافة الضيف", "error");
       return;
     }
 
@@ -345,9 +459,9 @@ async function addGuest() {
     const addedGuest = guests.find(g => g.id === guest.id);
     if (addedGuest) previewGuest(addedGuest);
     
-    alert("✅ تم إضافة الضيف بنجاح");
+    showToast("✅ تم إضافة الضيف بنجاح", "success");
   } catch (error) {
-    alert("❌ فشل الاتصال بالشيت أثناء إضافة الضيف");
+    showToast("❌ فشل الاتصال بالشيت", "error");
   } finally {
     addGuestBtn.disabled = false;
     addGuestBtn.innerHTML = '<i class="fas fa-save"></i> إضافة الضيف';
@@ -363,20 +477,26 @@ async function editGuest(index) {
 
   const name = newName.trim();
   const phone = newPhone.trim();
-  if (!name || !phone) { alert("⚠️ الاسم ورقم الجوال مطلوبة"); return; }
+  if (!name || !phone) { 
+    showToast("⚠️ الاسم ورقم الجوال مطلوبة", "warning");
+    return; 
+  }
 
   try {
     const result = await callScript({
       action: "updateGuest", eventId: currentEventId,
       id: guest.id, name, phone
     });
-    if (result.status !== "success") { alert("❌ لم يتم تعديل بيانات الضيف"); return; }
+    if (result.status !== "success") { 
+      showToast("❌ لم يتم تعديل بيانات الضيف", "error");
+      return; 
+    }
     await loadGuestsFromSheet();
     const updatedGuest = guests.find(g => g.id === guest.id);
     if (updatedGuest) previewGuest(updatedGuest);
-    alert("✅ تم تعديل بيانات الضيف");
+    showToast("✅ تم تعديل بيانات الضيف", "success");
   } catch (error) {
-    alert("❌ فشل الاتصال بالشيت أثناء التعديل");
+    showToast("❌ فشل الاتصال بالشيت", "error");
   }
 }
 
@@ -388,15 +508,19 @@ async function deleteGuest(index) {
     const result = await callScript({
       action: "deleteGuest", eventId: currentEventId, id: guest.id
     });
-    if (result.status !== "success") { alert("❌ لم يتم حذف الضيف"); return; }
+    if (result.status !== "success") { 
+      showToast("❌ لم يتم حذف الضيف", "error");
+      return; 
+    }
     await loadGuestsFromSheet();
+    showToast("✅ تم حذف الضيف", "success");
   } catch (error) {
-    alert("❌ فشل الاتصال بالشيت أثناء الحذف");
+    showToast("❌ فشل الاتصال بالشيت", "error");
   }
 }
 
 // ============================================
-// معاينة الضيف
+// معاينة الضيف - QR مربع دائماً
 // ============================================
 
 function getQrText(guest) {
@@ -412,13 +536,24 @@ function previewGuest(guest) {
   if (fontColor) nameBox.style.color = fontColor.value;
   if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
 
+  // 🔧 إصلاح: جعل QR مربع دائماً
   qrBox.innerHTML = "";
+  
+  // تحديد الحجم المربع (نفس العرض والارتفاع)
+  const qrSize = Math.min(qrBox.clientWidth || 100, qrBox.clientHeight || 100);
+  
+  // فرض الشكل المربع
+  qrBox.style.width = qrSize + 'px';
+  qrBox.style.height = qrSize + 'px';
+  qrBox.style.aspectRatio = '1/1';
+  
   new QRCode(qrBox, {
     text: getQrText(guest),
-    width: qrBox.clientWidth || 100,
-    height: qrBox.clientHeight || 100,
+    width: qrSize,
+    height: qrSize,
     colorDark: qrColor ? qrColor.value : "#000000",
-    colorLight: "#ffffff"
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
   });
 }
 
@@ -539,13 +674,35 @@ function makeDraggable(el) {
     el.style.zIndex = "20";
   });
 
+  // دعم اللمس للجوال
+  el.addEventListener("touchstart", e => {
+    dragging = true;
+    const touch = e.touches[0];
+    offsetX = touch.clientX - el.offsetLeft;
+    offsetY = touch.clientY - el.offsetTop;
+    el.style.zIndex = "20";
+  }, { passive: false });
+
   document.addEventListener("mousemove", e => {
     if (!dragging) return;
     el.style.left = (e.clientX - offsetX) + "px";
     el.style.top = (e.clientY - offsetY) + "px";
   });
 
+  document.addEventListener("touchmove", e => {
+    if (!dragging) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    el.style.left = (touch.clientX - offsetX) + "px";
+    el.style.top = (touch.clientY - offsetY) + "px";
+  }, { passive: false });
+
   document.addEventListener("mouseup", () => {
+    dragging = false;
+    if (el) el.style.zIndex = "10";
+  });
+
+  document.addEventListener("touchend", () => {
     dragging = false;
     if (el) el.style.zIndex = "10";
   });
@@ -585,7 +742,7 @@ if (qrColor) {
 
 async function pickColor(targetInput) {
   if (!window.EyeDropper) {
-    alert("⚠️ أداة اختيار اللون غير مدعومة في هذا المتصفح. جرب Chrome أو Edge.");
+    showToast("⚠️ أداة اختيار اللون غير مدعومة في هذا المتصفح", "warning");
     return;
   }
   try {
@@ -603,7 +760,7 @@ if (pickFontColorBtn) pickFontColorBtn.onclick = () => pickColor(fontColor);
 if (pickQrColorBtn) pickQrColorBtn.onclick = () => pickColor(qrColor);
 
 // ============================================
-// توليد الدعوات
+// توليد الدعوات - QR مربع دائماً
 // ============================================
 
 function getPositionOnImage(box, canvasWidth, canvasHeight) {
@@ -623,32 +780,70 @@ function getPositionOnImage(box, canvasWidth, canvasHeight) {
 function createQrImage(text) {
   return new Promise(resolve => {
     const tempDiv = document.createElement("div");
+    tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(tempDiv);
+    
+    // 🔧 إنشاء QR بحجم مربع
+    const qrSize = 600;
+    
     new QRCode(tempDiv, {
-      text, width: 600, height: 600,
+      text,
+      width: qrSize,
+      height: qrSize,
       colorDark: qrColor ? qrColor.value : "#000000",
-      colorLight: "#ffffff"
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
     });
+    
     setTimeout(() => {
       const canvas = tempDiv.querySelector("canvas");
+      if (!canvas) {
+        document.body.removeChild(tempDiv);
+        resolve(null);
+        return;
+      }
+      
       const ctx = canvas.getContext("2d");
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
+      
+      // جعل الخلفية شفافة
       for (let i = 0; i < data.length; i += 4) {
-        if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) data[i+3] = 0;
+        if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) {
+          data[i+3] = 0;
+        }
       }
+      
       ctx.putImageData(imageData, 0, 0);
+      
       const img = new Image();
-      img.onload = () => resolve(img);
+      img.onload = () => {
+        document.body.removeChild(tempDiv);
+        resolve(img);
+      };
+      img.onerror = () => {
+        document.body.removeChild(tempDiv);
+        resolve(null);
+      };
       img.src = canvas.toDataURL("image/png");
-    }, 200);
+    }, 300);
   });
 }
 
 async function generateInvitations() {
   try {
-    if (!uploadedImage) { alert("⚠️ ارفع التصميم أولاً"); return; }
-    if (!currentEventId) { alert("⚠️ اختر مناسبة أولاً"); return; }
-    if (!guests || guests.length === 0) { alert("⚠️ لا يوجد ضيوف"); return; }
+    if (!uploadedImage) { 
+      showToast("⚠️ ارفع التصميم أولاً", "warning");
+      return; 
+    }
+    if (!currentEventId) { 
+      showToast("⚠️ اختر مناسبة أولاً", "warning");
+      return; 
+    }
+    if (!guests || guests.length === 0) { 
+      showToast("⚠️ لا يوجد ضيوف", "warning");
+      return; 
+    }
 
     generateBtn.disabled = true;
     generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التوليد...';
@@ -668,6 +863,13 @@ async function generateInvitations() {
     const qrPos = getPositionOnImage(qrBox, baseImage.width, baseImage.height);
     const finalFontSize = Math.round((fontSize ? Number(fontSize.value || 40) : 40) * fontScale);
 
+    // 🔧 جعل منطقة QR مربعة دائماً
+    const qrSquareSize = Math.min(qrPos.w, qrPos.h);
+    const qrCenterX = qrPos.x + qrPos.w / 2;
+    const qrCenterY = qrPos.y + qrPos.h / 2;
+    const qrDrawX = qrCenterX - qrSquareSize / 2;
+    const qrDrawY = qrCenterY - qrSquareSize / 2;
+
     for (const guest of guests) {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
@@ -675,23 +877,27 @@ async function generateInvitations() {
       canvas.height = baseImage.height;
       ctx.drawImage(baseImage, 0, 0);
 
+      // اسم الضيف
       ctx.font = `${fontWeight ? fontWeight.value : "bold"} ${finalFontSize}px ${fontFamily ? fontFamily.value : "Arial"}`;
       ctx.fillStyle = fontColor ? fontColor.value : "#000000";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(guest.name, namePos.x + namePos.w/2, namePos.y + namePos.h/2);
 
+      // QR Code - مربع دائماً
       const qrImage = await createQrImage(getQrText(guest));
-      ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
+      if (qrImage) {
+        ctx.drawImage(qrImage, qrDrawX, qrDrawY, qrSquareSize, qrSquareSize);
+      }
 
       guest.invitation = canvas.toDataURL("image/png");
     }
 
     renderGuests();
-    alert("✅ تم توليد الدعوات بنجاح");
+    showToast("✅ تم توليد جميع الدعوات بنجاح", "success", 5000);
   } catch (error) {
     console.log("خطأ:", error);
-    alert("❌ سبب الخطأ: " + (error.message || error));
+    showToast("❌ خطأ: " + (error.message || error), "error", 5000);
   } finally {
     generateBtn.disabled = false;
     generateBtn.innerHTML = '<i class="fas fa-magic"></i> توليد الدعوات';
@@ -705,11 +911,11 @@ async function generateInvitations() {
 async function downloadAllInvitations() {
   const guestsWithInvitations = guests.filter(g => g.invitation);
   if (guestsWithInvitations.length === 0) {
-    alert("⚠️ لا توجد دعوات مولدة. اضغط على توليد الدعوات أولاً.");
+    showToast("⚠️ لا توجد دعوات مولدة", "warning");
     return;
   }
   if (typeof JSZip === "undefined") {
-    alert("⚠️ مكتبة ZIP لم تعمل. تأكد من الاتصال بالإنترنت.");
+    showToast("⚠️ مكتبة ZIP غير متاحة. تأكد من الاتصال بالإنترنت", "warning");
     return;
   }
 
@@ -730,10 +936,12 @@ async function downloadAllInvitations() {
   a.download = `دعوات-${eventName}.zip`;
   a.click();
   URL.revokeObjectURL(url);
+  
+  showToast("✅ تم تحميل جميع الدعوات", "success");
 }
 
 // ============================================
-// الماسح الضوئي
+// الماسح الضوئي مع إشعارات واضحة
 // ============================================
 
 function parseQrText(text) {
@@ -747,17 +955,20 @@ function parseQrText(text) {
 
 function startScanner() {
   if (!scanBtn) return;
-  if (scanner) { scanResult.textContent = "⚠️ الكاميرا تعمل بالفعل"; return; }
+  if (scanner) { 
+    scanResult.innerHTML = '<span style="color:#f59e0b;">⚠️ الكاميرا تعمل بالفعل</span>';
+    return; 
+  }
 
   scanner = new Html5Qrcode("reader");
   scanner.start(
     { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
     qrText => {
       if (isScanningPaused) return;
       isScanningPaused = true;
       checkInGuest(qrText);
-      setTimeout(() => { isScanningPaused = false; }, 3000);
+      setTimeout(() => { isScanningPaused = false; }, 3500);
     },
     error => {}
   ).catch(() => {
@@ -768,6 +979,7 @@ function startScanner() {
 
 async function checkInGuest(qrText) {
   if (!currentEventId) {
+    showToast("⚠️ اختر مناسبة أولاً", "warning");
     scanResult.innerHTML = '<span style="color:#ef4444;">⚠️ اختر مناسبة أولاً</span>';
     return;
   }
@@ -775,13 +987,24 @@ async function checkInGuest(qrText) {
   const parsed = parseQrText(qrText);
   
   if (String(parsed.eventId) !== String(currentEventId)) {
+    showToast("❌ هذا QR تابع لمناسبة أخرى", "error", 4000);
     scanResult.innerHTML = '<span style="color:#ef4444;">❌ QR تابع لمناسبة أخرى</span>';
+    playErrorSound();
     return;
   }
 
   const guest = guests.find(g => String(g.id) === String(parsed.guestId));
   if (!guest) {
+    showToast("❌ QR غير معروف لهذه المناسبة", "error", 4000);
     scanResult.innerHTML = '<span style="color:#ef4444;">❌ QR غير معروف</span>';
+    playErrorSound();
+    return;
+  }
+
+  if (guest.checkedIn) {
+    showToast(`⚠️ ${guest.name} تم تسجيله مسبقاً`, "warning", 4000);
+    scanResult.innerHTML = `<span style="color:#f59e0b;">⚠️ مكرر: ${guest.name}</span>`;
+    playErrorSound();
     return;
   }
 
@@ -798,20 +1021,50 @@ async function checkInGuest(qrText) {
     });
 
     if (result.status === "duplicate") {
-      scanResult.innerHTML = `<span style="color:#f59e0b;">⚠️ مكرر: ${guest.name} تم تسجيله مسبقًا</span>`;
+      showToast(`⚠️ ${guest.name} تم تسجيله مسبقاً`, "warning", 4000);
+      scanResult.innerHTML = `<span style="color:#f59e0b;">⚠️ مكرر: ${guest.name}</span>`;
+      playErrorSound();
       return;
     }
 
     if (result.status === "success") {
+      // 🔧 إشعار كبير وواضح عند النجاح
+      showToast(`✅ أهلاً وسهلاً ${guest.name}`, "success", 5000);
+      scanResult.innerHTML = `<span style="color:#10b981;font-size:1.3rem;">✅ تم تسجيل دخول ${guest.name}</span>`;
+      playSuccessSound();
       await loadGuestsFromSheet();
-      scanResult.innerHTML = `<span style="color:#10b981;">✅ تم تسجيل دخول ${guest.name}</span>`;
       return;
     }
 
-    scanResult.innerHTML = '<span style="color:#ef4444;">❌ حدث خطأ أثناء التسجيل</span>';
+    showToast("❌ حدث خطأ أثناء التسجيل", "error", 4000);
+    scanResult.innerHTML = '<span style="color:#ef4444;">❌ حدث خطأ</span>';
+    playErrorSound();
+
   } catch (error) {
-    scanResult.innerHTML = '<span style="color:#ef4444;">❌ فشل الاتصال بالشيت</span>';
+    showToast("❌ فشل الاتصال بالخادم", "error", 4000);
+    scanResult.innerHTML = '<span style="color:#ef4444;">❌ فشل الاتصال</span>';
+    playErrorSound();
   }
+}
+
+// ============================================
+// المؤثرات الصوتية
+// ============================================
+
+function playSuccessSound() {
+  try {
+    const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+    audio.volume = 0.6;
+    audio.play().catch(() => {});
+  } catch (e) {}
+}
+
+function playErrorSound() {
+  try {
+    const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg");
+    audio.volume = 0.6;
+    audio.play().catch(() => {});
+  } catch (e) {}
 }
 
 // ============================================
