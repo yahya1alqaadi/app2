@@ -78,10 +78,43 @@
     const scanResult = document.getElementById("scanResult");
     const countBox = document.getElementById("countBox");
 
+    function callScript(params) {
+      return new Promise((resolve, reject) => {
+        const callbackName = "callback_" + Date.now() + "_" + Math.floor(Math.random() * 999999);
+
+        params.callback = callbackName;
+
+        const query = new URLSearchParams(params).toString();
+        const script = document.createElement("script");
+
+        window[callbackName] = function (data) {
+          resolve(data);
+          delete window[callbackName];
+          script.remove();
+        };
+
+        script.onerror = function () {
+          reject();
+          delete window[callbackName];
+          script.remove();
+        };
+
+        script.src = SCRIPT_URL + "?" + query;
+        document.body.appendChild(script);
+      });
+    }
+
     async function loadGuests() {
       try {
-        const res = await fetch(SCRIPT_URL + "?action=guests");
-        const data = await res.json();
+        const data = await callScript({
+          action: "guests"
+        });
+
+        if (data.status !== "success") {
+          scanResult.textContent = "فشل تحميل بيانات الضيوف ❌";
+          scanResult.style.color = "red";
+          return;
+        }
 
         guests = data.guests || [];
 
@@ -135,17 +168,14 @@
 
       const time = new Date().toLocaleString("ar-SA");
 
-      const url =
-        SCRIPT_URL +
-        "?action=attendance" +
-        "&id=" + encodeURIComponent(guest.id) +
-        "&name=" + encodeURIComponent(guest.name) +
-        "&phone=" + encodeURIComponent(guest.phone) +
-        "&time=" + encodeURIComponent(time);
-
       try {
-        const res = await fetch(url);
-        const data = await res.json();
+        const data = await callScript({
+          action: "attendance",
+          id: guest.id,
+          name: guest.name,
+          phone: guest.phone,
+          time: time
+        });
 
         if (data.status === "duplicate") {
           scanResult.textContent = "مكرر ❌ " + guest.name + " تم تسجيله مسبقًا";
