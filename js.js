@@ -460,12 +460,20 @@ function previewGuest(guest) {
   if (!guest) return;
 
   nameBox.textContent = guest.name;
+
+  if (fontFamily) nameBox.style.fontFamily = fontFamily.value;
+  if (fontSize) nameBox.style.fontSize = fontSize.value + "px";
+  if (fontColor) nameBox.style.color = fontColor.value;
+  if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
+
   qrBox.innerHTML = "";
 
   new QRCode(qrBox, {
     text: getQrText(guest),
     width: qrBox.clientWidth || 100,
-    height: qrBox.clientHeight || 100
+    height: qrBox.clientHeight || 100,
+    colorDark: qrColor ? qrColor.value : "#000000",
+    colorLight: "#ffffff"
   });
 }
 
