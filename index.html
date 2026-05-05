@@ -21,7 +21,11 @@
   <!-- شاشة تسجيل الدخول -->
   <div id="loginScreen">
     <div class="login-box">
-      <h2><i class="fas fa-qrcode"></i> دخول الإدارة</h2>
+      <div class="login-icon">
+        <i class="fas fa-qrcode"></i>
+      </div>
+      <h2>دخول الإدارة</h2>
+      <p class="login-subtitle">أدخل كلمة المرور للمتابعة</p>
       <div class="input-group">
         <i class="fas fa-lock"></i>
         <input id="adminPasswordInput" type="password" placeholder="كلمة المرور" />
@@ -42,41 +46,60 @@
         <div class="logo-icon">
           <i class="fas fa-qrcode"></i>
         </div>
-        <h1>نظام دعوات QR</h1>
+        <div>
+          <h1>نظام دعوات QR</h1>
+          <span class="header-subtitle">لوحة التحكم</span>
+        </div>
       </div>
-      <button class="logout-btn" type="button" onclick="logoutAdmin()">
-        <i class="fas fa-sign-out-alt"></i> خروج
-      </button>
+      <div class="header-actions">
+        <span id="headerEventBadge" class="event-badge"></span>
+        <button class="logout-btn" type="button" onclick="logoutAdmin()">
+          <i class="fas fa-sign-out-alt"></i> خروج
+        </button>
+      </div>
     </header>
 
     <main>
       
       <!-- قسم إدارة المناسبات -->
       <section class="card">
-        <h2><i class="fas fa-calendar-alt"></i> إدارة المناسبات</h2>
+        <div class="card-header">
+          <h2><i class="fas fa-calendar-alt"></i> إدارة المناسبات</h2>
+        </div>
         <div class="event-tools">
           <div class="event-row">
-            <select id="eventSelect"></select>
-            <input id="newEventName" type="text" placeholder="اسم مناسبة جديدة" />
+            <div class="select-wrapper">
+              <i class="fas fa-chevron-down"></i>
+              <select id="eventSelect"></select>
+            </div>
+            <input id="newEventName" type="text" placeholder="أدخل اسم المناسبة الجديدة" />
           </div>
           <div class="event-buttons">
             <button id="addEventBtn" class="btn btn-primary" type="button">
               <i class="fas fa-plus-circle"></i> إضافة مناسبة
             </button>
             <button id="toggleEventBtn" class="btn btn-outline" type="button">
-              <i class="fas fa-eye-slash"></i> إخفاء / إظهار للموظف
+              <i class="fas fa-eye-slash"></i> إخفاء / إظهار
             </button>
           </div>
-          <p id="eventStatus"></p>
+          <p id="eventStatus" class="status-message"></p>
         </div>
       </section>
 
       <!-- قسم إضافة ضيف -->
       <section class="card">
-        <h2><i class="fas fa-user-plus"></i> إضافة ضيف</h2>
+        <div class="card-header">
+          <h2><i class="fas fa-user-plus"></i> إضافة ضيف جديد</h2>
+        </div>
         <div class="form">
-          <input id="guestName" type="text" placeholder="اسم الضيف" />
-          <input id="guestPhone" type="text" placeholder="رقم الجوال" />
+          <div class="input-wrapper">
+            <i class="fas fa-user"></i>
+            <input id="guestName" type="text" placeholder="اسم الضيف الكامل" />
+          </div>
+          <div class="input-wrapper">
+            <i class="fas fa-phone"></i>
+            <input id="guestPhone" type="text" placeholder="رقم الجوال" />
+          </div>
           <button id="addGuestBtn" class="btn btn-primary" type="button">
             <i class="fas fa-save"></i> إضافة الضيف
           </button>
@@ -85,57 +108,81 @@
 
       <!-- قسم تصميم الدعوة -->
       <section class="card">
-        <h2><i class="fas fa-paint-brush"></i> تصميم الدعوة</h2>
+        <div class="card-header">
+          <h2><i class="fas fa-paint-brush"></i> تصميم الدعوة</h2>
+          <span class="card-badge">اسحب العناصر لتحديد المكان</span>
+        </div>
         
-        <input id="inviteUpload" type="file" accept="image/*" />
+        <div class="upload-area">
+          <label for="inviteUpload" class="upload-label">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>اختر صورة التصميم</span>
+          </label>
+          <input id="inviteUpload" type="file" accept="image/*" />
+        </div>
         
         <div class="design-controls">
-          <select id="fontFamily">
-            <option value="Arial">Arial</option>
-            <option value="Tahoma">Tahoma</option>
-            <option value="Times New Roman">Times New Roman</option>
-            <option value="Cairo" selected>Cairo</option>
-          </select>
+          <div class="control-group">
+            <label>الخط</label>
+            <select id="fontFamily">
+              <option value="Arial">Arial</option>
+              <option value="Tahoma">Tahoma</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Cairo" selected>Cairo</option>
+            </select>
+          </div>
 
-          <input id="fontSize" type="number" value="40" min="10" max="150" placeholder="حجم الخط" />
+          <div class="control-group">
+            <label>الحجم</label>
+            <input id="fontSize" type="number" value="40" min="10" max="150" />
+          </div>
 
-          <label class="color-label">
-            <span>لون النص</span>
-            <input id="fontColor" type="color" value="#000000" />
-          </label>
+          <div class="control-group">
+            <label>النمط</label>
+            <select id="fontWeight">
+              <option value="normal">عادي</option>
+              <option value="bold" selected>عريض</option>
+            </select>
+          </div>
 
-          <button id="pickFontColorBtn" class="btn btn-outline" type="button">
-            <i class="fas fa-eyedropper"></i> اختر من الصورة
-          </button>
+          <div class="control-group">
+            <label>لون النص</label>
+            <div class="color-picker-group">
+              <input id="fontColor" type="color" value="#000000" />
+              <button id="pickFontColorBtn" class="btn btn-icon" type="button" title="اختر من الصورة">
+                <i class="fas fa-eyedropper"></i>
+              </button>
+            </div>
+          </div>
 
-          <label class="color-label">
-            <span>لون QR</span>
-            <input id="qrColor" type="color" value="#000000" />
-          </label>
-
-          <button id="pickQrColorBtn" class="btn btn-outline" type="button">
-            <i class="fas fa-eyedropper"></i> اختر من الصورة
-          </button>
-
-          <select id="fontWeight">
-            <option value="normal">عادي</option>
-            <option value="bold" selected>عريض</option>
-          </select>
+          <div class="control-group">
+            <label>لون QR</label>
+            <div class="color-picker-group">
+              <input id="qrColor" type="color" value="#000000" />
+              <button id="pickQrColorBtn" class="btn btn-icon" type="button" title="اختر من الصورة">
+                <i class="fas fa-eyedropper"></i>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div class="editor" id="editor">
-          <img id="inviteImage" alt="تصميم الدعوة" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='500' viewBox='0 0 400 500'%3E%3Crect width='400' height='500' fill='%23f1f5f9'/%3E%3Ctext x='200' y='250' font-size='20' text-anchor='middle' fill='%2394a3b8'%3Eأضف صورة%3C/text%3E%3C/svg%3E" />
-          <div id="nameBox" class="draggable">اسم الضيف</div>
-          <div id="qrBox" class="draggable qr-placeholder">
-            <i class="fas fa-qrcode"></i> QR
+        <div class="editor-container">
+          <div class="editor" id="editor">
+            <img id="inviteImage" alt="تصميم الدعوة" />
+            <div id="nameBox" class="draggable">
+              <i class="fas fa-font"></i> اسم الضيف
+            </div>
+            <div id="qrBox" class="draggable qr-placeholder">
+              <i class="fas fa-qrcode"></i>
+            </div>
           </div>
         </div>
 
         <div class="action-buttons">
-          <button id="generateBtn" class="btn btn-primary" type="button">
+          <button id="generateBtn" class="btn btn-primary btn-lg" type="button">
             <i class="fas fa-magic"></i> توليد الدعوات
           </button>
-          <button id="downloadAllBtn" class="btn btn-warning" type="button">
+          <button id="downloadAllBtn" class="btn btn-warning btn-lg" type="button">
             <i class="fas fa-download"></i> تحميل كل الدعوات
           </button>
         </div>
@@ -143,16 +190,19 @@
 
       <!-- قسم قائمة الضيوف -->
       <section class="card">
-        <h2><i class="fas fa-users"></i> قائمة الضيوف</h2>
+        <div class="card-header">
+          <h2><i class="fas fa-users"></i> قائمة الضيوف</h2>
+          <span id="guestCount" class="card-badge">0 ضيف</span>
+        </div>
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>الاسم</th>
-                <th>الجوال</th>
-                <th>الحالة</th>
-                <th>الدعوة</th>
-                <th>إجراءات</th>
+                <th><i class="fas fa-user"></i> الاسم</th>
+                <th><i class="fas fa-phone"></i> الجوال</th>
+                <th><i class="fas fa-check-circle"></i> الحالة</th>
+                <th><i class="fas fa-image"></i> الدعوة</th>
+                <th><i class="fas fa-cog"></i> إجراءات</th>
               </tr>
             </thead>
             <tbody id="guestTable"></tbody>
@@ -161,8 +211,10 @@
       </section>
 
       <!-- قسم الدعوات المولدة -->
-      <section class="card">
-        <h2><i class="fas fa-images"></i> الدعوات المولدة</h2>
+      <section class="card" id="invitationsCard">
+        <div class="card-header">
+          <h2><i class="fas fa-images"></i> الدعوات المولدة</h2>
+        </div>
         <div class="table-wrapper">
           <table>
             <thead>
@@ -179,8 +231,10 @@
 
       <!-- قسم تسجيل الدخول بالمسح -->
       <section class="card">
-        <h2><i class="fas fa-camera"></i> تسجيل الدخول بالمسح</h2>
-        <button id="scanBtn" class="btn btn-primary" type="button">
+        <div class="card-header">
+          <h2><i class="fas fa-camera"></i> تسجيل الدخول بالمسح</h2>
+        </div>
+        <button id="scanBtn" class="btn btn-primary btn-lg" type="button">
           <i class="fas fa-qrcode"></i> تشغيل الكاميرا
         </button>
         <div id="reader"></div>
