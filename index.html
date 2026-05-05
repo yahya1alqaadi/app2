@@ -5,76 +5,208 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>نظام دعوات QR</title>
   <link rel="stylesheet" href="style.css" />
+
+  <style>
+    #loginScreen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3f4f6;
+      padding: 20px;
+    }
+
+    .login-box {
+      background: white;
+      width: 100%;
+      max-width: 380px;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      text-align: center;
+    }
+
+    .login-box h2 {
+      margin-bottom: 20px;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: #111827;
+      color: white;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    #loginError {
+      color: red;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    #adminContent {
+      display: none;
+    }
+
+    .logout-btn {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 999;
+      background: #b91c1c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
-  <header>
-    <h1>نظام دعوات QR</h1>
-  </header>
 
-  <main>
-    <section class="card">
-      <h2>إضافة ضيف</h2>
-      <div class="form">
-        <input id="guestName" type="text" placeholder="اسم الضيف" />
-        <input id="guestPhone" type="text" placeholder="رقم الجوال" />
-        <button id="addGuestBtn" type="button">إضافة الضيف</button>
-      </div>
-    </section>
+  <!-- شاشة تسجيل الدخول -->
+  <div id="loginScreen">
+    <div class="login-box">
+      <h2>دخول الإدارة</h2>
+      <input id="adminPasswordInput" type="password" placeholder="كلمة المرور" />
+      <button id="loginBtn" type="button">دخول</button>
+      <p id="loginError"></p>
+    </div>
+  </div>
 
-    <section class="card">
-      <h2>تصميم الدعوة</h2>
+  <!-- محتوى الإدارة -->
+  <div id="adminContent">
 
-      <input id="inviteUpload" type="file" accept="image/*" />
+    <button class="logout-btn" type="button" onclick="logoutAdmin()">خروج</button>
 
-      <div class="editor" id="editor">
-        <img id="inviteImage" alt="تصميم الدعوة" />
-        <div id="nameBox" class="draggable">اسم الضيف</div>
-        <div id="qrBox" class="draggable qr-placeholder">QR</div>
-      </div>
+    <header>
+      <h1>نظام دعوات QR</h1>
+    </header>
 
-      <button id="generateBtn" type="button">توليد الدعوات</button>
-    </section>
+    <main>
+      <section class="card">
+        <h2>إضافة ضيف</h2>
+        <div class="form">
+          <input id="guestName" type="text" placeholder="اسم الضيف" />
+          <input id="guestPhone" type="text" placeholder="رقم الجوال" />
+          <button id="addGuestBtn" type="button">إضافة الضيف</button>
+        </div>
+      </section>
 
-    <section class="card">
-      <h2>قائمة الضيوف</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>الاسم</th>
-            <th>الجوال</th>
-            <th>الحالة</th>
-            <th>الدعوة</th>
-            <th>حذف</th>
-          </tr>
-        </thead>
-        <tbody id="guestTable"></tbody>
-      </table>
-    </section>
+      <section class="card">
+        <h2>تصميم الدعوة</h2>
 
-    <section class="card">
-      <h2>الدعوات المولدة</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>الضيف</th>
-            <th>معاينة الدعوة</th>
-            <th>تحميل</th>
-          </tr>
-        </thead>
-        <tbody id="invitationTable"></tbody>
-      </table>
-    </section>
+        <input id="inviteUpload" type="file" accept="image/*" />
 
-    <section class="card">
-      <h2>تسجيل الدخول بالمسح</h2>
-      <button id="scanBtn" type="button">تشغيل الكاميرا</button>
-      <div id="reader"></div>
-      <p id="scanResult"></p>
-    </section>
-  </main>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script src="js.js"></script>
+        <div class="editor" id="editor">
+          <img id="inviteImage" alt="تصميم الدعوة" />
+          <div id="nameBox" class="draggable">اسم الضيف</div>
+          <div id="qrBox" class="draggable qr-placeholder">QR</div>
+        </div>
+
+        <button id="generateBtn" type="button">توليد الدعوات</button>
+      </section>
+
+      <section class="card">
+        <h2>قائمة الضيوف</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>الجوال</th>
+              <th>الحالة</th>
+              <th>الدعوة</th>
+              <th>حذف</th>
+            </tr>
+          </thead>
+          <tbody id="guestTable"></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>الدعوات المولدة</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>الضيف</th>
+              <th>معاينة الدعوة</th>
+              <th>تحميل</th>
+            </tr>
+          </thead>
+          <tbody id="invitationTable"></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>تسجيل الدخول بالمسح</h2>
+        <button id="scanBtn" type="button">تشغيل الكاميرا</button>
+        <div id="reader"></div>
+        <p id="scanResult"></p>
+      </section>
+    </main>
+
+  </div>
+
+  <script>
+    const ADMIN_PASSWORD = "95321";
+
+    const loginScreen = document.getElementById("loginScreen");
+    const adminContent = document.getElementById("adminContent");
+    const adminPasswordInput = document.getElementById("adminPasswordInput");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginError = document.getElementById("loginError");
+
+    function showAdmin() {
+      loginScreen.style.display = "none";
+      adminContent.style.display = "block";
+    }
+
+    function checkLogin() {
+      const password = adminPasswordInput.value.trim();
+
+      if (password === ADMIN_PASSWORD) {
+        sessionStorage.setItem("adminLoggedIn", "yes");
+        showAdmin();
+      } else {
+        loginError.textContent = "كلمة المرور غير صحيحة";
+      }
+    }
+
+    function logoutAdmin() {
+      sessionStorage.removeItem("adminLoggedIn");
+      location.reload();
+    }
+
+    loginBtn.onclick = checkLogin;
+
+    adminPasswordInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        checkLogin();
+      }
+    });
+
+    if (sessionStorage.getItem("adminLoggedIn") === "yes") {
+      showAdmin();
+    }
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="js.js"></script>
 </body>
 </html>
