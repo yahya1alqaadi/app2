@@ -630,6 +630,7 @@ function getQrText(guest) {
 function previewGuest(guest) {
   if (!guest || !qrBox) return;
   
+  // ✅ تحديث الاسم
   if (nameBox) {
     if (showName) {
       nameBox.innerHTML = guest.name;
@@ -657,11 +658,12 @@ function previewGuest(guest) {
   const selectedQrColor = qrColor ? qrColor.value : "#000000";
   const isLight = isColorLight(selectedQrColor);
   
-  // ✅ خلفية الصندوق تكون مخططة فقط للتمييز
+  // ✅ المعاينة: خلفية شفافة + إطار منقط فقط
   qrBox.style.backgroundColor = 'transparent';
-  qrBox.style.border = '2px dashed #94a3b8';
+  qrBox.style.border = '2px dashed ' + (isLight ? '#64748b' : '#cbd5e1');
+  qrBox.style.borderRadius = '8px';
   
-  // ✅ إنشاء QR بخلفية بيضاء في المعاينة فقط للرؤية
+  // ✅ إنشاء QR بخلفية بيضاء للمعاينة فقط
   new QRCode(qrBox, {
     text: getQrText(guest),
     width: qrSize,
