@@ -837,8 +837,13 @@ async function checkInGuest(qrText) {
   if (String(parsed.eventId) !== String(currentEventId)) { showToast("❌ مناسبة أخرى", "error", 3500); return; }
   var guest = guests.find(function(g) { return String(g.id) === String(parsed.guestId); });
   if (!guest) { showToast("❌ غير معروف", "error", 3500); return; }
-  var maxScans = guest.maxScans || 1, currentScans = guest.scanCount || 0;
+  
+  var maxScans = guest.maxScans || 1;
+  var currentScans = guest.scanCount || 0;
+  
+  // ✅ فقط نتحقق من maxScans
   if (currentScans >= maxScans) { showToast("🚫 منتهي", "error", 4000); return; }
+  
   try {
     var result = await callScript({ action: "attendance", eventId: currentEventId, id: guest.id, name: guest.name, phone: guest.phone, time: new Date().toLocaleString("ar-SA") });
     if (result.status === "success") {
