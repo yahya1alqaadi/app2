@@ -825,7 +825,7 @@ function startScanner() {
   if (!scanBtn) return;
   if (scanner) { if (scanResult) scanResult.innerHTML = '<span style="color:#f59e0b;">⚠️ الكاميرا تعمل</span>'; return; }
   scanner = new Html5Qrcode("reader");
-  scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
+  scanner.start({ facingMode: "environment" }, { fps: 30, qrbox: { width: 250, height: 250 } },
     function(qrText) { if (isScanningPaused) return; isScanningPaused = true; checkInGuest(qrText); setTimeout(function() { isScanningPaused = false; }, 4500); },
     function() {}
   ).catch(function() { if (scanResult) scanResult.innerHTML = '<span style="color:#ef4444;">❌ فشل</span>'; scanner = null; });
