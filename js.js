@@ -164,11 +164,10 @@ function resizeQRBox() {
 function updateQRPlaceholderStyle() {
   if (!qrBox) return;
   const selectedQrColor = qrColor ? qrColor.value : "#000000";
-  const isLight = isColorLight(selectedQrColor);
   resizeQRBox();
-  qrBox.style.backgroundColor = isLight ? '#1e293b' : '#ffffff';
+  qrBox.style.backgroundColor = 'transparent';
   qrBox.style.color = selectedQrColor;
-  qrBox.style.border = isLight ? '2px dashed #64748b' : '2px dashed #2563eb';
+  qrBox.style.border = '2px dashed #94a3b8';
   qrBox.innerHTML = '<i class="fas fa-qrcode"></i>';
 }
 
