@@ -1,6 +1,5 @@
 // ============================================
 // نظام دعوات QR - المنطق البرمجي الكامل
-// مع: خطوط متعددة + رابط الشيت + حد أقصى للمسح
 // ============================================
 
 const ADMIN_PASSWORD = "95321";
@@ -54,9 +53,7 @@ let guests = [];
 let currentEventId = localStorage.getItem("currentEventId") || "";
 let uploadedImage = localStorage.getItem("uploadedImage") || "";
 
-// ✅ رابط Google Sheets (عدله إلى رابط الشيت الخاص بك)
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1Q4_xHS5CXKYIxElTz8YCyBjnWydxGdKIh8yJZtYTB8A/edit";
-
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
 
 let scanner = null;
@@ -65,13 +62,11 @@ let qrScalePercent = parseInt(localStorage.getItem("qrScalePercent") || "100");
 let showName = localStorage.getItem("showName") !== "false";
 
 // ============================================
-// عناصر DOM
+// عناصر DOM مع التحقق من وجودها
 // ============================================
 
 function getElement(id) {
-  const el = document.getElementById(id);
-  if (!el) console.warn(`⚠️ عنصر ${id} غير موجود`);
-  return el;
+  return document.getElementById(id);
 }
 
 const eventSelect = getElement("eventSelect");
@@ -121,6 +116,23 @@ function isColorLight(hexColor) {
   return brightness > 150;
 }
 
+function roundRect(ctx, x, y, w, h, r) {
+  if (w < 2 * r) r = w / 2;
+  if (h < 2 * r) r = h / 2;
+  
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
 // ============================================
 // دوال QR
 // ============================================
@@ -138,7 +150,7 @@ function resizeQRBox() {
   const selectedQrColor = qrColor ? qrColor.value : "#000000";
   const isLight = isColorLight(selectedQrColor);
   
-  qrBox.style.backgroundColor = isLight ? '#334155' : '#ffffff';
+  qrBox.style.backgroundColor = isLight ? '#1e293b' : '#ffffff';
 }
 
 function updateQRPlaceholderStyle() {
@@ -149,7 +161,7 @@ function updateQRPlaceholderStyle() {
   
   resizeQRBox();
   
-  qrBox.style.backgroundColor = isLight ? '#334155' : '#ffffff';
+  qrBox.style.backgroundColor = isLight ? '#1e293b' : '#ffffff';
   qrBox.style.color = selectedQrColor;
   qrBox.style.border = isLight ? '2px dashed #64748b' : '2px dashed #2563eb';
   qrBox.innerHTML = '<i class="fas fa-qrcode"></i>';
@@ -183,7 +195,6 @@ function addQRSizeControl() {
   if (!designControls) return;
   if (document.getElementById('qrSizeControl')) return;
 
-  // متحكم حجم QR
   const qrControlGroup = document.createElement('div');
   qrControlGroup.className = 'control-group';
   qrControlGroup.id = 'qrSizeControl';
@@ -196,7 +207,6 @@ function addQRSizeControl() {
   `;
   designControls.appendChild(qrControlGroup);
 
-  // زر إخفاء/إظهار الاسم
   const nameControlGroup = document.createElement('div');
   nameControlGroup.className = 'control-group';
   nameControlGroup.id = 'nameVisibilityControl';
@@ -235,10 +245,6 @@ function addQRSizeControl() {
   }
 }
 
-// ============================================
-// ✅ إضافة زر فتح الشيت في قسم المناسبات
-// ============================================
-
 function addSheetButton() {
   const eventButtonsDiv = document.querySelector('.event-buttons');
   if (!eventButtonsDiv || document.getElementById('openSheetBtn')) return;
@@ -276,7 +282,10 @@ function createToastContainer() {
   return container;
 }
 
-function showToast(message, type = 'success', duration = 4000) {
+function showToast(message, type, duration) {
+  type = type || 'success';
+  duration = duration || 4000;
+  
   const container = document.getElementById('toastContainer') || createToastContainer();
 
   const colors = {
@@ -293,6 +302,7 @@ function showToast(message, type = 'success', duration = 4000) {
   overlay.style.cssText = `
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     display: flex; align-items: center; justify-content: center;
     pointer-events: auto; animation: fadeInOverlay 0.3s ease;
   `;
@@ -315,10 +325,10 @@ function showToast(message, type = 'success', duration = 4000) {
   container.style.display = 'block';
   document.body.style.overflow = 'hidden';
 
-  setTimeout(() => {
+  setTimeout(function() {
     overlay.style.opacity = '0';
     overlay.style.transition = 'opacity 0.3s ease';
-    setTimeout(() => {
+    setTimeout(function() {
       container.style.display = 'none';
       container.innerHTML = '';
       document.body.style.overflow = '';
@@ -326,13 +336,14 @@ function showToast(message, type = 'success', duration = 4000) {
   }, duration);
 }
 
-const toastStyle = document.createElement('style');
-toastStyle.textContent = `
+// إضافة أنيميشن CSS
+var toastStyleEl = document.createElement('style');
+toastStyleEl.textContent = `
   @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
   @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   @keyframes bounce { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 `;
-document.head.appendChild(toastStyle);
+document.head.appendChild(toastStyleEl);
 
 // ============================================
 // تحميل الصورة المخزنة
@@ -349,11 +360,11 @@ if (uploadedImage && inviteImage) {
 // ============================================
 
 function callScript(params) {
-  return new Promise((resolve, reject) => {
-    const callbackName = "callback_" + Date.now() + "_" + Math.floor(Math.random() * 999999);
+  return new Promise(function(resolve, reject) {
+    var callbackName = "callback_" + Date.now() + "_" + Math.floor(Math.random() * 999999);
     params.callback = callbackName;
-    const query = new URLSearchParams(params).toString();
-    const script = document.createElement("script");
+    var query = new URLSearchParams(params).toString();
+    var script = document.createElement("script");
 
     window[callbackName] = function(data) {
       resolve(data);
@@ -362,7 +373,7 @@ function callScript(params) {
     };
 
     script.onerror = function() {
-      reject();
+      reject(new Error("فشل تحميل السكربت"));
       delete window[callbackName];
       script.remove();
     };
@@ -381,11 +392,11 @@ function sanitizeFileName(name) {
 }
 
 function getCurrentEvent() {
-  return events.find(event => String(event.eventId) === String(currentEventId));
+  return events.find(function(event) { return String(event.eventId) === String(currentEventId); });
 }
 
 function createEventId(name) {
-  const clean = String(name || "").trim().replace(/\s+/g, "-").replace(/[^\u0600-\u06FFa-zA-Z0-9-_]/g, "");
+  var clean = String(name || "").trim().replace(/\s+/g, "-").replace(/[^\u0600-\u06FFa-zA-Z0-9-_]/g, "");
   return "EVENT-" + Date.now() + "-" + clean;
 }
 
@@ -395,7 +406,7 @@ function createEventId(name) {
 
 async function loadEvents() {
   try {
-    const result = await callScript({ action: "events", admin: "yes" });
+    var result = await callScript({ action: "events", admin: "yes" });
 
     if (result.status !== "success") {
       if (eventStatus) eventStatus.textContent = "❌ فشل تحميل المناسبات";
@@ -409,7 +420,7 @@ async function loadEvents() {
       localStorage.setItem("currentEventId", currentEventId);
     }
 
-    if (currentEventId && !events.find(e => String(e.eventId) === String(currentEventId))) {
+    if (currentEventId && !events.find(function(e) { return String(e.eventId) === String(currentEventId); })) {
       currentEventId = events.length > 0 ? events[0].eventId : "";
       localStorage.setItem("currentEventId", currentEventId);
     }
@@ -439,17 +450,17 @@ function renderEventSelect() {
   eventSelect.innerHTML = "";
 
   if (events.length === 0) {
-    const option = document.createElement("option");
+    var option = document.createElement("option");
     option.value = "";
     option.textContent = "لا توجد مناسبات";
     eventSelect.appendChild(option);
     return;
   }
 
-  events.forEach(event => {
-    const option = document.createElement("option");
+  events.forEach(function(event) {
+    var option = document.createElement("option");
     option.value = event.eventId;
-    option.textContent = `${event.eventName} - ${event.active === "yes" ? "ظاهرة" : "مخفية"}`;
+    option.textContent = event.eventName + " - " + (event.active === "yes" ? "ظاهرة" : "مخفية");
     if (String(event.eventId) === String(currentEventId)) option.selected = true;
     eventSelect.appendChild(option);
   });
@@ -457,13 +468,13 @@ function renderEventSelect() {
 
 function updateEventStatus() {
   if (!eventStatus || !toggleEventBtn) return;
-  const event = getCurrentEvent();
+  var event = getCurrentEvent();
   if (!event) {
     eventStatus.textContent = "ℹ️ أضف مناسبة أولاً";
     toggleEventBtn.innerHTML = '<i class="fas fa-eye-slash"></i> إخفاء / إظهار';
     return;
   }
-  eventStatus.textContent = `📌 ${event.eventName} - ${event.active === "yes" ? "ظاهرة" : "مخفية"}`;
+  eventStatus.textContent = "📌 " + event.eventName + " - " + (event.active === "yes" ? "ظاهرة" : "مخفية");
   toggleEventBtn.innerHTML = event.active === "yes" ? 
     '<i class="fas fa-eye-slash"></i> إخفاء المناسبة' : 
     '<i class="fas fa-eye"></i> إظهار المناسبة';
@@ -471,7 +482,7 @@ function updateEventStatus() {
 
 function updateHeaderBadge() {
   if (!headerEventBadge) return;
-  const event = getCurrentEvent();
+  var event = getCurrentEvent();
   headerEventBadge.textContent = event ? event.eventName : "";
   headerEventBadge.style.display = event ? "inline" : "none";
 }
@@ -482,17 +493,17 @@ function updateHeaderBadge() {
 
 async function addEvent() {
   if (!newEventName) return;
-  const name = newEventName.value.trim();
+  var name = newEventName.value.trim();
   if (!name) { showToast("⚠️ اكتب اسم المناسبة", "warning"); return; }
 
-  const eventId = createEventId(name);
+  var eventId = createEventId(name);
   if (addEventBtn) {
     addEventBtn.disabled = true;
     addEventBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإضافة...';
   }
 
   try {
-    const result = await callScript({ action: "addEvent", eventId, eventName: name, active: "yes" });
+    var result = await callScript({ action: "addEvent", eventId: eventId, eventName: name, active: "yes" });
     if (result.status !== "success" && result.status !== "duplicate") {
       showToast("❌ حدث خطأ", "error");
       return;
@@ -513,22 +524,22 @@ async function addEvent() {
 }
 
 async function toggleCurrentEvent() {
-  const event = getCurrentEvent();
+  var event = getCurrentEvent();
   if (!event) { showToast("⚠️ اختر مناسبة أولاً", "warning"); return; }
 
-  const newActive = event.active === "yes" ? "no" : "yes";
+  var newActive = event.active === "yes" ? "no" : "yes";
   try {
-    const result = await callScript({ action: "updateEvent", eventId: event.eventId, active: newActive });
+    var result = await callScript({ action: "updateEvent", eventId: event.eventId, active: newActive });
     if (result.status !== "success") { showToast("❌ لم يتم التعديل", "error"); return; }
     await loadEvents();
-    showToast(`✅ تم ${newActive === "yes" ? "إظهار" : "إخفاء"} المناسبة`, "success");
+    showToast("✅ تم " + (newActive === "yes" ? "إظهار" : "إخفاء") + " المناسبة", "success");
   } catch (error) {
     showToast("❌ فشل الاتصال", "error");
   }
 }
 
 // ============================================
-// تحميل وإدارة الضيوف (مع maxScans)
+// تحميل وإدارة الضيوف
 // ============================================
 
 async function loadGuestsFromSheet() {
@@ -542,23 +553,25 @@ async function loadGuestsFromSheet() {
   guestTable.innerHTML = '<tr><td colspan="6"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>';
 
   try {
-    const result = await callScript({ action: "guests", eventId: currentEventId });
+    var result = await callScript({ action: "guests", eventId: currentEventId });
 
     if (result.status !== "success") {
       guestTable.innerHTML = '<tr><td colspan="6">❌ فشل التحميل</td></tr>';
       return;
     }
 
-    guests = (result.guests || []).map(g => ({
-      id: String(g.id),
-      name: g.name || "",
-      phone: g.phone || "",
-      checkedIn: g.checkedIn || false,
-      scanCount: parseInt(g.scanCount) || 0,
-      maxScans: parseInt(g.maxScans) || 1,
-      invitation: g.invitation || "",
-      invitationPNG: g.invitationPNG || ""
-    }));
+    guests = (result.guests || []).map(function(g) {
+      return {
+        id: String(g.id),
+        name: g.name || "",
+        phone: g.phone || "",
+        checkedIn: g.checkedIn || false,
+        scanCount: parseInt(g.scanCount) || 0,
+        maxScans: parseInt(g.maxScans) || 1,
+        invitation: g.invitation || "",
+        invitationPNG: g.invitationPNG || ""
+      };
+    });
 
     renderGuests();
 
@@ -573,33 +586,27 @@ async function loadGuestsFromSheet() {
   }
 }
 
-// ============================================
-// ✅ إضافة ضيف مع maxScans
-// ============================================
-
 async function addGuest() {
   if (!guestName || !guestPhone) return;
   
-  const name = guestName.value.trim();
-  const phone = guestPhone.value.trim();
+  var name = guestName.value.trim();
+  var phone = guestPhone.value.trim();
 
   if (!currentEventId) { showToast("⚠️ اختر مناسبة أولاً", "warning"); return; }
   if (!name || !phone) { showToast("⚠️ اكتب الاسم ورقم الجوال", "warning"); return; }
 
-  // ✅ طلب عدد مرات الدخول المسموحة
-  const maxScansInput = prompt("كم عدد مرات الدخول المسموحة لهذا الضيف؟\n(مثال: 1 = شخص واحد، 5 = خمسة أشخاص)", "1");
-  const maxScans = parseInt(maxScansInput);
+  var maxScansInput = prompt("كم عدد مرات الدخول المسموحة لهذا الضيف؟\n(مثال: 1 = شخص واحد، 5 = خمسة أشخاص)", "1");
+  var maxScans = parseInt(maxScansInput);
   
   if (isNaN(maxScans) || maxScans < 1) {
     showToast("⚠️ الرجاء إدخال رقم صحيح أكبر من 0", "warning");
     return;
   }
 
-  const guest = {
+  var guest = {
     id: "GUEST-" + Date.now() + "-" + Math.floor(Math.random() * 999999),
-    name, phone, checkedIn: false,
-    scanCount: 0,
-    maxScans: maxScans,
+    name: name, phone: phone, checkedIn: false,
+    scanCount: 0, maxScans: maxScans,
     invitation: "", invitationPNG: ""
   };
 
@@ -609,13 +616,9 @@ async function addGuest() {
   }
 
   try {
-    const result = await callScript({
-      action: "addGuest",
-      eventId: currentEventId,
-      id: guest.id,
-      name: guest.name,
-      phone: guest.phone,
-      maxScans: guest.maxScans
+    var result = await callScript({
+      action: "addGuest", eventId: currentEventId,
+      id: guest.id, name: guest.name, phone: guest.phone, maxScans: guest.maxScans
     });
 
     if (result.status !== "success" && result.status !== "duplicate") {
@@ -627,10 +630,10 @@ async function addGuest() {
     guestPhone.value = "";
     await loadGuestsFromSheet();
     
-    const addedGuest = guests.find(g => g.id === guest.id);
+    var addedGuest = guests.find(function(g) { return g.id === guest.id; });
     if (addedGuest) previewGuest(addedGuest);
     
-    showToast(`✅ تم إضافة ${guest.name} (${maxScans} مرات دخول)`, "success");
+    showToast("✅ تم إضافة " + guest.name + " (" + maxScans + " مرات دخول)", "success");
   } catch (error) {
     showToast("❌ فشل الاتصال", "error");
   } finally {
@@ -641,32 +644,25 @@ async function addGuest() {
   }
 }
 
-// ============================================
-// ✅ تعديل ضيف مع maxScans
-// ============================================
-
 async function editGuest(index) {
-  const guest = guests[index];
-  const newName = prompt("عدّل اسم الضيف:", guest.name);
+  var guest = guests[index];
+  var newName = prompt("عدّل اسم الضيف:", guest.name);
   if (newName === null) return;
-  const newPhone = prompt("عدّل رقم الجوال:", guest.phone);
+  var newPhone = prompt("عدّل رقم الجوال:", guest.phone);
   if (newPhone === null) return;
-  const newMaxScans = prompt("عدّل عدد مرات الدخول المسموحة:", guest.maxScans || 1);
+  var newMaxScans = prompt("عدّل عدد مرات الدخول المسموحة:", guest.maxScans || 1);
 
-  const name = newName.trim();
-  const phone = newPhone.trim();
-  const maxScans = parseInt(newMaxScans);
+  var name = newName.trim();
+  var phone = newPhone.trim();
+  var maxScans = parseInt(newMaxScans);
 
   if (!name || !phone) { showToast("⚠️ الاسم ورقم الجوال مطلوبة", "warning"); return; }
   if (isNaN(maxScans) || maxScans < 1) { showToast("⚠️ عدد مرات الدخول غير صحيح", "warning"); return; }
 
   try {
-    const result = await callScript({
-      action: "updateGuest",
-      eventId: currentEventId,
-      id: guest.id,
-      name, phone,
-      maxScans: maxScans
+    var result = await callScript({
+      action: "updateGuest", eventId: currentEventId,
+      id: guest.id, name: name, phone: phone, maxScans: maxScans
     });
     if (result.status !== "success") { showToast("❌ لم يتم التعديل", "error"); return; }
     await loadGuestsFromSheet();
@@ -677,11 +673,11 @@ async function editGuest(index) {
 }
 
 async function deleteGuest(index) {
-  const guest = guests[index];
-  if (!confirm(`🗑️ هل تريد حذف ${guest.name}؟`)) return;
+  var guest = guests[index];
+  if (!confirm("🗑️ هل تريد حذف " + guest.name + "؟")) return;
 
   try {
-    const result = await callScript({
+    var result = await callScript({
       action: "deleteGuest", eventId: currentEventId, id: guest.id
     });
     if (result.status !== "success") { showToast("❌ لم يتم الحذف", "error"); return; }
@@ -709,10 +705,10 @@ function previewGuest(guest) {
       nameBox.style.display = 'flex';
       nameBox.style.opacity = '1';
       
-      const isLight = isColorLight(fontColor ? fontColor.value : "#000000");
+      var isLight = isColorLight(fontColor ? fontColor.value : "#000000");
       nameBox.style.backgroundColor = isLight ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.85)';
       nameBox.style.color = fontColor ? fontColor.value : "#000000";
-      nameBox.style.border = `2px dashed ${isLight ? '#94a3b8' : '#2563eb'}`;
+      nameBox.style.border = '2px dashed ' + (isLight ? '#94a3b8' : '#2563eb');
       nameBox.style.textShadow = isLight ? '0 0 8px rgba(0,0,0,0.8)' : 'none';
       
       if (fontFamily) nameBox.style.fontFamily = fontFamily.value;
@@ -729,36 +725,34 @@ function previewGuest(guest) {
   
   qrBox.innerHTML = "";
   
-  const qrSize = qrBox.clientWidth || 110;
-  const selectedQrColor = qrColor ? qrColor.value : "#000000";
-  const isLight = isColorLight(selectedQrColor);
+  var qrSize = qrBox.clientWidth || 110;
+  var selectedQrColor = qrColor ? qrColor.value : "#000000";
+  var isLight = isColorLight(selectedQrColor);
+  var bgColor = isLight ? '#1e293b' : '#ffffff';
   
- // ✅ خلفية متباينة للمعاينة
-const bgColor = isLight ? '#1e293b' : '#ffffff';
-qrBox.style.backgroundColor = bgColor;
-qrBox.style.border = isLight ? '2px dashed #64748b' : '2px dashed #2563eb';
-
-// ✅ تنظيف QR القديم
-qrBox.innerHTML = '';
-
-new QRCode(qrBox, {
-  text: getQrText(guest),
-  width: qrSize,
-  height: qrSize,
-  colorDark: selectedQrColor,
-  colorLight: bgColor, // ✅ لون الخلفية يتطابق مع خلفية الصندوق
-  correctLevel: QRCode.CorrectLevel.H
-});
+  qrBox.style.backgroundColor = bgColor;
+  qrBox.style.border = isLight ? '2px dashed #64748b' : '2px dashed #2563eb';
+  
+  new QRCode(qrBox, {
+    text: getQrText(guest),
+    width: qrSize,
+    height: qrSize,
+    colorDark: selectedQrColor,
+    colorLight: bgColor,
+    correctLevel: QRCode.CorrectLevel.H
+  });
+}
 
 // ============================================
-// ✅ عرض الجداول مع maxScans// ============================================
+// عرض الجداول
+// ============================================
 
 function renderGuests() {
   if (!guestTable) return;
 
   guestTable.innerHTML = "";
 
-  if (guestCount) guestCount.textContent = `${guests.length} ضيف`;
+  if (guestCount) guestCount.textContent = guests.length + " ضيف";
 
   if (guests.length === 0) {
     guestTable.innerHTML = '<tr><td colspan="6">ℹ️ لا يوجد ضيوف</td></tr>';
@@ -766,20 +760,20 @@ function renderGuests() {
     return;
   }
 
-  guests.forEach((guest, index) => {
-    const row = document.createElement("tr");
+  guests.forEach(function(guest, index) {
+    var row = document.createElement("tr");
     row.style.cursor = "pointer";
     
-    const hasInvitation = guest.invitation || guest.invitationPNG;
-    const scanRemaining = Math.max(0, (guest.maxScans || 1) - (guest.scanCount || 0));
-    const isMaxedOut = scanRemaining <= 0;
+    var hasInvitation = guest.invitation || guest.invitationPNG;
+    var scanRemaining = Math.max(0, (guest.maxScans || 1) - (guest.scanCount || 0));
+    var isMaxedOut = scanRemaining <= 0;
     
     row.innerHTML = `
       <td><strong>${escapeHtml(guest.name)}</strong></td>
       <td dir="ltr">${escapeHtml(guest.phone)}</td>
       <td>
         <span class="status-badge" style="background:${isMaxedOut ? '#fee2e2' : (guest.scanCount > 0 ? '#fef3c7' : '#f1f5f9')};color:${isMaxedOut ? '#991b1b' : (guest.scanCount > 0 ? '#92400e' : '#475569')};">
-          ${isMaxedOut ? '🚫 منتهي' : `${guest.scanCount || 0}/${guest.maxScans || 1}`}
+          ${isMaxedOut ? '🚫 منتهي' : (guest.scanCount || 0) + '/' + (guest.maxScans || 1)}
         </span>
       </td>
       <td>${hasInvitation ? '<span style="color:#10b981;">✅ PDF</span>' : '<span style="color:#94a3b8;">—</span>'}</td>
@@ -789,13 +783,13 @@ function renderGuests() {
       </td>
     `;
 
-    row.addEventListener("click", (e) => {
+    row.addEventListener("click", function(e) {
       if (e.target.closest("button")) return;
       previewGuest(guest);
     });
 
-    const editBtn = row.querySelector(".edit-btn");
-    const deleteBtn = row.querySelector(".delete-btn");
+    var editBtn = row.querySelector(".edit-btn");
+    var deleteBtn = row.querySelector(".delete-btn");
     
     if (editBtn) editBtn.addEventListener("click", function(e) { e.stopPropagation(); editGuest(index); });
     if (deleteBtn) deleteBtn.addEventListener("click", function(e) { e.stopPropagation(); deleteGuest(index); });
@@ -811,17 +805,17 @@ function renderInvitationTable() {
   
   invitationTable.innerHTML = "";
 
-  const guestsWithInvitations = guests.filter(g => g.invitation || g.invitationPNG);
+  var guestsWithInvitations = guests.filter(function(g) { return g.invitation || g.invitationPNG; });
   
   if (guestsWithInvitations.length === 0) {
     invitationTable.innerHTML = '<tr><td colspan="3">ℹ️ لا توجد دعوات</td></tr>';
     return;
   }
 
-  guestsWithInvitations.forEach(guest => {
-    const row = document.createElement("tr");
-    const pdfData = guest.invitation || guest.invitationPNG || '';
-    const safeName = sanitizeFileName(guest.name);
+  guestsWithInvitations.forEach(function(guest) {
+    var row = document.createElement("tr");
+    var pdfData = guest.invitation || guest.invitationPNG || '';
+    var safeName = sanitizeFileName(guest.name);
     
     row.innerHTML = `
       <td><strong>${escapeHtml(guest.name)}</strong></td>
@@ -833,13 +827,13 @@ function renderInvitationTable() {
       </td>
     `;
     
-    const downloadBtn = row.querySelector('.download-pdf-btn');
+    var downloadBtn = row.querySelector('.download-pdf-btn');
     if (downloadBtn && pdfData) {
       downloadBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        const link = document.createElement('a');
+        var link = document.createElement('a');
         link.href = pdfData;
-        link.download = `دعوة_${safeName}.pdf`;
+        link.download = 'دعوة_' + safeName + '.pdf';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -848,20 +842,6 @@ function renderInvitationTable() {
     
     invitationTable.appendChild(row);
   });
-}
-
-// أيضًا تحديث رأس الجدول في HTML
-function updateTableHeader() {
-  const headerRow = guestTable?.closest('table')?.querySelector('thead tr');
-  if (headerRow) {
-    headerRow.innerHTML = `
-      <th><i class="fas fa-user"></i> الاسم</th>
-      <th><i class="fas fa-phone"></i> الجوال</th>
-      <th><i class="fas fa-check-circle"></i> الدخول</th>
-      <th><i class="fas fa-image"></i> الدعوة</th>
-      <th><i class="fas fa-cog"></i> إجراءات</th>
-    `;
-  }
 }
 
 // ============================================
@@ -899,10 +879,10 @@ function refreshQrPreview() {
 
 if (inviteUpload) {
   inviteUpload.addEventListener("change", function(e) {
-    const file = e.target.files[0];
+    var file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
+    var reader = new FileReader();
     reader.onload = function(event) {
       uploadedImage = event.target.result;
       localStorage.setItem("uploadedImage", uploadedImage);
@@ -919,41 +899,41 @@ if (inviteUpload) {
 function makeDraggable(el) {
   if (!el) return;
 
-  let dragging = false;
-  let offsetX = 0;
-  let offsetY = 0;
+  var dragging = false;
+  var offsetX = 0;
+  var offsetY = 0;
 
-  el.addEventListener("mousedown", e => {
+  el.addEventListener("mousedown", function(e) {
     dragging = true;
     offsetX = e.clientX - el.offsetLeft;
     offsetY = e.clientY - el.offsetTop;
     el.style.zIndex = "20";
   });
 
-  el.addEventListener("touchstart", e => {
+  el.addEventListener("touchstart", function(e) {
     dragging = true;
-    const touch = e.touches[0];
+    var touch = e.touches[0];
     offsetX = touch.clientX - el.offsetLeft;
     offsetY = touch.clientY - el.offsetTop;
     el.style.zIndex = "20";
   }, { passive: false });
 
-  document.addEventListener("mousemove", e => {
+  document.addEventListener("mousemove", function(e) {
     if (!dragging) return;
     el.style.left = (e.clientX - offsetX) + "px";
     el.style.top = (e.clientY - offsetY) + "px";
   });
 
-  document.addEventListener("touchmove", e => {
+  document.addEventListener("touchmove", function(e) {
     if (!dragging) return;
     e.preventDefault();
-    const touch = e.touches[0];
+    var touch = e.touches[0];
     el.style.left = (touch.clientX - offsetX) + "px";
     el.style.top = (touch.clientY - offsetY) + "px";
   }, { passive: false });
 
-  document.addEventListener("mouseup", () => { dragging = false; if (el) el.style.zIndex = "10"; });
-  document.addEventListener("touchend", () => { dragging = false; if (el) el.style.zIndex = "10"; });
+  document.addEventListener("mouseup", function() { dragging = false; if (el) el.style.zIndex = "10"; });
+  document.addEventListener("touchend", function() { dragging = false; if (el) el.style.zIndex = "10"; });
 }
 
 makeDraggable(nameBox);
@@ -963,7 +943,7 @@ makeDraggable(qrBox);
 // ربط أحداث التصميم
 // ============================================
 
-[fontFamily, fontSize, fontColor, fontWeight].forEach(input => {
+[fontFamily, fontSize, fontColor, fontWeight].forEach(function(input) {
   if (!input) return;
   input.addEventListener("input", updateNamePreviewStyle);
   input.addEventListener("change", updateNamePreviewStyle);
@@ -987,8 +967,8 @@ async function pickColor(targetInput) {
     return;
   }
   try {
-    const eyeDropper = new EyeDropper();
-    const result = await eyeDropper.open();
+    var eyeDropper = new EyeDropper();
+    var result = await eyeDropper.open();
     targetInput.value = result.sRGBHex;
     updateNamePreviewStyle();
     refreshQrPreview();
@@ -997,27 +977,27 @@ async function pickColor(targetInput) {
   } catch (error) {}
 }
 
-if (pickFontColorBtn) pickFontColorBtn.onclick = () => pickColor(fontColor);
-if (pickQrColorBtn) pickQrColorBtn.onclick = () => pickColor(qrColor);
+if (pickFontColorBtn) pickFontColorBtn.onclick = function() { pickColor(fontColor); };
+if (pickQrColorBtn) pickQrColorBtn.onclick = function() { pickColor(qrColor); };
 
 // ============================================
 // مكتبة jsPDF
 // ============================================
 
 function loadJSPDF() {
-  return new Promise((resolve, reject) => {
+  return new Promise(function(resolve, reject) {
     if (window.jspdf && window.jspdf.jsPDF) {
       resolve(window.jspdf.jsPDF);
       return;
     }
     
-    const script = document.createElement('script');
+    var script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    script.onload = () => {
+    script.onload = function() {
       if (window.jspdf && window.jspdf.jsPDF) resolve(window.jspdf.jsPDF);
       else reject(new Error('فشل تحميل PDF'));
     };
-    script.onerror = () => reject(new Error('فشل تحميل PDF'));
+    script.onerror = function() { reject(new Error('فشل تحميل PDF')); };
     document.head.appendChild(script);
   });
 }
@@ -1029,16 +1009,16 @@ function loadJSPDF() {
 function getPositionOnImage(box, canvasWidth, canvasHeight) {
   if (!box || !inviteImage) return { x: 0, y: 0, w: 100, h: 100 };
   
-  const imageRect = inviteImage.getBoundingClientRect();
-  const boxRect = box.getBoundingClientRect();
+  var imageRect = inviteImage.getBoundingClientRect();
+  var boxRect = box.getBoundingClientRect();
   if (!imageRect.width || !imageRect.height) throw new Error("صورة التصميم غير ظاهرة");
   
-  const scaleX = canvasWidth / imageRect.width;
-  const scaleY = canvasHeight / imageRect.height;
+  var scaleX = canvasWidth / imageRect.width;
+  var scaleY = canvasHeight / imageRect.height;
   
-  const rawW = boxRect.width * scaleX;
-  const rawH = boxRect.height * scaleY;
-  const squareSize = Math.min(rawW, rawH);
+  var rawW = boxRect.width * scaleX;
+  var rawH = boxRect.height * scaleY;
+  var squareSize = Math.min(rawW, rawH);
   
   return {
     x: (boxRect.left - imageRect.left) * scaleX + (rawW - squareSize) / 2,
@@ -1049,65 +1029,51 @@ function getPositionOnImage(box, canvasWidth, canvasHeight) {
 }
 
 function createQrImage(text) {
-  return new Promise(resolve => {
-    const tempDiv = document.createElement("div");
+  return new Promise(function(resolve) {
+    var tempDiv = document.createElement("div");
     tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
     document.body.appendChild(tempDiv);
     
-    const qrSize = 600;
-    const selectedQrColor = qrColor ? qrColor.value : "#000000";
-    const isLight = isColorLight(selectedQrColor);
+    var qrSize = 600;
+    var selectedQrColor = qrColor ? qrColor.value : "#000000";
+    var isLight = isColorLight(selectedQrColor);
     
-    // ✅ إنشاء QR مع خلفية مناسبة
     new QRCode(tempDiv, {
-      text,
+      text: text,
       width: qrSize,
       height: qrSize,
       colorDark: selectedQrColor,
-      colorLight: isLight ? "#000000" : "#ffffff", // ✅ خلفية سوداء للألوان الفاتحة
+      colorLight: isLight ? "#000000" : "#ffffff",
       correctLevel: QRCode.CorrectLevel.H
     });
     
-    setTimeout(() => {
-      const canvas = tempDiv.querySelector("canvas");
+    setTimeout(function() {
+      var canvas = tempDiv.querySelector("canvas");
       if (!canvas) { document.body.removeChild(tempDiv); resolve(null); return; }
       
-      const ctx = canvas.getContext("2d");
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
+      var ctx = canvas.getContext("2d");
+      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var data = imageData.data;
       
       if (isLight) {
-        // ✅ للألوان الفاتحة: نجعل الخلفية السوداء شفافة ونبقي QR الفاتح
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          
-          // إذا كان البكسل أسود (خلفية) ← نجعله شفاف
-          if (r < 30 && g < 30 && b < 30) {
-            data[i + 3] = 0;
+        for (var i = 0; i < data.length; i += 4) {
+          if (data[i] < 30 && data[i+1] < 30 && data[i+2] < 30) {
+            data[i+3] = 0;
           }
-          // بكسل QR الفاتح يبقى كما هو
         }
       } else {
-        // ✅ للألوان الداكنة: نجعل الخلفية البيضاء شفافة
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          
-          // إذا كان البكسل أبيض (خلفية) ← نجعله شفاف
-          if (r > 240 && g > 240 && b > 240) {
-            data[i + 3] = 0;
+        for (var i = 0; i < data.length; i += 4) {
+          if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) {
+            data[i+3] = 0;
           }
         }
       }
       
       ctx.putImageData(imageData, 0, 0);
       
-      const img = new Image();
-      img.onload = () => { document.body.removeChild(tempDiv); resolve(img); };
-      img.onerror = () => { document.body.removeChild(tempDiv); resolve(null); };
+      var img = new Image();
+      img.onload = function() { document.body.removeChild(tempDiv); resolve(img); };
+      img.onerror = function() { document.body.removeChild(tempDiv); resolve(null); };
       img.src = canvas.toDataURL("image/png");
     }, 300);
   });
@@ -1130,30 +1096,31 @@ async function generateInvitations() {
       generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري توليد PDF...';
     }
 
-    const JsPDF = await loadJSPDF();
-    await new Promise(resolve => setTimeout(resolve, 300));
+    var JsPDF = await loadJSPDF();
+    await new Promise(function(resolve) { setTimeout(resolve, 300); });
 
-    const baseImage = new Image();
-    await new Promise((resolve, reject) => {
+    var baseImage = new Image();
+    await new Promise(function(resolve, reject) {
       baseImage.onload = resolve;
-      baseImage.onerror = () => reject(new Error("فشل تحميل الصورة"));
+      baseImage.onerror = function() { reject(new Error("فشل تحميل الصورة")); };
       baseImage.src = uploadedImage;
     });
 
-    const imageRect = inviteImage.getBoundingClientRect();
-    const qrPos = getPositionOnImage(qrBox, baseImage.width, baseImage.height);
-    const finalFontSize = Math.round((fontSize ? Number(fontSize.value || 40) : 40) * (baseImage.width / imageRect.width));
-    const selectedFontColor = fontColor ? fontColor.value : "#000000";
-    const isNameLight = isColorLight(selectedFontColor);
+    var imageRect = inviteImage.getBoundingClientRect();
+    var qrPos = getPositionOnImage(qrBox, baseImage.width, baseImage.height);
+    var finalFontSize = Math.round((fontSize ? Number(fontSize.value || 40) : 40) * (baseImage.width / imageRect.width));
+    var selectedFontColor = fontColor ? fontColor.value : "#000000";
+    var isNameLight = isColorLight(selectedFontColor);
 
-    let namePos = null;
+    var namePos = null;
     if (showName && nameBox) {
       namePos = getPositionOnImage(nameBox, baseImage.width, baseImage.height);
     }
 
-    for (const guest of guests) {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
+    for (var g = 0; g < guests.length; g++) {
+      var guest = guests[g];
+      var canvas = document.createElement("canvas");
+      var ctx = canvas.getContext("2d");
       canvas.width = baseImage.width;
       canvas.height = baseImage.height;
       ctx.drawImage(baseImage, 0, 0);
@@ -1161,61 +1128,55 @@ async function generateInvitations() {
       if (showName && namePos) {
         if (isNameLight) {
           ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-          const padding = 12;
+          var padding = 12;
           ctx.fillRect(namePos.x - padding, namePos.y - namePos.h/2 - padding, namePos.w + padding * 2, namePos.h + padding * 2);
         }
         
-        ctx.font = `${fontWeight ? fontWeight.value : "bold"} ${finalFontSize}px ${fontFamily ? fontFamily.value : "Arial"}`;
+        ctx.font = (fontWeight ? fontWeight.value : "bold") + " " + finalFontSize + "px " + (fontFamily ? fontFamily.value : "Arial");
         ctx.fillStyle = selectedFontColor;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(guest.name, namePos.x + namePos.w/2, namePos.y + namePos.h/2);
       }
 
-      // رسم QR Code
-const qrImage = await createQrImage(getQrText(guest));
-if (qrImage) {
-  const selectedQrColor = qrColor ? qrColor.value : "#000000";
-  const isQrLight = isColorLight(selectedQrColor);
-  
-  if (isQrLight) {
-    // ✅ للـ QR الفاتح: نرسم خلفية داكنة أولاً
-    const padding = Math.round(qrPos.w * 0.08); // padding نسبي 8%
-    
-    // خلفية داكنة مع زوايا دائرية
-    ctx.fillStyle = '#1e293b';
-    roundRect(ctx, qrPos.x - padding, qrPos.y - padding, qrPos.w + padding * 2, qrPos.h + padding * 2, 10);
-    ctx.fill();
-    
-    // إطار أبيض رفيع
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.lineWidth = Math.max(1, Math.round(qrPos.w * 0.005));
-    roundRect(ctx, qrPos.x - padding, qrPos.y - padding, qrPos.w + padding * 2, qrPos.h + padding * 2, 10);
-    ctx.stroke();
-  }
-  
-  // رسم QR نفسه (بخلفية شفافة)
-  ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
-}
+      var qrImage = await createQrImage(getQrText(guest));
+      if (qrImage) {
+        var selectedQrColor = qrColor ? qrColor.value : "#000000";
+        var isQrLight = isColorLight(selectedQrColor);
+        
+        if (isQrLight) {
+          var qrPadding = Math.round(qrPos.w * 0.08);
+          ctx.fillStyle = '#1e293b';
+          roundRect(ctx, qrPos.x - qrPadding, qrPos.y - qrPadding, qrPos.w + qrPadding * 2, qrPos.h + qrPadding * 2, 10);
+          ctx.fill();
+          
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.lineWidth = Math.max(1, Math.round(qrPos.w * 0.005));
+          roundRect(ctx, qrPos.x - qrPadding, qrPos.y - qrPadding, qrPos.w + qrPadding * 2, qrPos.h + qrPadding * 2, 10);
+          ctx.stroke();
+        }
+        
+        ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
+      }
 
-      const pngDataURL = canvas.toDataURL("image/png");
+      var pngDataURL = canvas.toDataURL("image/png");
       guest.invitationPNG = pngDataURL;
 
-      const pdf = new JsPDF({
+      var pdf = new JsPDF({
         orientation: baseImage.width > baseImage.height ? 'landscape' : 'portrait',
         unit: 'px',
         format: [baseImage.width, baseImage.height]
       });
 
       pdf.addImage(pngDataURL, 'PNG', 0, 0, baseImage.width, baseImage.height);
-      const pdfDataURL = pdf.output('datauristring');
+      var pdfDataURL = pdf.output('datauristring');
       guest.invitation = pdfDataURL;
 
       await updateGuestInvitationInSheet(guest.id);
     }
 
     renderGuests();
-    showToast(`✅ تم توليد ${guests.length} ملف PDF`, "success", 5000);
+    showToast("✅ تم توليد " + guests.length + " ملف PDF", "success", 5000);
   } catch (error) {
     showToast("❌ خطأ: " + (error.message || error), "error", 5000);
   } finally {
@@ -1225,32 +1186,13 @@ if (qrImage) {
     }
   }
 }
-// ============================================
-// دالة مساعدة: رسم مستطيل بزوايا دائرية
-// ============================================
 
-function roundRect(ctx, x, y, w, h, r) {
-  if (w < 2 * r) r = w / 2;
-  if (h < 2 * r) r = h / 2;
-  
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
 // ============================================
 // تحميل جميع الدعوات PDF
 // ============================================
 
 async function downloadAllInvitations() {
-  const guestsWithInvitations = guests.filter(g => g.invitation);
+  var guestsWithInvitations = guests.filter(function(g) { return g.invitation; });
   if (guestsWithInvitations.length === 0) {
     showToast("⚠️ لا توجد دعوات", "warning");
     return;
@@ -1265,30 +1207,30 @@ async function downloadAllInvitations() {
     downloadAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل...';
   }
 
-  const zip = new JSZip();
-  const event = getCurrentEvent();
-  const eventName = event ? sanitizeFileName(event.eventName) : "الدعوات";
+  var zip = new JSZip();
+  var event = getCurrentEvent();
+  var eventName = event ? sanitizeFileName(event.eventName) : "الدعوات";
 
-  guestsWithInvitations.forEach(guest => {
-    const pdfData = guest.invitation;
-    if (pdfData && pdfData.includes('base64')) {
-      const base64Data = pdfData.split(',')[1];
-      const safeName = sanitizeFileName(guest.name);
-      zip.file(`دعوة_${safeName}.pdf`, base64Data, { base64: true });
+  guestsWithInvitations.forEach(function(guest) {
+    var pdfData = guest.invitation;
+    if (pdfData && pdfData.indexOf('base64') !== -1) {
+      var base64Data = pdfData.split(',')[1];
+      var safeName = sanitizeFileName(guest.name);
+      zip.file('دعوة_' + safeName + '.pdf', base64Data, { base64: true });
     }
   });
 
   try {
-    const content = await zip.generateAsync({ type: "blob" });
-    const url = URL.createObjectURL(content);
-    const a = document.createElement("a");
+    var content = await zip.generateAsync({ type: "blob" });
+    var url = URL.createObjectURL(content);
+    var a = document.createElement("a");
     a.href = url;
-    a.download = `دعوات_${eventName}.zip`;
+    a.download = 'دعوات_' + eventName + '.zip';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast(`✅ تم تحميل ${guestsWithInvitations.length} ملف`, "success", 4000);
+    showToast("✅ تم تحميل " + guestsWithInvitations.length + " ملف", "success", 4000);
   } catch (error) {
     showToast("❌ خطأ في إنشاء ZIP", "error");
   } finally {
@@ -1300,13 +1242,13 @@ async function downloadAllInvitations() {
 }
 
 // ============================================
-// ✅ الماسح الضوئي مع maxScans
+// الماسح الضوئي مع maxScans
 // ============================================
 
 function parseQrText(text) {
-  const value = String(text || "").trim();
-  if (value.includes("|")) {
-    const parts = value.split("|");
+  var value = String(text || "").trim();
+  if (value.indexOf("|") !== -1) {
+    var parts = value.split("|");
     return { eventId: parts[0], guestId: parts[1] };
   }
   return { eventId: currentEventId, guestId: value };
@@ -1323,14 +1265,14 @@ function startScanner() {
   scanner.start(
     { facingMode: "environment" },
     { fps: 10, qrbox: { width: 250, height: 250 } },
-    qrText => {
+    function(qrText) {
       if (isScanningPaused) return;
       isScanningPaused = true;
       checkInGuest(qrText);
-      setTimeout(() => { isScanningPaused = false; }, 4500);
+      setTimeout(function() { isScanningPaused = false; }, 4500);
     },
-    error => {}
-  ).catch(() => {
+    function(error) {}
+  ).catch(function() {
     if (scanResult) scanResult.innerHTML = '<span style="color:#ef4444;">❌ فشل التشغيل</span>';
     scanner = null;
   });
@@ -1343,7 +1285,7 @@ async function checkInGuest(qrText) {
     return;
   }
 
-  const parsed = parseQrText(qrText);
+  var parsed = parseQrText(qrText);
   
   if (String(parsed.eventId) !== String(currentEventId)) {
     showToast("❌ QR تابع لمناسبة أخرى", "error", 3500);
@@ -1351,55 +1293,53 @@ async function checkInGuest(qrText) {
     return;
   }
 
-  const guest = guests.find(g => String(g.id) === String(parsed.guestId));
+  var guest = guests.find(function(g) { return String(g.id) === String(parsed.guestId); });
   if (!guest) {
     showToast("❌ QR غير معروف", "error", 3500);
     if (scanResult) scanResult.innerHTML = '<span style="color:#ef4444;">❌ غير معروف</span>';
     return;
   }
 
-  // ✅ التحقق من الحد الأقصى للدخول
-  const maxScans = guest.maxScans || 1;
-  const currentScans = guest.scanCount || 0;
+  var maxScans = guest.maxScans || 1;
+  var currentScans = guest.scanCount || 0;
   
   if (currentScans >= maxScans) {
-    showToast(`🚫 ${guest.name} استنفذ الحد الأقصى (${maxScans}/${maxScans})`, "error", 4000);
-    if (scanResult) scanResult.innerHTML = `<span style="color:#ef4444;">🚫 ${guest.name} منتهي (${maxScans}/${maxScans})</span>`;
+    showToast("🚫 " + guest.name + " استنفذ الحد الأقصى (" + maxScans + "/" + maxScans + ")", "error", 4000);
+    if (scanResult) scanResult.innerHTML = '<span style="color:#ef4444;">🚫 ' + guest.name + ' منتهي</span>';
     return;
   }
 
-  const time = new Date().toLocaleString("ar-SA");
+  var time = new Date().toLocaleString("ar-SA");
 
   try {
-    const result = await callScript({
+    var result = await callScript({
       action: "attendance",
       eventId: currentEventId,
       id: guest.id,
       name: guest.name,
       phone: guest.phone,
-      time,
-      scanCount: currentScans + 1,
-      maxScans: maxScans
+      time: time
     });
 
     if (result.status === "duplicate") {
-      showToast(`⚠️ ${guest.name} مكرر`, "warning", 3500);
+      showToast("⚠️ " + guest.name + " مكرر", "warning", 3500);
       return;
     }
 
     if (result.status === "success") {
-      const newCount = currentScans + 1;
-      const remaining = maxScans - newCount;
+      await loadGuestsFromSheet();
+      
+      var updatedGuest = guests.find(function(g) { return String(g.id) === String(guest.id); });
+      var newCount = updatedGuest ? updatedGuest.scanCount : (currentScans + 1);
+      var remaining = maxScans - newCount;
       
       if (remaining <= 0) {
-        showToast(`🚫 ${guest.name} اكتمل العدد (${maxScans}/${maxScans})`, "warning", 4000);
-        if (scanResult) scanResult.innerHTML = `<span style="color:#f59e0b;">🚫 ${guest.name} مكتمل</span>`;
+        showToast("🚫 " + guest.name + " اكتمل (" + maxScans + "/" + maxScans + ")", "warning", 4000);
+        if (scanResult) scanResult.innerHTML = '<span style="color:#f59e0b;">🚫 ' + guest.name + ' مكتمل</span>';
       } else {
-        showToast(`✅ ${guest.name} (${newCount}/${maxScans}) متبقي ${remaining}`, "success", 4000);
-        if (scanResult) scanResult.innerHTML = `<span style="color:#10b981;">✅ ${guest.name} (${newCount}/${maxScans})</span>`;
+        showToast("✅ " + guest.name + " (" + newCount + "/" + maxScans + ") متبقي " + remaining, "success", 4000);
+        if (scanResult) scanResult.innerHTML = '<span style="color:#10b981;">✅ ' + guest.name + ' (' + newCount + '/' + maxScans + ')</span>';
       }
-      
-      await loadGuestsFromSheet();
       return;
     }
 
@@ -1438,10 +1378,9 @@ if (scanBtn) scanBtn.onclick = startScanner;
 // تطبيق الأنماط الأولية
 // ============================================
 
-setTimeout(() => {
+setTimeout(function() {
   updateQRPlaceholderStyle();
   updateNameBoxAppearance();
-  updateTableHeader();
 }, 300);
 
 // ============================================
