@@ -1168,21 +1168,31 @@ async function generateInvitations() {
         ctx.fillText(guest.name, namePos.x + namePos.w/2, namePos.y + namePos.h/2);
       }
 
-      const qrImage = await createQrImage(getQrText(guest));
-      if (qrImage) {
-        const selectedQrColor = qrColor ? qrColor.value : "#000000";
-        const isQrLight = isColorLight(selectedQrColor);
-        
-        if (isQrLight) {
-          ctx.fillStyle = '#1e293b';
-          ctx.fillRect(qrPos.x - 5, qrPos.y - 5, qrPos.w + 10, qrPos.h + 10);
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(qrPos.x - 5, qrPos.y - 5, qrPos.w + 10, qrPos.h + 10);
-        }
-        
-        ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
-      }
+      // رسم QR Code
+const qrImage = await createQrImage(getQrText(guest));
+if (qrImage) {
+  const selectedQrColor = qrColor ? qrColor.value : "#000000";
+  const isQrLight = isColorLight(selectedQrColor);
+  
+  if (isQrLight) {
+    // ✅ للـ QR الفاتح: نرسم خلفية داكنة أولاً
+    const padding = Math.round(qrPos.w * 0.08); // padding نسبي 8%
+    
+    // خلفية داكنة مع زوايا دائرية
+    ctx.fillStyle = '#1e293b';
+    roundRect(ctx, qrPos.x - padding, qrPos.y - padding, qrPos.w + padding * 2, qrPos.h + padding * 2, 10);
+    ctx.fill();
+    
+    // إطار أبيض رفيع
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.lineWidth = Math.max(1, Math.round(qrPos.w * 0.005));
+    roundRect(ctx, qrPos.x - padding, qrPos.y - padding, qrPos.w + padding * 2, qrPos.h + padding * 2, 10);
+    ctx.stroke();
+  }
+  
+  // رسم QR نفسه (بخلفية شفافة)
+  ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
+}
 
       const pngDataURL = canvas.toDataURL("image/png");
       guest.invitationPNG = pngDataURL;
@@ -1211,7 +1221,26 @@ async function generateInvitations() {
     }
   }
 }
+// ============================================
+// دالة مساعدة: رسم مستطيل بزوايا دائرية
+// ============================================
 
+function roundRect(ctx, x, y, w, h, r) {
+  if (w < 2 * r) r = w / 2;
+  if (h < 2 * r) r = h / 2;
+  
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
 // ============================================
 // تحميل جميع الدعوات PDF
 // ============================================
