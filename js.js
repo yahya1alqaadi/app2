@@ -1,5 +1,6 @@
 // ============================================
 // نظام دعوات QR - المنطق البرمجي الكامل
+// مع: خطوط متعددة + رابط الشيت + حد أقصى للمسح
 // ============================================
 
 const ADMIN_PASSWORD = "95321";
@@ -45,7 +46,7 @@ if (sessionStorage.getItem("adminLoggedIn") === "yes") {
 }
 
 // ============================================
-// المتغيرات الرئيسية - تعريف qrScalePercent هنا
+// المتغيرات الرئيسية
 // ============================================
 
 let events = [];
@@ -53,23 +54,23 @@ let guests = [];
 let currentEventId = localStorage.getItem("currentEventId") || "";
 let uploadedImage = localStorage.getItem("uploadedImage") || "";
 
+// ✅ رابط Google Sheets (عدله إلى رابط الشيت الخاص بك)
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1Q4_xHS5CXKYIxElTz8YCyBjnWydxGdKIh8yJZtYTB8A/edit";
+
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
 
 let scanner = null;
 let isScanningPaused = false;
-
-// ✅ تعريف qrScalePercent هنا قبل أي استخدام
 let qrScalePercent = parseInt(localStorage.getItem("qrScalePercent") || "100");
+let showName = localStorage.getItem("showName") !== "false";
 
 // ============================================
-// عناصر DOM - مع التحقق من وجودها
+// عناصر DOM
 // ============================================
 
 function getElement(id) {
   const el = document.getElementById(id);
-  if (!el) {
-    console.warn(`⚠️ عنصر ${id} غير موجود في الصفحة`);
-  }
+  if (!el) console.warn(`⚠️ عنصر ${id} غير موجود`);
   return el;
 }
 
@@ -102,7 +103,7 @@ const headerEventBadge = getElement("headerEventBadge");
 const guestCount = getElement("guestCount");
 
 // ============================================
-// دالة مساعدة: تحديد إذا كان اللون فاتحاً
+// دوال مساعدة للألوان
 // ============================================
 
 function isColorLight(hexColor) {
@@ -121,7 +122,7 @@ function isColorLight(hexColor) {
 }
 
 // ============================================
-// دالة resizeQRBox - تعتمد على qrScalePercent
+// دوال QR
 // ============================================
 
 function resizeQRBox() {
@@ -134,20 +135,11 @@ function resizeQRBox() {
   qrBox.style.height = scaledSize + 'px';
   qrBox.style.aspectRatio = '1/1';
   
-  // الحفاظ على الخلفية المناسبة
   const selectedQrColor = qrColor ? qrColor.value : "#000000";
   const isLight = isColorLight(selectedQrColor);
   
-  if (isLight) {
-    qrBox.style.backgroundColor = '#334155';
-  } else {
-    qrBox.style.backgroundColor = '#ffffff';
-  }
+  qrBox.style.backgroundColor = isLight ? '#334155' : '#ffffff';
 }
-
-// ============================================
-// تحديث شكل placeholder QR
-// ============================================
 
 function updateQRPlaceholderStyle() {
   if (!qrBox) return;
@@ -157,21 +149,33 @@ function updateQRPlaceholderStyle() {
   
   resizeQRBox();
   
-  if (isLight) {
-    qrBox.style.backgroundColor = '#334155';
-    qrBox.style.color = selectedQrColor;
-    qrBox.style.border = '2px dashed #64748b';
-  } else {
-    qrBox.style.backgroundColor = '#ffffff';
-    qrBox.style.color = selectedQrColor;
-    qrBox.style.border = '2px dashed #2563eb';
-  }
-  
+  qrBox.style.backgroundColor = isLight ? '#334155' : '#ffffff';
+  qrBox.style.color = selectedQrColor;
+  qrBox.style.border = isLight ? '2px dashed #64748b' : '2px dashed #2563eb';
   qrBox.innerHTML = '<i class="fas fa-qrcode"></i>';
 }
 
+function updateNameBoxAppearance() {
+  if (!nameBox || !fontColor) return;
+  
+  const isLight = isColorLight(fontColor.value);
+  
+  nameBox.style.backgroundColor = isLight ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.85)';
+  nameBox.style.color = fontColor.value;
+  nameBox.style.border = `2px dashed ${isLight ? '#94a3b8' : '#2563eb'}`;
+  nameBox.style.textShadow = isLight ? '0 0 8px rgba(0,0,0,0.8)' : 'none';
+  
+  if (showName) {
+    nameBox.style.display = 'flex';
+    nameBox.style.opacity = '1';
+  } else {
+    nameBox.style.display = 'none';
+    nameBox.style.opacity = '0';
+  }
+}
+
 // ============================================
-// إضافة متحكم حجم QR
+// إضافة متحكمات التصميم
 // ============================================
 
 function addQRSizeControl() {
@@ -179,21 +183,35 @@ function addQRSizeControl() {
   if (!designControls) return;
   if (document.getElementById('qrSizeControl')) return;
 
-  const controlGroup = document.createElement('div');
-  controlGroup.className = 'control-group';
-  controlGroup.id = 'qrSizeControl';
-  controlGroup.innerHTML = `
+  // متحكم حجم QR
+  const qrControlGroup = document.createElement('div');
+  qrControlGroup.className = 'control-group';
+  qrControlGroup.id = 'qrSizeControl';
+  qrControlGroup.innerHTML = `
     <label><i class="fas fa-expand-arrows-alt"></i> حجم QR</label>
     <div style="display:flex;align-items:center;gap:8px;">
       <input type="range" id="qrSizeSlider" min="50" max="200" value="${qrScalePercent}" step="5" style="flex:1;" />
       <span id="qrSizeValue" style="font-weight:700;font-size:0.85rem;min-width:45px;text-align:center;">${qrScalePercent}%</span>
     </div>
   `;
+  designControls.appendChild(qrControlGroup);
 
-  designControls.appendChild(controlGroup);
+  // زر إخفاء/إظهار الاسم
+  const nameControlGroup = document.createElement('div');
+  nameControlGroup.className = 'control-group';
+  nameControlGroup.id = 'nameVisibilityControl';
+  nameControlGroup.style.cssText = 'display:flex;align-items:flex-end;';
+  nameControlGroup.innerHTML = `
+    <button type="button" id="toggleNameBtn" class="btn ${showName ? 'btn-outline' : 'btn-warning'}" style="padding:0.5rem 1rem;font-size:0.85rem;">
+      <i class="fas ${showName ? 'fa-eye-slash' : 'fa-eye'}"></i> 
+      ${showName ? 'إخفاء الاسم' : 'إظهار الاسم'}
+    </button>
+  `;
+  designControls.appendChild(nameControlGroup);
 
   const slider = document.getElementById('qrSizeSlider');
   const valueDisplay = document.getElementById('qrSizeValue');
+  const toggleNameBtn = document.getElementById('toggleNameBtn');
 
   if (slider && valueDisplay) {
     slider.addEventListener('input', function() {
@@ -201,15 +219,47 @@ function addQRSizeControl() {
       valueDisplay.textContent = qrScalePercent + '%';
       localStorage.setItem("qrScalePercent", qrScalePercent);
       resizeQRBox();
-      if (guests.length > 0) {
-        previewGuest(guests[0]);
-      }
+      if (guests.length > 0) previewGuest(guests[0]);
+    });
+  }
+
+  if (toggleNameBtn) {
+    toggleNameBtn.addEventListener('click', function() {
+      showName = !showName;
+      localStorage.setItem("showName", showName);
+      this.innerHTML = `<i class="fas ${showName ? 'fa-eye-slash' : 'fa-eye'}"></i> ${showName ? 'إخفاء الاسم' : 'إظهار الاسم'}`;
+      this.className = `btn ${showName ? 'btn-outline' : 'btn-warning'}`;
+      updateNameBoxAppearance();
+      if (guests.length > 0) previewGuest(guests[0]);
     });
   }
 }
 
 // ============================================
-// نظام الإشعارات (Toast Notifications)
+// ✅ إضافة زر فتح الشيت في قسم المناسبات
+// ============================================
+
+function addSheetButton() {
+  const eventButtonsDiv = document.querySelector('.event-buttons');
+  if (!eventButtonsDiv || document.getElementById('openSheetBtn')) return;
+
+  const sheetBtn = document.createElement('button');
+  sheetBtn.id = 'openSheetBtn';
+  sheetBtn.type = 'button';
+  sheetBtn.className = 'btn btn-outline';
+  sheetBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> فتح الشيت';
+  sheetBtn.title = 'فتح Google Sheets لإدارة الضيوف مباشرة';
+  sheetBtn.style.cssText = 'background:#f0fdf4;border-color:#86efac;color:#166534;';
+  
+  sheetBtn.addEventListener('click', function() {
+    window.open(SHEET_URL, '_blank');
+  });
+  
+  eventButtonsDiv.appendChild(sheetBtn);
+}
+
+// ============================================
+// نظام الإشعارات
 // ============================================
 
 function createToastContainer() {
@@ -219,14 +269,8 @@ function createToastContainer() {
   const container = document.createElement('div');
   container.id = 'toastContainer';
   container.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 99999;
-    display: none;
-    pointer-events: none;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 99999; display: none; pointer-events: none;
   `;
   document.body.appendChild(container);
   return container;
@@ -241,50 +285,33 @@ function showToast(message, type = 'success', duration = 4000) {
     warning: { bg: 'rgba(245, 158, 11, 0.97)', icon: '⚠️', border: '#d97706' },
     info: { bg: 'rgba(59, 130, 246, 0.97)', icon: 'ℹ️', border: '#2563eb' }
   };
-
   const color = colors[type] || colors.info;
 
   container.innerHTML = '';
 
   const overlay = document.createElement('div');
   overlay.style.cssText = `
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: auto;
-    animation: fadeInOverlay 0.3s ease;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: auto; animation: fadeInOverlay 0.3s ease;
   `;
 
   const card = document.createElement('div');
   card.style.cssText = `
-    background: ${color.bg};
-    color: white;
-    padding: 40px 30px;
-    border-radius: 24px;
-    text-align: center;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.4);
-    border: 3px solid ${color.border};
-    max-width: 450px;
-    width: 90%;
+    background: ${color.bg}; color: white; padding: 40px 30px;
+    border-radius: 24px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+    border: 3px solid ${color.border}; max-width: 450px; width: 90%;
     animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    direction: rtl;
-    font-family: 'Cairo', 'Tajawal', sans-serif;
+    direction: rtl; font-family: 'Cairo', 'Tajawal', sans-serif;
   `;
-
   card.innerHTML = `
     <div style="font-size:5rem;margin-bottom:15px;animation:bounce 0.6s ease;">${color.icon}</div>
-    <div style="font-size:1.8rem;font-weight:800;margin-bottom:10px;line-height:1.4;">${message}</div>
+    <div style="font-size:1.8rem;font-weight:800;line-height:1.4;">${message}</div>
   `;
 
   overlay.appendChild(card);
   container.appendChild(overlay);
-
   container.style.display = 'block';
   document.body.style.overflow = 'hidden';
 
@@ -299,22 +326,11 @@ function showToast(message, type = 'success', duration = 4000) {
   }, duration);
 }
 
-// إضافة الأنيميشنات
 const toastStyle = document.createElement('style');
 toastStyle.textContent = `
-  @keyframes fadeInOverlay {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  @keyframes scaleIn {
-    from { transform: scale(0.5); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-  @keyframes bounce {
-    0% { transform: scale(0); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-  }
+  @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes bounce { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 `;
 document.head.appendChild(toastStyle);
 
@@ -329,7 +345,7 @@ if (uploadedImage && inviteImage) {
 }
 
 // ============================================
-// وظائف الاتصال بـ Google Sheets
+// وظائف الاتصال
 // ============================================
 
 function callScript(params) {
@@ -357,20 +373,11 @@ function callScript(params) {
 }
 
 function escapeHtml(value) {
-  return String(value || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  return String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
 function sanitizeFileName(name) {
-  return String(name || "ضيف")
-    .trim()
-    .replace(/[\\/:*?"<>|]/g, "-")
-    .replace(/\s+/g, "_")
-    .substring(0, 100);
+  return String(name || "ضيف").trim().replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, "_").substring(0, 100);
 }
 
 function getCurrentEvent() {
@@ -419,9 +426,11 @@ async function loadEvents() {
     }
     
     setTimeout(addQRSizeControl, 500);
+    setTimeout(addSheetButton, 500);
     setTimeout(updateQRPlaceholderStyle, 600);
+    setTimeout(updateNameBoxAppearance, 600);
   } catch (error) {
-    if (eventStatus) eventStatus.textContent = "❌ فشل الاتصال بالشيت";
+    if (eventStatus) eventStatus.textContent = "❌ فشل الاتصال";
   }
 }
 
@@ -451,10 +460,10 @@ function updateEventStatus() {
   const event = getCurrentEvent();
   if (!event) {
     eventStatus.textContent = "ℹ️ أضف مناسبة أولاً";
-    toggleEventBtn.innerHTML = '<i class="fas fa-eye-slash"></i> إخفاء / إظهار للموظف';
+    toggleEventBtn.innerHTML = '<i class="fas fa-eye-slash"></i> إخفاء / إظهار';
     return;
   }
-  eventStatus.textContent = `📌 المناسبة الحالية: ${event.eventName} - ${event.active === "yes" ? "ظاهرة" : "مخفية"}`;
+  eventStatus.textContent = `📌 ${event.eventName} - ${event.active === "yes" ? "ظاهرة" : "مخفية"}`;
   toggleEventBtn.innerHTML = event.active === "yes" ? 
     '<i class="fas fa-eye-slash"></i> إخفاء المناسبة' : 
     '<i class="fas fa-eye"></i> إظهار المناسبة';
@@ -519,24 +528,24 @@ async function toggleCurrentEvent() {
 }
 
 // ============================================
-// تحميل وإدارة الضيوف
+// تحميل وإدارة الضيوف (مع maxScans)
 // ============================================
 
 async function loadGuestsFromSheet() {
   if (!guestTable) return;
   
   if (!currentEventId) {
-    guestTable.innerHTML = '<tr><td colspan="5">ℹ️ اختر مناسبة أولاً</td></tr>';
+    guestTable.innerHTML = '<tr><td colspan="6">ℹ️ اختر مناسبة أولاً</td></tr>';
     return;
   }
 
-  guestTable.innerHTML = '<tr><td colspan="5"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>';
+  guestTable.innerHTML = '<tr><td colspan="6"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</td></tr>';
 
   try {
     const result = await callScript({ action: "guests", eventId: currentEventId });
 
     if (result.status !== "success") {
-      guestTable.innerHTML = `<tr><td colspan="5">❌ فشل التحميل</td></tr>`;
+      guestTable.innerHTML = '<tr><td colspan="6">❌ فشل التحميل</td></tr>';
       return;
     }
 
@@ -545,6 +554,8 @@ async function loadGuestsFromSheet() {
       name: g.name || "",
       phone: g.phone || "",
       checkedIn: g.checkedIn || false,
+      scanCount: parseInt(g.scanCount) || 0,
+      maxScans: parseInt(g.maxScans) || 1,
       invitation: g.invitation || "",
       invitationPNG: g.invitationPNG || ""
     }));
@@ -554,13 +565,17 @@ async function loadGuestsFromSheet() {
     if (guests.length > 0) {
       try { previewGuest(guests[0]); } catch (e) {}
     } else {
-      if (nameBox) nameBox.innerHTML = '<i class="fas fa-font"></i> اسم الضيف';
+      if (nameBox) nameBox.innerHTML = showName ? '<i class="fas fa-font"></i> اسم الضيف' : '';
       updateQRPlaceholderStyle();
     }
   } catch (error) {
-    guestTable.innerHTML = '<tr><td colspan="5">❌ فشل الاتصال</td></tr>';
+    guestTable.innerHTML = '<tr><td colspan="6">❌ فشل الاتصال</td></tr>';
   }
 }
+
+// ============================================
+// ✅ إضافة ضيف مع maxScans
+// ============================================
 
 async function addGuest() {
   if (!guestName || !guestPhone) return;
@@ -571,9 +586,21 @@ async function addGuest() {
   if (!currentEventId) { showToast("⚠️ اختر مناسبة أولاً", "warning"); return; }
   if (!name || !phone) { showToast("⚠️ اكتب الاسم ورقم الجوال", "warning"); return; }
 
+  // ✅ طلب عدد مرات الدخول المسموحة
+  const maxScansInput = prompt("كم عدد مرات الدخول المسموحة لهذا الضيف؟\n(مثال: 1 = شخص واحد، 5 = خمسة أشخاص)", "1");
+  const maxScans = parseInt(maxScansInput);
+  
+  if (isNaN(maxScans) || maxScans < 1) {
+    showToast("⚠️ الرجاء إدخال رقم صحيح أكبر من 0", "warning");
+    return;
+  }
+
   const guest = {
     id: "GUEST-" + Date.now() + "-" + Math.floor(Math.random() * 999999),
-    name, phone, checkedIn: false, invitation: "", invitationPNG: ""
+    name, phone, checkedIn: false,
+    scanCount: 0,
+    maxScans: maxScans,
+    invitation: "", invitationPNG: ""
   };
 
   if (addGuestBtn) {
@@ -583,8 +610,12 @@ async function addGuest() {
 
   try {
     const result = await callScript({
-      action: "addGuest", eventId: currentEventId,
-      id: guest.id, name: guest.name, phone: guest.phone
+      action: "addGuest",
+      eventId: currentEventId,
+      id: guest.id,
+      name: guest.name,
+      phone: guest.phone,
+      maxScans: guest.maxScans
     });
 
     if (result.status !== "success" && result.status !== "duplicate") {
@@ -599,7 +630,7 @@ async function addGuest() {
     const addedGuest = guests.find(g => g.id === guest.id);
     if (addedGuest) previewGuest(addedGuest);
     
-    showToast("✅ تم إضافة الضيف", "success");
+    showToast(`✅ تم إضافة ${guest.name} (${maxScans} مرات دخول)`, "success");
   } catch (error) {
     showToast("❌ فشل الاتصال", "error");
   } finally {
@@ -610,21 +641,32 @@ async function addGuest() {
   }
 }
 
+// ============================================
+// ✅ تعديل ضيف مع maxScans
+// ============================================
+
 async function editGuest(index) {
   const guest = guests[index];
   const newName = prompt("عدّل اسم الضيف:", guest.name);
   if (newName === null) return;
   const newPhone = prompt("عدّل رقم الجوال:", guest.phone);
   if (newPhone === null) return;
+  const newMaxScans = prompt("عدّل عدد مرات الدخول المسموحة:", guest.maxScans || 1);
 
   const name = newName.trim();
   const phone = newPhone.trim();
+  const maxScans = parseInt(newMaxScans);
+
   if (!name || !phone) { showToast("⚠️ الاسم ورقم الجوال مطلوبة", "warning"); return; }
+  if (isNaN(maxScans) || maxScans < 1) { showToast("⚠️ عدد مرات الدخول غير صحيح", "warning"); return; }
 
   try {
     const result = await callScript({
-      action: "updateGuest", eventId: currentEventId,
-      id: guest.id, name, phone
+      action: "updateGuest",
+      eventId: currentEventId,
+      id: guest.id,
+      name, phone,
+      maxScans: maxScans
     });
     if (result.status !== "success") { showToast("❌ لم يتم التعديل", "error"); return; }
     await loadGuestsFromSheet();
@@ -636,7 +678,7 @@ async function editGuest(index) {
 
 async function deleteGuest(index) {
   const guest = guests[index];
-  if (!confirm("🗑️ هل تريد حذف هذا الضيف؟")) return;
+  if (!confirm(`🗑️ هل تريد حذف ${guest.name}؟`)) return;
 
   try {
     const result = await callScript({
@@ -659,13 +701,29 @@ function getQrText(guest) {
 }
 
 function previewGuest(guest) {
-  if (!guest || !nameBox || !qrBox) return;
+  if (!guest || !qrBox) return;
   
-  nameBox.innerHTML = guest.name;
-  if (fontFamily) nameBox.style.fontFamily = fontFamily.value;
-  if (fontSize) nameBox.style.fontSize = fontSize.value + "px";
-  if (fontColor) nameBox.style.color = fontColor.value;
-  if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
+  if (nameBox) {
+    if (showName) {
+      nameBox.innerHTML = guest.name;
+      nameBox.style.display = 'flex';
+      nameBox.style.opacity = '1';
+      
+      const isLight = isColorLight(fontColor ? fontColor.value : "#000000");
+      nameBox.style.backgroundColor = isLight ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.85)';
+      nameBox.style.color = fontColor ? fontColor.value : "#000000";
+      nameBox.style.border = `2px dashed ${isLight ? '#94a3b8' : '#2563eb'}`;
+      nameBox.style.textShadow = isLight ? '0 0 8px rgba(0,0,0,0.8)' : 'none';
+      
+      if (fontFamily) nameBox.style.fontFamily = fontFamily.value;
+      if (fontSize) nameBox.style.fontSize = fontSize.value + "px";
+      if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
+    } else {
+      nameBox.innerHTML = '';
+      nameBox.style.display = 'none';
+      nameBox.style.opacity = '0';
+    }
+  }
 
   resizeQRBox();
   
@@ -675,13 +733,8 @@ function previewGuest(guest) {
   const selectedQrColor = qrColor ? qrColor.value : "#000000";
   const isLight = isColorLight(selectedQrColor);
   
-  if (isLight) {
-    qrBox.style.backgroundColor = '#334155';
-    qrBox.style.border = '2px dashed #64748b';
-  } else {
-    qrBox.style.backgroundColor = '#ffffff';
-    qrBox.style.border = '2px dashed #2563eb';
-  }
+  qrBox.style.backgroundColor = isLight ? '#334155' : '#ffffff';
+  qrBox.style.border = isLight ? '2px dashed #64748b' : '2px dashed #2563eb';
   
   new QRCode(qrBox, {
     text: getQrText(guest),
@@ -694,8 +747,7 @@ function previewGuest(guest) {
 }
 
 // ============================================
-// عرض الجداول
-// ============================================
+// ✅ عرض الجداول مع maxScans// ============================================
 
 function renderGuests() {
   if (!guestTable) return;
@@ -705,7 +757,7 @@ function renderGuests() {
   if (guestCount) guestCount.textContent = `${guests.length} ضيف`;
 
   if (guests.length === 0) {
-    guestTable.innerHTML = '<tr><td colspan="5">ℹ️ لا يوجد ضيوف</td></tr>';
+    guestTable.innerHTML = '<tr><td colspan="6">ℹ️ لا يوجد ضيوف</td></tr>';
     renderInvitationTable();
     return;
   }
@@ -715,13 +767,15 @@ function renderGuests() {
     row.style.cursor = "pointer";
     
     const hasInvitation = guest.invitation || guest.invitationPNG;
+    const scanRemaining = Math.max(0, (guest.maxScans || 1) - (guest.scanCount || 0));
+    const isMaxedOut = scanRemaining <= 0;
     
     row.innerHTML = `
       <td><strong>${escapeHtml(guest.name)}</strong></td>
       <td dir="ltr">${escapeHtml(guest.phone)}</td>
       <td>
-        <span class="status-badge" style="background:${guest.checkedIn ? '#d1fae5' : '#fee2e2'};color:${guest.checkedIn ? '#065f46' : '#991b1b'};">
-          ${guest.checkedIn ? '✅ حضر' : '⏳ لم يدخل'}
+        <span class="status-badge" style="background:${isMaxedOut ? '#fee2e2' : (guest.scanCount > 0 ? '#fef3c7' : '#f1f5f9')};color:${isMaxedOut ? '#991b1b' : (guest.scanCount > 0 ? '#92400e' : '#475569')};">
+          ${isMaxedOut ? '🚫 منتهي' : `${guest.scanCount || 0}/${guest.maxScans || 1}`}
         </span>
       </td>
       <td>${hasInvitation ? '<span style="color:#10b981;">✅ PDF</span>' : '<span style="color:#94a3b8;">—</span>'}</td>
@@ -736,15 +790,11 @@ function renderGuests() {
       previewGuest(guest);
     });
 
-    row.querySelector(".edit-btn")?.addEventListener("click", function(e) {
-      e.stopPropagation();
-      editGuest(index);
-    });
-
-    row.querySelector(".delete-btn")?.addEventListener("click", function(e) {
-      e.stopPropagation();
-      deleteGuest(index);
-    });
+    const editBtn = row.querySelector(".edit-btn");
+    const deleteBtn = row.querySelector(".delete-btn");
+    
+    if (editBtn) editBtn.addEventListener("click", function(e) { e.stopPropagation(); editGuest(index); });
+    if (deleteBtn) deleteBtn.addEventListener("click", function(e) { e.stopPropagation(); deleteGuest(index); });
 
     guestTable.appendChild(row);
   });
@@ -796,15 +846,46 @@ function renderInvitationTable() {
   });
 }
 
+// أيضًا تحديث رأس الجدول في HTML
+function updateTableHeader() {
+  const headerRow = guestTable?.closest('table')?.querySelector('thead tr');
+  if (headerRow) {
+    headerRow.innerHTML = `
+      <th><i class="fas fa-user"></i> الاسم</th>
+      <th><i class="fas fa-phone"></i> الجوال</th>
+      <th><i class="fas fa-check-circle"></i> الدخول</th>
+      <th><i class="fas fa-image"></i> الدعوة</th>
+      <th><i class="fas fa-cog"></i> إجراءات</th>
+    `;
+  }
+}
+
 // ============================================
-// وظائف مساعدة للـ QR
+// تحديث معاينة الاسم
 // ============================================
+
+function updateNamePreviewStyle() {
+  if (!nameBox) return;
+  
+  if (!showName) {
+    updateNameBoxAppearance();
+    return;
+  }
+  
+  if (fontFamily) nameBox.style.fontFamily = fontFamily.value;
+  if (fontSize) nameBox.style.fontSize = fontSize.value + "px";
+  if (fontColor) nameBox.style.color = fontColor.value;
+  if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
+  
+  updateNameBoxAppearance();
+}
 
 function refreshQrPreview() {
   if (guests.length > 0) {
     previewGuest(guests[0]);
   } else {
     updateQRPlaceholderStyle();
+    updateNameBoxAppearance();
   }
 }
 
@@ -867,31 +948,12 @@ function makeDraggable(el) {
     el.style.top = (touch.clientY - offsetY) + "px";
   }, { passive: false });
 
-  document.addEventListener("mouseup", () => {
-    dragging = false;
-    if (el) el.style.zIndex = "10";
-  });
-
-  document.addEventListener("touchend", () => {
-    dragging = false;
-    if (el) el.style.zIndex = "10";
-  });
+  document.addEventListener("mouseup", () => { dragging = false; if (el) el.style.zIndex = "10"; });
+  document.addEventListener("touchend", () => { dragging = false; if (el) el.style.zIndex = "10"; });
 }
 
 makeDraggable(nameBox);
 makeDraggable(qrBox);
-
-// ============================================
-// تحديث معاينة الاسم
-// ============================================
-
-function updateNamePreviewStyle() {
-  if (!nameBox) return;
-  if (fontFamily) nameBox.style.fontFamily = fontFamily.value;
-  if (fontSize) nameBox.style.fontSize = fontSize.value + "px";
-  if (fontColor) nameBox.style.color = fontColor.value;
-  if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
-}
 
 // ============================================
 // ربط أحداث التصميم
@@ -900,12 +962,14 @@ function updateNamePreviewStyle() {
 [fontFamily, fontSize, fontColor, fontWeight].forEach(input => {
   if (!input) return;
   input.addEventListener("input", updateNamePreviewStyle);
+  input.addEventListener("change", updateNamePreviewStyle);
 });
 
 if (qrColor) {
   qrColor.addEventListener("input", function() {
     refreshQrPreview();
     updateQRPlaceholderStyle();
+    updateNameBoxAppearance();
   });
 }
 
@@ -925,6 +989,7 @@ async function pickColor(targetInput) {
     updateNamePreviewStyle();
     refreshQrPreview();
     updateQRPlaceholderStyle();
+    updateNameBoxAppearance();
   } catch (error) {}
 }
 
@@ -945,11 +1010,8 @@ function loadJSPDF() {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
     script.onload = () => {
-      if (window.jspdf && window.jspdf.jsPDF) {
-        resolve(window.jspdf.jsPDF);
-      } else {
-        reject(new Error('فشل تحميل PDF'));
-      }
+      if (window.jspdf && window.jspdf.jsPDF) resolve(window.jspdf.jsPDF);
+      else reject(new Error('فشل تحميل PDF'));
     };
     script.onerror = () => reject(new Error('فشل تحميل PDF'));
     document.head.appendChild(script);
@@ -961,9 +1023,12 @@ function loadJSPDF() {
 // ============================================
 
 function getPositionOnImage(box, canvasWidth, canvasHeight) {
+  if (!box || !inviteImage) return { x: 0, y: 0, w: 100, h: 100 };
+  
   const imageRect = inviteImage.getBoundingClientRect();
   const boxRect = box.getBoundingClientRect();
   if (!imageRect.width || !imageRect.height) throw new Error("صورة التصميم غير ظاهرة");
+  
   const scaleX = canvasWidth / imageRect.width;
   const scaleY = canvasHeight / imageRect.height;
   
@@ -989,9 +1054,7 @@ function createQrImage(text) {
     const selectedQrColor = qrColor ? qrColor.value : "#000000";
     
     new QRCode(tempDiv, {
-      text,
-      width: qrSize,
-      height: qrSize,
+      text, width: qrSize, height: qrSize,
       colorDark: selectedQrColor,
       colorLight: "#ffffff",
       correctLevel: QRCode.CorrectLevel.H
@@ -999,46 +1062,29 @@ function createQrImage(text) {
     
     setTimeout(() => {
       const canvas = tempDiv.querySelector("canvas");
-      if (!canvas) {
-        document.body.removeChild(tempDiv);
-        resolve(null);
-        return;
-      }
+      if (!canvas) { document.body.removeChild(tempDiv); resolve(null); return; }
       
       const ctx = canvas.getContext("2d");
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       
       for (let i = 0; i < data.length; i += 4) {
-        if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) {
-          data[i+3] = 0;
-        }
+        if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) data[i+3] = 0;
       }
       
       ctx.putImageData(imageData, 0, 0);
       
       const img = new Image();
-      img.onload = () => {
-        document.body.removeChild(tempDiv);
-        resolve(img);
-      };
-      img.onerror = () => {
-        document.body.removeChild(tempDiv);
-        resolve(null);
-      };
+      img.onload = () => { document.body.removeChild(tempDiv); resolve(img); };
+      img.onerror = () => { document.body.removeChild(tempDiv); resolve(null); };
       img.src = canvas.toDataURL("image/png");
     }, 300);
   });
 }
 
-async function updateGuestInvitationInSheet(guestId, pdfData, pngData) {
+async function updateGuestInvitationInSheet(guestId) {
   try {
-    await callScript({
-      action: "updateInvitation",
-      eventId: currentEventId,
-      id: guestId,
-      invitationGenerated: "yes"
-    });
+    await callScript({ action: "updateInvitation", eventId: currentEventId, id: guestId, invitationGenerated: "yes" });
   } catch (error) {}
 }
 
@@ -1064,9 +1110,15 @@ async function generateInvitations() {
     });
 
     const imageRect = inviteImage.getBoundingClientRect();
-    const namePos = getPositionOnImage(nameBox, baseImage.width, baseImage.height);
     const qrPos = getPositionOnImage(qrBox, baseImage.width, baseImage.height);
     const finalFontSize = Math.round((fontSize ? Number(fontSize.value || 40) : 40) * (baseImage.width / imageRect.width));
+    const selectedFontColor = fontColor ? fontColor.value : "#000000";
+    const isNameLight = isColorLight(selectedFontColor);
+
+    let namePos = null;
+    if (showName && nameBox) {
+      namePos = getPositionOnImage(nameBox, baseImage.width, baseImage.height);
+    }
 
     for (const guest of guests) {
       const canvas = document.createElement("canvas");
@@ -1075,18 +1127,26 @@ async function generateInvitations() {
       canvas.height = baseImage.height;
       ctx.drawImage(baseImage, 0, 0);
 
-      ctx.font = `${fontWeight ? fontWeight.value : "bold"} ${finalFontSize}px ${fontFamily ? fontFamily.value : "Arial"}`;
-      ctx.fillStyle = fontColor ? fontColor.value : "#000000";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(guest.name, namePos.x + namePos.w/2, namePos.y + namePos.h/2);
+      if (showName && namePos) {
+        if (isNameLight) {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+          const padding = 12;
+          ctx.fillRect(namePos.x - padding, namePos.y - namePos.h/2 - padding, namePos.w + padding * 2, namePos.h + padding * 2);
+        }
+        
+        ctx.font = `${fontWeight ? fontWeight.value : "bold"} ${finalFontSize}px ${fontFamily ? fontFamily.value : "Arial"}`;
+        ctx.fillStyle = selectedFontColor;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(guest.name, namePos.x + namePos.w/2, namePos.y + namePos.h/2);
+      }
 
       const qrImage = await createQrImage(getQrText(guest));
       if (qrImage) {
         const selectedQrColor = qrColor ? qrColor.value : "#000000";
-        const isLight = isColorLight(selectedQrColor);
+        const isQrLight = isColorLight(selectedQrColor);
         
-        if (isLight) {
+        if (isQrLight) {
           ctx.fillStyle = '#1e293b';
           ctx.fillRect(qrPos.x - 5, qrPos.y - 5, qrPos.w + 10, qrPos.h + 10);
           ctx.strokeStyle = '#ffffff';
@@ -1110,7 +1170,7 @@ async function generateInvitations() {
       const pdfDataURL = pdf.output('datauristring');
       guest.invitation = pdfDataURL;
 
-      await updateGuestInvitationInSheet(guest.id, pdfDataURL, pngDataURL);
+      await updateGuestInvitationInSheet(guest.id);
     }
 
     renderGuests();
@@ -1180,7 +1240,7 @@ async function downloadAllInvitations() {
 }
 
 // ============================================
-// الماسح الضوئي
+// ✅ الماسح الضوئي مع maxScans
 // ============================================
 
 function parseQrText(text) {
@@ -1238,9 +1298,13 @@ async function checkInGuest(qrText) {
     return;
   }
 
-  if (guest.checkedIn) {
-    showToast(`⚠️ ${guest.name} مكرر`, "warning", 3500);
-    if (scanResult) scanResult.innerHTML = `<span style="color:#f59e0b;">⚠️ ${guest.name} مكرر</span>`;
+  // ✅ التحقق من الحد الأقصى للدخول
+  const maxScans = guest.maxScans || 1;
+  const currentScans = guest.scanCount || 0;
+  
+  if (currentScans >= maxScans) {
+    showToast(`🚫 ${guest.name} استنفذ الحد الأقصى (${maxScans}/${maxScans})`, "error", 4000);
+    if (scanResult) scanResult.innerHTML = `<span style="color:#ef4444;">🚫 ${guest.name} منتهي (${maxScans}/${maxScans})</span>`;
     return;
   }
 
@@ -1248,8 +1312,14 @@ async function checkInGuest(qrText) {
 
   try {
     const result = await callScript({
-      action: "attendance", eventId: currentEventId,
-      id: guest.id, name: guest.name, phone: guest.phone, time
+      action: "attendance",
+      eventId: currentEventId,
+      id: guest.id,
+      name: guest.name,
+      phone: guest.phone,
+      time,
+      scanCount: currentScans + 1,
+      maxScans: maxScans
     });
 
     if (result.status === "duplicate") {
@@ -1258,8 +1328,17 @@ async function checkInGuest(qrText) {
     }
 
     if (result.status === "success") {
-      showToast(`✅ أهلاً ${guest.name}`, "success", 4000);
-      if (scanResult) scanResult.innerHTML = `<span style="color:#10b981;">✅ ${guest.name}</span>`;
+      const newCount = currentScans + 1;
+      const remaining = maxScans - newCount;
+      
+      if (remaining <= 0) {
+        showToast(`🚫 ${guest.name} اكتمل العدد (${maxScans}/${maxScans})`, "warning", 4000);
+        if (scanResult) scanResult.innerHTML = `<span style="color:#f59e0b;">🚫 ${guest.name} مكتمل</span>`;
+      } else {
+        showToast(`✅ ${guest.name} (${newCount}/${maxScans}) متبقي ${remaining}`, "success", 4000);
+        if (scanResult) scanResult.innerHTML = `<span style="color:#10b981;">✅ ${guest.name} (${newCount}/${maxScans})</span>`;
+      }
+      
       await loadGuestsFromSheet();
       return;
     }
@@ -1296,10 +1375,14 @@ if (downloadAllBtn) {
 if (scanBtn) scanBtn.onclick = startScanner;
 
 // ============================================
-// تطبيق النمط الأولي
+// تطبيق الأنماط الأولية
 // ============================================
 
-setTimeout(updateQRPlaceholderStyle, 300);
+setTimeout(() => {
+  updateQRPlaceholderStyle();
+  updateNameBoxAppearance();
+  updateTableHeader();
+}, 300);
 
 // ============================================
 // بدء التطبيق
