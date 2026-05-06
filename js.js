@@ -733,18 +733,22 @@ function previewGuest(guest) {
   const selectedQrColor = qrColor ? qrColor.value : "#000000";
   const isLight = isColorLight(selectedQrColor);
   
-  qrBox.style.backgroundColor = isLight ? '#334155' : '#ffffff';
-  qrBox.style.border = isLight ? '2px dashed #64748b' : '2px dashed #2563eb';
-  
-  new QRCode(qrBox, {
-    text: getQrText(guest),
-    width: qrSize,
-    height: qrSize,
-    colorDark: selectedQrColor,
-    colorLight: isLight ? '#334155' : '#ffffff',
-    correctLevel: QRCode.CorrectLevel.H
-  });
-}
+ // ✅ خلفية متباينة للمعاينة
+const bgColor = isLight ? '#1e293b' : '#ffffff';
+qrBox.style.backgroundColor = bgColor;
+qrBox.style.border = isLight ? '2px dashed #64748b' : '2px dashed #2563eb';
+
+// ✅ تنظيف QR القديم
+qrBox.innerHTML = '';
+
+new QRCode(qrBox, {
+  text: getQrText(guest),
+  width: qrSize,
+  height: qrSize,
+  colorDark: selectedQrColor,
+  colorLight: bgColor, // ✅ لون الخلفية يتطابق مع خلفية الصندوق
+  correctLevel: QRCode.CorrectLevel.H
+});
 
 // ============================================
 // ✅ عرض الجداول مع maxScans// ============================================
