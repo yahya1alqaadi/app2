@@ -750,25 +750,11 @@ async function generateInvitations() {
         ctx.fillText(guest.name, namePos.x + namePos.w/2, namePos.y + namePos.h/2);
       }
 
-      // ✅ رسم QR - حل نهائي لجميع الألوان
-      const selectedQrColor = qrColor ? qrColor.value : "#000000";
-      const isQrLight = isColorLight(selectedQrColor);
-
-      if (isQrLight) {
-        // للألوان الفاتحة: خلفية داكنة + إطار
-        const padding = Math.round(qrPos.w * 0.06);
-        ctx.fillStyle = '#1e293b';
-        roundRect(ctx, qrPos.x - padding, qrPos.y - padding, qrPos.w + padding*2, qrPos.h + padding*2, 10);
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = Math.max(1, Math.round(qrPos.w * 0.006));
-        roundRect(ctx, qrPos.x - padding, qrPos.y - padding, qrPos.w + padding*2, qrPos.h + padding*2, 10);
-        ctx.stroke();
-      }
-
-      // رسم QR الشفاف
-      const qrImage = await createQrImage(getQrText(guest));
-      if (qrImage) { ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h); }
+     // ✅ رسم QR مباشرة بدون أي خلفية
+const qrImage = await createQrImage(getQrText(guest));
+if (qrImage) {
+  ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
+}
 
       const pngDataURL = canvas.toDataURL("image/png");
       guest.invitationPNG = pngDataURL;
