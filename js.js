@@ -17,7 +17,6 @@ const loginError = document.getElementById("loginError");
 function showAdmin() {
   loginScreen.style.display = "none";
   adminContent.style.display = "block";
-  // إنشاء حاوية الإشعارات عند تحميل لوحة التحكم
   createToastContainer();
 }
 
@@ -58,8 +57,6 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJ
 
 let scanner = null;
 let isScanningPaused = false;
-
-// متغير لحجم QR النسبي (القيمة الافتراضية 100%)
 let qrScalePercent = 100;
 
 // ============================================
@@ -95,15 +92,37 @@ const headerEventBadge = document.getElementById("headerEventBadge");
 const guestCount = document.getElementById("guestCount");
 
 // ============================================
+// إضافة مكتبة jsPDF (تحميل ديناميكي)
+// ============================================
+
+function loadJSPDF() {
+  return new Promise((resolve, reject) => {
+    if (window.jspdf && window.jspdf.jsPDF) {
+      resolve(window.jspdf.jsPDF);
+      return;
+    }
+    
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    script.onload = () => {
+      if (window.jspdf && window.jspdf.jsPDF) {
+        resolve(window.jspdf.jsPDF);
+      } else {
+        reject(new Error('فشل تحميل مكتبة PDF'));
+      }
+    };
+    script.onerror = () => reject(new Error('فشل تحميل مكتبة PDF'));
+    document.head.appendChild(script);
+  });
+}
+
+// ============================================
 // إضافة متحكم حجم QR في واجهة التصميم
 // ============================================
 
 function addQRSizeControl() {
-  // البحث عن قسم design-controls
   const designControls = document.querySelector('.design-controls');
   if (!designControls) return;
-
-  // التحقق من عدم وجود المتحكم مسبقاً
   if (document.getElementById('qrSizeControl')) return;
 
   const controlGroup = document.createElement('div');
@@ -119,7 +138,6 @@ function addQRSizeControl() {
 
   designControls.appendChild(controlGroup);
 
-  // ربط الأحداث
   const slider = document.getElementById('qrSizeSlider');
   const valueDisplay = document.getElementById('qrSizeValue');
 
@@ -135,13 +153,8 @@ function addQRSizeControl() {
 
 function resizeQRBox() {
   if (!qrBox) return;
-  
-  // الحجم الأساسي المربع
   const baseSize = 110;
-  // تطبيق النسبة
   const scaledSize = Math.round(baseSize * (qrScalePercent / 100));
-  
-  // الحفاظ على الشكل المربع
   qrBox.style.width = scaledSize + 'px';
   qrBox.style.height = scaledSize + 'px';
   qrBox.style.aspectRatio = '1/1';
@@ -183,10 +196,8 @@ function showToast(message, type = 'success', duration = 4000) {
 
   const color = colors[type] || colors.info;
 
-  // تنظيف المحتوى القديم
   container.innerHTML = '';
 
-  // إنشاء الخلفية المعتمة
   const overlay = document.createElement('div');
   overlay.style.cssText = `
     position: absolute;
@@ -202,7 +213,6 @@ function showToast(message, type = 'success', duration = 4000) {
     animation: fadeInOverlay 0.3s ease;
   `;
 
-  // إنشاء بطاقة الإشعار
   const card = document.createElement('div');
   card.style.cssText = `
     background: ${color.bg};
@@ -232,12 +242,9 @@ function showToast(message, type = 'success', duration = 4000) {
   overlay.appendChild(card);
   container.appendChild(overlay);
 
-  // إظهار الحاوية
   container.style.display = 'block';
-  // منع التمرير في الخلفية
   document.body.style.overflow = 'hidden';
 
-  // إخفاء الإشعار بعد المدة المحددة
   setTimeout(() => {
     overlay.style.opacity = '0';
     overlay.style.transition = 'opacity 0.3s ease';
@@ -249,19 +256,16 @@ function showToast(message, type = 'success', duration = 4000) {
   }, duration);
 }
 
-// إضافة الأنيميشنات
 const toastStyle = document.createElement('style');
 toastStyle.textContent = `
   @keyframes fadeInOverlay {
     from { opacity: 0; }
     to { opacity: 1; }
   }
-  
   @keyframes scaleIn {
     from { transform: scale(0.5); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
   }
-  
   @keyframes bounce {
     0% { transform: scale(0); }
     50% { transform: scale(1.2); }
@@ -317,6 +321,18 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+// ============================================
+// دالة مساعدة: تنظيف اسم الملف
+// ============================================
+
+function sanitizeFileName(name) {
+  return String(name || "ضيف")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/\s+/g, "_")
+    .substring(0, 100);
+}
+
 function getCurrentEvent() {
   return events.find(event => String(event.eventId) === String(currentEventId));
 }
@@ -362,7 +378,6 @@ async function loadEvents() {
       renderGuests();
     }
     
-    // إضافة متحكم حجم QR بعد تحميل كل شيء
     setTimeout(addQRSizeControl, 500);
   } catch (error) {
     eventStatus.textContent = "❌ فشل الاتصال بالشيت لتحميل المناسبات";
@@ -490,7 +505,8 @@ async function loadGuestsFromSheet() {
       name: guest.name || "",
       phone: guest.phone || "",
       checkedIn: guest.checkedIn || false,
-      invitation: ""
+      invitation: guest.invitation || "",
+      invitationPNG: guest.invitationPNG || ""
     }));
 
     renderGuests();
@@ -524,7 +540,7 @@ async function addGuest() {
 
   const guest = {
     id: "GUEST-" + Date.now() + "-" + Math.floor(Math.random() * 999999),
-    name, phone, checkedIn: false, invitation: ""
+    name, phone, checkedIn: false, invitation: "", invitationPNG: ""
   };
 
   addGuestBtn.disabled = true;
@@ -609,7 +625,7 @@ async function deleteGuest(index) {
 }
 
 // ============================================
-// معاينة الضيف - QR مربع مع حجم نسبي
+// معاينة الضيف
 // ============================================
 
 function getQrText(guest) {
@@ -625,12 +641,10 @@ function previewGuest(guest) {
   if (fontColor) nameBox.style.color = fontColor.value;
   if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
 
-  // تطبيق الحجم النسبي للـ QR
   resizeQRBox();
   
   qrBox.innerHTML = "";
   
-  // استخدام حجم مربع متساوي
   const qrSize = qrBox.clientWidth || 110;
   
   new QRCode(qrBox, {
@@ -662,6 +676,8 @@ function renderGuests() {
     const row = document.createElement("tr");
     row.style.cursor = "pointer";
     
+    const hasInvitation = guest.invitation || guest.invitationPNG;
+    
     row.innerHTML = `
       <td><strong>${escapeHtml(guest.name)}</strong></td>
       <td dir="ltr">${escapeHtml(guest.phone)}</td>
@@ -670,7 +686,7 @@ function renderGuests() {
           ${guest.checkedIn ? '✅ حضر' : '⏳ لم يدخل'}
         </span>
       </td>
-      <td>${guest.invitation ? '<span style="color:#10b981;">✅ تم التوليد</span>' : '<span style="color:#94a3b8;">—</span>'}</td>
+      <td>${hasInvitation ? '<span style="color:#10b981;">✅ تم التوليد (PDF)</span>' : '<span style="color:#94a3b8;">—</span>'}</td>
       <td>
         <button type="button" class="edit-btn"><i class="fas fa-edit"></i> تعديل</button>
         <button type="button" class="delete-btn"><i class="fas fa-trash"></i> حذف</button>
@@ -701,7 +717,7 @@ function renderGuests() {
 function renderInvitationTable() {
   invitationTable.innerHTML = "";
 
-  const guestsWithInvitations = guests.filter(g => g.invitation);
+  const guestsWithInvitations = guests.filter(g => g.invitation || g.invitationPNG);
   
   if (guestsWithInvitations.length === 0) {
     invitationTable.innerHTML = '<tr><td colspan="3">ℹ️ لا توجد دعوات مولدة بعد</td></tr>';
@@ -710,19 +726,76 @@ function renderInvitationTable() {
 
   guestsWithInvitations.forEach(guest => {
     const row = document.createElement("tr");
+    const pdfData = guest.invitation || guest.invitationPNG || '';
+    const safeName = sanitizeFileName(guest.name);
+    
     row.innerHTML = `
       <td><strong>${escapeHtml(guest.name)}</strong></td>
       <td>
-        <img src="${guest.invitation}" class="guest-img" alt="دعوة ${escapeHtml(guest.name)}" />
+        <span style="font-size:2rem;">📄</span>
+        <br><small style="color:var(--gray-500);">ملف PDF</small>
       </td>
       <td>
-        <a href="${guest.invitation}" download="دعوة-${escapeHtml(guest.name)}.png" class="btn btn-primary">
-          <i class="fas fa-download"></i> تحميل
-        </a>
+        <button class="btn btn-primary download-pdf-btn" data-pdf="${pdfData.substring(0, 50)}" data-name="${safeName}">
+          <i class="fas fa-download"></i> تحميل PDF
+        </button>
       </td>
     `;
+    
+    // ربط زر التحميل
+    const downloadBtn = row.querySelector('.download-pdf-btn');
+    if (downloadBtn && pdfData) {
+      downloadBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        downloadSinglePDF(pdfData, safeName);
+      });
+    }
+    
     invitationTable.appendChild(row);
   });
+}
+
+// ============================================
+// دالة تحميل ملف PDF واحد
+// ============================================
+
+function downloadSinglePDF(pdfData, guestName) {
+  if (!pdfData) {
+    showToast("⚠️ بيانات PDF غير متوفرة", "warning");
+    return;
+  }
+  
+  const safeName = sanitizeFileName(guestName);
+  const fileName = `دعوة_${safeName}.pdf`;
+  
+  // إنشاء رابط تحميل
+  const link = document.createElement('a');
+  link.href = pdfData;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  showToast(`✅ جاري تحميل ${fileName}`, "success", 2000);
+}
+
+// ============================================
+// تحديث بيانات الضيوف في Google Sheets بعد توليد PDF
+// ============================================
+
+async function updateGuestInvitationInSheet(guestId, pdfData, pngData) {
+  try {
+    // نحاول تحديث الشيت ببيانات PDF (قد تكون طويلة جداً)
+    // لذا نرسل إشارة فقط أن الدعوة تم توليدها
+    await callScript({
+      action: "updateInvitation",
+      eventId: currentEventId,
+      id: guestId,
+      invitationGenerated: "yes"
+    });
+  } catch (error) {
+    console.log("لم يتم تحديث الشيت بالدعوة:", error);
+  }
 }
 
 // ============================================
@@ -845,7 +918,7 @@ if (pickFontColorBtn) pickFontColorBtn.onclick = () => pickColor(fontColor);
 if (pickQrColorBtn) pickQrColorBtn.onclick = () => pickColor(qrColor);
 
 // ============================================
-// توليد الدعوات - QR مربع مع حجم نسبي
+// توليد الدعوات - PDF مع اسم الضيف
 // ============================================
 
 function getPositionOnImage(box, canvasWidth, canvasHeight) {
@@ -855,7 +928,6 @@ function getPositionOnImage(box, canvasWidth, canvasHeight) {
   const scaleX = canvasWidth / imageRect.width;
   const scaleY = canvasHeight / imageRect.height;
   
-  // جعل منطقة QR مربعة
   const rawW = boxRect.width * scaleX;
   const rawH = boxRect.height * scaleY;
   const squareSize = Math.min(rawW, rawH);
@@ -874,7 +946,6 @@ function createQrImage(text) {
     tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
     document.body.appendChild(tempDiv);
     
-    // حجم مربع للـ QR
     const qrSize = 600;
     
     new QRCode(tempDiv, {
@@ -936,8 +1007,11 @@ async function generateInvitations() {
     }
 
     generateBtn.disabled = true;
-    generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التوليد...';
+    generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري توليد ملفات PDF...';
 
+    // تحميل مكتبة jsPDF
+    const JsPDF = await loadJSPDF();
+    
     await new Promise(resolve => setTimeout(resolve, 300));
 
     const baseImage = new Image();
@@ -948,12 +1022,12 @@ async function generateInvitations() {
     });
 
     const imageRect = inviteImage.getBoundingClientRect();
-    const fontScale = baseImage.width / imageRect.width;
     const namePos = getPositionOnImage(nameBox, baseImage.width, baseImage.height);
     const qrPos = getPositionOnImage(qrBox, baseImage.width, baseImage.height);
-    const finalFontSize = Math.round((fontSize ? Number(fontSize.value || 40) : 40) * fontScale);
+    const finalFontSize = Math.round((fontSize ? Number(fontSize.value || 40) : 40) * (baseImage.width / imageRect.width));
 
     for (const guest of guests) {
+      // 1. إنشاء صورة PNG للدعوة (للمعاينة)
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       canvas.width = baseImage.width;
@@ -968,26 +1042,43 @@ async function generateInvitations() {
 
       const qrImage = await createQrImage(getQrText(guest));
       if (qrImage) {
-        // رسم QR بشكل مربع
         ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
       }
 
-      guest.invitation = canvas.toDataURL("image/png");
+      const pngDataURL = canvas.toDataURL("image/png");
+      guest.invitationPNG = pngDataURL;
+
+      // 2. إنشاء ملف PDF
+      const pdf = new JsPDF({
+        orientation: baseImage.width > baseImage.height ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [baseImage.width, baseImage.height]
+      });
+
+      // إضافة الصورة المصممة إلى PDF
+      pdf.addImage(pngDataURL, 'PNG', 0, 0, baseImage.width, baseImage.height);
+
+      // حفظ PDF كـ Data URL
+      const pdfDataURL = pdf.output('datauristring');
+      guest.invitation = pdfDataURL;
+
+      // محاولة تحديث الشيت
+      await updateGuestInvitationInSheet(guest.id, pdfDataURL, pngDataURL);
     }
 
     renderGuests();
-    showToast("✅ تم توليد جميع الدعوات بنجاح", "success", 5000);
+    showToast(`✅ تم توليد ${guests.length} ملف PDF بنجاح`, "success", 5000);
   } catch (error) {
     console.log("خطأ:", error);
     showToast("❌ خطأ: " + (error.message || error), "error", 5000);
   } finally {
     generateBtn.disabled = false;
-    generateBtn.innerHTML = '<i class="fas fa-magic"></i> توليد الدعوات';
+    generateBtn.innerHTML = '<i class="fas fa-magic"></i> توليد الدعوات PDF';
   }
 }
 
 // ============================================
-// تحميل جميع الدعوات
+// تحميل جميع الدعوات PDF في ملف ZIP
 // ============================================
 
 async function downloadAllInvitations() {
@@ -1001,29 +1092,50 @@ async function downloadAllInvitations() {
     return;
   }
 
+  downloadAllBtn.disabled = true;
+  downloadAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تجهيز الملفات...';
+
   const zip = new JSZip();
   const event = getCurrentEvent();
-  const eventName = event ? event.eventName : "الدعوات";
+  const eventName = event ? sanitizeFileName(event.eventName) : "الدعوات";
 
   guestsWithInvitations.forEach(guest => {
-    const base64Data = guest.invitation.split(",")[1];
-    const safeName = String(guest.name).replace(/[\\/:*?"<>|]/g, "-");
-    zip.file(`دعوة-${safeName}.png`, base64Data, { base64: true });
+    // استخراج بيانات PDF من Data URL
+    const pdfData = guest.invitation;
+    if (pdfData && pdfData.includes('base64')) {
+      const base64Data = pdfData.split(',')[1];
+      const safeName = sanitizeFileName(guest.name);
+      zip.file(`دعوة_${safeName}.pdf`, base64Data, { base64: true });
+    }
   });
 
-  const content = await zip.generateAsync({ type: "blob" });
-  const url = URL.createObjectURL(content);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `دعوات-${eventName}.zip`;
-  a.click();
-  URL.revokeObjectURL(url);
-  
-  showToast("✅ تم تحميل جميع الدعوات", "success");
+  try {
+    const content = await zip.generateAsync({ 
+      type: "blob",
+      compression: "DEFLATE",
+      compressionOptions: { level: 6 }
+    });
+    
+    const url = URL.createObjectURL(content);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `دعوات_${eventName}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast(`✅ تم تحميل ${guestsWithInvitations.length} ملف PDF`, "success", 4000);
+  } catch (error) {
+    showToast("❌ خطأ في إنشاء ملف ZIP", "error");
+  } finally {
+    downloadAllBtn.disabled = false;
+    downloadAllBtn.innerHTML = '<i class="fas fa-download"></i> تحميل كل الدعوات PDF';
+  }
 }
 
 // ============================================
-// الماسح الضوئي مع إشعارات ملء الشاشة
+// الماسح الضوئي
 // ============================================
 
 function parseQrText(text) {
@@ -1163,6 +1275,10 @@ generateBtn.onclick = generateInvitations;
 downloadAllBtn.onclick = downloadAllInvitations;
 
 if (scanBtn) scanBtn.onclick = startScanner;
+
+// تحديث نص الأزرار
+if (generateBtn) generateBtn.innerHTML = '<i class="fas fa-magic"></i> توليد الدعوات PDF';
+if (downloadAllBtn) downloadAllBtn.innerHTML = '<i class="fas fa-download"></i> تحميل كل الدعوات PDF';
 
 // ============================================
 // بدء التطبيق
