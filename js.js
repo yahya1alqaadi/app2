@@ -674,23 +674,36 @@ function createQrImage(text) {
     const tempDiv = document.createElement("div");
     tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
     document.body.appendChild(tempDiv);
+    
     const qrSize = 600;
     const selectedQrColor = qrColor ? qrColor.value : "#000000";
+    
     new QRCode(tempDiv, {
-      text: text, width: qrSize, height: qrSize,
-      colorDark: selectedQrColor, colorLight: "#ffffff",
+      text: text,
+      width: qrSize,
+      height: qrSize,
+      colorDark: selectedQrColor,
+      colorLight: "#ffffff",
       correctLevel: QRCode.CorrectLevel.H
     });
+    
     setTimeout(function() {
       const canvas = tempDiv.querySelector("canvas");
       if (!canvas) { document.body.removeChild(tempDiv); resolve(null); return; }
+      
       const ctx = canvas.getContext("2d");
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
+      
+      // جعل الخلفية البيضاء شفافة
       for (let i = 0; i < data.length; i += 4) {
-        if (data[i] > 200 && data[i+1] > 200 && data[i+2] > 200) { data[i+3] = 0; }
+        if (data[i] > 200 && data[i+1] > 200 && data[i+2] > 200) {
+          data[i+3] = 0;
+        }
       }
+      
       ctx.putImageData(imageData, 0, 0);
+      
       const img = new Image();
       img.onload = function() { document.body.removeChild(tempDiv); resolve(img); };
       img.onerror = function() { document.body.removeChild(tempDiv); resolve(null); };
