@@ -678,6 +678,7 @@ function createQrImage(text) {
     const qrSize = 600;
     const selectedQrColor = qrColor ? qrColor.value : "#000000";
     
+    // ✅ دائماً ننشئ QR بخلفية بيضاء
     new QRCode(tempDiv, {
       text: text,
       width: qrSize,
@@ -695,10 +696,17 @@ function createQrImage(text) {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       
-      // جعل الخلفية البيضاء شفافة
+      // ✅ نحول الخلفية البيضاء فقط إلى شفافة
+      // لكن نترك بكسلات QR الملونة كما هي
       for (let i = 0; i < data.length; i += 4) {
-        if (data[i] > 200 && data[i+1] > 200 && data[i+2] > 200) {
-          data[i+3] = 0;
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        
+        // فقط البكسلات البيضاء النقية تصبح شفافة
+        // البكسلات الملونة (حتى لو كانت فاتحة) تبقى كما هي
+        if (r >= 250 && g >= 250 && b >= 250) {
+          data[i + 3] = 0;
         }
       }
       
@@ -750,7 +758,18 @@ async function generateInvitations() {
         ctx.fillText(guest.name, namePos.x + namePos.w/2, namePos.y + namePos.h/2);
       }
 
-     // ✅ رسم QR مباشرة بدون أي خلفية
+// ✅ رسم QR - يدعم جميع الألوان
+const selectedQrColor = qrColor ? qrColor.value : "#000000";
+const isQrLight = isColorLight(selectedQrColor);
+
+// إذا كان اللون فاتح جداً، نضيف خلفية داكنة خفيفة
+if (isQrLight) {
+  const pad = Math.round(Math.min(qrPos.w, qrPos.h) * 0.04);
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+  roundRect(ctx, qrPos.x - pad, qrPos.y - pad, qrPos.w + pad * 2, qrPos.h + pad * 2, 8);
+  ctx.fill();
+}
+
 const qrImage = await createQrImage(getQrText(guest));
 if (qrImage) {
   ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
