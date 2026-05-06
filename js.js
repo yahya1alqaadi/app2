@@ -771,8 +771,9 @@ if (isQrLight) {
   ctx.fill();
 }
 
-const qrImage = await createQrImage(getQrText(guest));
-if (qrImage) {
+// رسم QR
+var qrImage = await createQrImage(getQrText(guest));
+if (qrImage && qrImage.width > 0) {
   ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
 }
 
