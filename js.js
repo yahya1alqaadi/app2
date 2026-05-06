@@ -1015,21 +1015,11 @@ async function generateInvitations() {
         ctx.fillText(guest.name, namePos.x + namePos.w/2, namePos.y + namePos.h/2);
       }
       const qrImage = await createQrImage(getQrText(guest));
-      if (qrImage) {
-        const selectedQrColor = qrColor ? qrColor.value : "#000000";
-        const isQrLight = isColorLight(selectedQrColor);
-        if (isQrLight) {
-          const qrPadding = Math.round(qrPos.w * 0.08);
-          ctx.fillStyle = '#1e293b';
-          roundRect(ctx, qrPos.x - qrPadding, qrPos.y - qrPadding, qrPos.w + qrPadding * 2, qrPos.h + qrPadding * 2, 10);
-          ctx.fill();
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-          ctx.lineWidth = Math.max(1, Math.round(qrPos.w * 0.005));
-          roundRect(ctx, qrPos.x - qrPadding, qrPos.y - qrPadding, qrPos.w + qrPadding * 2, qrPos.h + qrPadding * 2, 10);
-          ctx.stroke();
-        }
-        ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
-      }
+if (qrImage) {
+  // ✅ رسم QR مباشرة بدون أي خلفية إضافية
+  // الصورة نفسها شفافة (الخلفية البيضاء أزيلت)
+  ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
+}
       const pngDataURL = canvas.toDataURL("image/png");
       guest.invitationPNG = pngDataURL;
       const pdf = new JsPDF({
