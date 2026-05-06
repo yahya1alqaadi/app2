@@ -158,7 +158,8 @@ function resizeQRBox() {
   qrBox.style.height = scaledSize + 'px';
   qrBox.style.aspectRatio = '1/1';
   qrBox.style.backgroundColor = 'transparent';
-  qrBox.style.border = '2px dashed #94a3b8';
+  qrBox.style.border = '2px dashed #cbd5e1';
+  qrBox.style.borderRadius = '8px';
 }
 
 function updateQRPlaceholderStyle() {
