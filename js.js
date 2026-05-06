@@ -655,20 +655,29 @@ function loadJSPDF() {
 
 function getPositionOnImage(box, canvasWidth, canvasHeight) {
   if (!box || !inviteImage) return { x: 0, y: 0, w: 100, h: 100 };
-  const imageRect = inviteImage.getBoundingClientRect();
-  const boxRect = box.getBoundingClientRect();
-  if (!imageRect.width || !imageRect.height) throw new Error("الصورة غير ظاهرة");
-  const scaleX = canvasWidth / imageRect.width;
-  const scaleY = canvasHeight / imageRect.height;
-  const relLeft = boxRect.left - imageRect.left;
-  const relTop = boxRect.top - imageRect.top;
-  const x = relLeft * scaleX, y = relTop * scaleY;
-  const w = boxRect.width * scaleX, h = boxRect.height * scaleY;
-  const sq = Math.min(w, h);
-  const cx = x + w / 2, cy = y + h / 2;
-  return { x: Math.round(cx - sq / 2), y: Math.round(cy - sq / 2), w: Math.round(sq), h: Math.round(sq) };
+  
+  var imageRect = inviteImage.getBoundingClientRect();
+  var boxRect = box.getBoundingClientRect();
+  
+  if (!imageRect.width || !imageRect.height) {
+    return { x: 100, y: 100, w: 200, h: 200 };
+  }
+  
+  var scaleX = canvasWidth / imageRect.width;
+  var scaleY = canvasHeight / imageRect.height;
+  
+  var x = (boxRect.left - imageRect.left) * scaleX;
+  var y = (boxRect.top - imageRect.top) * scaleY;
+  var w = boxRect.width * scaleX;
+  var h = boxRect.height * scaleY;
+  
+  return {
+    x: Math.round(x),
+    y: Math.round(y),
+    w: Math.round(w),
+    h: Math.round(h)
+  };
 }
-
 function createQrImage(text) {
   return new Promise(function(resolve) {
     var qrSize = 600;
