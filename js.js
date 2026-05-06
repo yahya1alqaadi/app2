@@ -679,30 +679,43 @@ function createQrImage(text) {
   return new Promise(function(resolve) {
     var qrSize = 600;
     var selectedQrColor = qrColor ? qrColor.value : "#000000";
-    var isLight = isColorLight(selectedQrColor);
-    var bgColor = isLight ? "#222222" : "#ffffff";
     
     var qrDiv = document.createElement("div");
     qrDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
     document.body.appendChild(qrDiv);
     
+    // ننشئ QR بخلفية بيضاء
     new QRCode(qrDiv, {
       text: text,
       width: qrSize,
       height: qrSize,
       colorDark: selectedQrColor,
-      colorLight: bgColor,
+      colorLight: "#ffffff",
       correctLevel: QRCode.CorrectLevel.H
     });
     
     setTimeout(function() {
       var canvas = qrDiv.querySelector("canvas");
       if (!canvas) { document.body.removeChild(qrDiv); resolve(null); return; }
+      
+      var ctx = canvas.getContext("2d");
+      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var data = imageData.data;
+      
+      // نجعل الخلفية البيضاء شفافة
+      for (var i = 0; i < data.length; i += 4) {
+        if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240 && data[i+3] > 0) {
+          data[i+3] = 0;
+        }
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+      
       var img = new Image();
       img.onload = function() { document.body.removeChild(qrDiv); resolve(img); };
       img.onerror = function() { document.body.removeChild(qrDiv); resolve(null); };
       img.src = canvas.toDataURL("image/png");
-    }, 600);
+    }, 500);
   });
 }
 
