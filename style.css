@@ -1047,3 +1047,21 @@ tr:hover td {
     padding: 0.9rem 2rem 0.9rem 2.8rem;
    
 }
+/* إخفاء صندوق QR - يظهر QR مباشرة على الصورة */
+#qrBox {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+/* إخفاء أي بورد أو خلفية من مكتبة QR نفسها */
+#qrBox canvas {
+  display: block;
+}
+
+#qrBox img {
+  display: none;
+}
