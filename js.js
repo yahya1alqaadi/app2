@@ -504,7 +504,7 @@ function previewGuest(guest) {
     height: qrSize,
     colorDark: selectedQrColor,
     colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H
+    correctLevel: QRCode.CorrectLevel.M
   });
 }
 
@@ -693,7 +693,7 @@ function createQrImage(text) {
       height: qrSize,
       colorDark: selectedQrColor,
       colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.H
+      correctLevel: QRCode.CorrectLevel.M
     });
     
     setTimeout(function() {
