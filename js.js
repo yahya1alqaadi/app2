@@ -762,9 +762,9 @@ async function generateInvitations() {
       }
 
       var qrImg = await createQrImage(getQrText(guest));
-      if (qrImg && qrImg.width > 0) {
-        ctx.drawImage(qrImg, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
-      }
+if (qrImg && qrImg.width > 0) {
+  ctx.drawImage(qrImg, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
+}
 
       var pngDataURL = canvas.toDataURL("image/png");
       guest.invitationPNG = pngDataURL;
