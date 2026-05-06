@@ -671,15 +671,13 @@ function getPositionOnImage(box, canvasWidth, canvasHeight) {
 
 function createQrImage(text) {
   return new Promise(function(resolve) {
-    const tempDiv = document.createElement("div");
-    tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
-    document.body.appendChild(tempDiv);
+    var qrSize = 600;
+    var selectedQrColor = qrColor ? qrColor.value : "#000000";
+    var qrDiv = document.createElement("div");
+    qrDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(qrDiv);
     
-    const qrSize = 600;
-    const selectedQrColor = qrColor ? qrColor.value : "#000000";
-    
-    // ✅ دائماً ننشئ QR بخلفية بيضاء
-    new QRCode(tempDiv, {
+    var qrCode = new QRCode(qrDiv, {
       text: text,
       width: qrSize,
       height: qrSize,
@@ -688,38 +686,41 @@ function createQrImage(text) {
       correctLevel: QRCode.CorrectLevel.H
     });
     
-    setTimeout(function() {
-      const canvas = tempDiv.querySelector("canvas");
-      if (!canvas) { document.body.removeChild(tempDiv); resolve(null); return; }
-      
-      const ctx = canvas.getContext("2d");
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-      
-      // ✅ نحول الخلفية البيضاء فقط إلى شفافة
-      // لكن نترك بكسلات QR الملونة كما هي
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
+    // انتظر حتى يتم الرسم
+    var checkInterval = setInterval(function() {
+      var canvas = qrDiv.querySelector("canvas");
+      if (canvas && canvas.width > 0) {
+        clearInterval(checkInterval);
         
-        // فقط البكسلات البيضاء النقية تصبح شفافة
-        // البكسلات الملونة (حتى لو كانت فاتحة) تبقى كما هي
-        if (r >= 250 && g >= 250 && b >= 250) {
-          data[i + 3] = 0;
-        }
+        var img = new Image();
+        img.onload = function() {
+          document.body.removeChild(qrDiv);
+          resolve(img);
+        };
+        img.onerror = function() {
+          document.body.removeChild(qrDiv);
+          resolve(null);
+        };
+        img.src = canvas.toDataURL("image/png");
       }
-      
-      ctx.putImageData(imageData, 0, 0);
-      
-      const img = new Image();
-      img.onload = function() { document.body.removeChild(tempDiv); resolve(img); };
-      img.onerror = function() { document.body.removeChild(tempDiv); resolve(null); };
-      img.src = canvas.toDataURL("image/png");
-    }, 300);
+    }, 50);
+    
+    // حد أقصى للانتظار 3 ثواني
+    setTimeout(function() {
+      clearInterval(checkInterval);
+      var canvas = qrDiv.querySelector("canvas");
+      if (canvas) {
+        var img = new Image();
+        img.onload = function() { document.body.removeChild(qrDiv); resolve(img); };
+        img.onerror = function() { document.body.removeChild(qrDiv); resolve(null); };
+        img.src = canvas.toDataURL("image/png");
+      } else {
+        document.body.removeChild(qrDiv);
+        resolve(null);
+      }
+    }, 3000);
   });
 }
-
 async function updateGuestInvitationInSheet(guestId) {
   try { await callScript({ action: "updateInvitation", eventId: currentEventId, id: guestId, invitationGenerated: "yes" }); } catch (e) {}
 }
