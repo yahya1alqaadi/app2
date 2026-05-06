@@ -881,18 +881,40 @@ function loadJSPDF() {
 
 function getPositionOnImage(box, canvasWidth, canvasHeight) {
   if (!box || !inviteImage) return { x: 0, y: 0, w: 100, h: 100 };
+  
+  const editor = document.getElementById("editor");
+  const editorRect = editor.getBoundingClientRect();
   const imageRect = inviteImage.getBoundingClientRect();
   const boxRect = box.getBoundingClientRect();
-  if (!imageRect.width || !imageRect.height) throw new Error("صورة التصميم غير ظاهرة");
+  
+  if (!imageRect.width || !imageRect.height) {
+    throw new Error("صورة التصميم غير ظاهرة");
+  }
+  
+  // ✅ حساب نسبة التحويل من شاشة المتصفح إلى أبعاد الصورة الحقيقية
   const scaleX = canvasWidth / imageRect.width;
   const scaleY = canvasHeight / imageRect.height;
-  const rawW = boxRect.width * scaleX;
-  const rawH = boxRect.height * scaleY;
-  const squareSize = Math.min(rawW, rawH);
+  
+  // ✅ حساب موقع الصندوق بالنسبة للصورة (وليس بالنسبة للمحرر)
+  const relativeLeft = boxRect.left - imageRect.left;
+  const relativeTop = boxRect.top - imageRect.top;
+  
+  // ✅ تحويل إلى إحداثيات الصورة الحقيقية
+  const x = relativeLeft * scaleX;
+  const y = relativeTop * scaleY;
+  const w = boxRect.width * scaleX;
+  const h = boxRect.height * scaleY;
+  
+  // ✅ الحفاظ على الشكل المربع للـ QR
+  const squareSize = Math.min(w, h);
+  const centerX = x + w / 2;
+  const centerY = y + h / 2;
+  
   return {
-    x: (boxRect.left - imageRect.left) * scaleX + (rawW - squareSize) / 2,
-    y: (boxRect.top - imageRect.top) * scaleY + (rawH - squareSize) / 2,
-    w: squareSize, h: squareSize
+    x: centerX - squareSize / 2,
+    y: centerY - squareSize / 2,
+    w: squareSize,
+    h: squareSize
   };
 }
 
