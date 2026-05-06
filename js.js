@@ -640,17 +640,39 @@ function loadJSPDF() {
 
 function getPositionOnImage(box, canvasWidth, canvasHeight) {
   if (!box || !inviteImage) return { x: 0, y: 0, w: 200, h: 200 };
+  
+  var editorEl = document.getElementById("editor");
+  if (!editorEl) return { x: 100, y: 100, w: 200, h: 200 };
+  
+  var editorRect = editorEl.getBoundingClientRect();
   var imageRect = inviteImage.getBoundingClientRect();
   var boxRect = box.getBoundingClientRect();
+  
   if (!imageRect.width || !imageRect.height) return { x: 100, y: 100, w: 200, h: 200 };
+  
+  // ✅ النسبة بين حجم الصورة الحقيقي وحجمها الظاهر على الشاشة
   var scaleX = canvasWidth / imageRect.width;
   var scaleY = canvasHeight / imageRect.height;
-  var x = (boxRect.left - imageRect.left) * scaleX;
-  var y = (boxRect.top - imageRect.top) * scaleY;
+  
+  // ✅ موقع الصندوق بالنسبة للصورة (وليس بالنسبة للشاشة)
+  var relativeX = boxRect.left - imageRect.left;
+  var relativeY = boxRect.top - imageRect.top;
+  
+  // ✅ تحويل إلى إحداثيات الصورة الحقيقية
+  var x = relativeX * scaleX;
+  var y = relativeY * scaleY;
   var w = boxRect.width * scaleX;
   var h = boxRect.height * scaleY;
-  var size = Math.round(Math.min(w, h));
-  return { x: Math.round(x), y: Math.round(y), w: size, h: size };
+  
+  // ✅ جعله مربعاً متساوي الأضلاع
+  var size = Math.min(Math.round(w), Math.round(h));
+  
+  return {
+    x: Math.round(x),
+    y: Math.round(y),
+    w: size,
+    h: size
+  };
 }
 
 function createQrImage(text) {
