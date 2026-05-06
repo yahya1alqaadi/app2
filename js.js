@@ -901,31 +901,42 @@ function createQrImage(text) {
     const tempDiv = document.createElement("div");
     tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
     document.body.appendChild(tempDiv);
+    
     const qrSize = 600;
     const selectedQrColor = qrColor ? qrColor.value : "#000000";
-    const isLight = isColorLight(selectedQrColor);
+    
+    // ✅ دائماً نستخدم خلفية بيضاء مؤقتة ثم نجعلها شفافة
     new QRCode(tempDiv, {
-      text: text, width: qrSize, height: qrSize,
+      text: text,
+      width: qrSize,
+      height: qrSize,
       colorDark: selectedQrColor,
-      colorLight: isLight ? "#000000" : "#ffffff",
+      colorLight: "#ffffff",
       correctLevel: QRCode.CorrectLevel.H
     });
+    
     setTimeout(function() {
       const canvas = tempDiv.querySelector("canvas");
       if (!canvas) { document.body.removeChild(tempDiv); resolve(null); return; }
+      
       const ctx = canvas.getContext("2d");
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
-      if (isLight) {
-        for (let i = 0; i < data.length; i += 4) {
-          if (data[i] < 30 && data[i+1] < 30 && data[i+2] < 30) data[i+3] = 0;
-        }
-      } else {
-        for (let i = 0; i < data.length; i += 4) {
-          if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) data[i+3] = 0;
+      
+      // ✅ نجعل كل الخلفية البيضاء شفافة
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        
+        // أي بكسل أبيض أو قريب من الأبيض ← شفاف
+        if (r > 200 && g > 200 && b > 200) {
+          data[i + 3] = 0;
         }
       }
+      
       ctx.putImageData(imageData, 0, 0);
+      
       const img = new Image();
       img.onload = function() { document.body.removeChild(tempDiv); resolve(img); };
       img.onerror = function() { document.body.removeChild(tempDiv); resolve(null); };
