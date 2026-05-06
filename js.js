@@ -1032,8 +1032,26 @@ async function generateInvitations() {
       }
       const qrImage = await createQrImage(getQrText(guest));
 if (qrImage) {
-  // ✅ رسم QR مباشرة بدون أي خلفية إضافية
-  // الصورة نفسها شفافة (الخلفية البيضاء أزيلت)
+  const selectedQrColor = qrColor ? qrColor.value : "#000000";
+  const isQrLight = isColorLight(selectedQrColor);
+  
+  if (isQrLight) {
+    // ✅ فقط للألوان الفاتحة: نضيف خلفية داكنة + إطار
+    const padding = Math.round(qrPos.w * 0.06);
+    
+    // خلفية داكنة بزوايا دائرية
+    ctx.fillStyle = '#1e293b';
+    roundRect(ctx, qrPos.x - padding, qrPos.y - padding, qrPos.w + padding * 2, qrPos.h + padding * 2, 12);
+    ctx.fill();
+    
+    // إطار أبيض رفيع
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = Math.max(2, Math.round(qrPos.w * 0.008));
+    roundRect(ctx, qrPos.x - padding, qrPos.y - padding, qrPos.w + padding * 2, qrPos.h + padding * 2, 12);
+    ctx.stroke();
+  }
+  
+  // ✅ رسم QR (الخلفية شفافة في الصورة)
   ctx.drawImage(qrImage, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
 }
       const pngDataURL = canvas.toDataURL("image/png");
