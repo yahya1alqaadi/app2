@@ -484,12 +484,15 @@ function getQrText(guest) { return String(guest.id); }
 
 function previewGuest(guest) {
   if (!guest || !qrBox) return;
+  
+  // تحديث الاسم
   if (nameBox) {
     if (showName) {
       nameBox.innerHTML = guest.name;
-      nameBox.style.display = 'flex'; nameBox.style.opacity = '1';
+      nameBox.style.display = 'flex';
+      nameBox.style.opacity = '1';
       const isLight = isColorLight(fontColor ? fontColor.value : "#000000");
-      nameBox.style.backgroundColor = isLight ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.85)';
+      nameBox.style.backgroundColor = isLight ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.85)';
       nameBox.style.color = fontColor ? fontColor.value : "#000000";
       nameBox.style.border = '2px dashed ' + (isLight ? '#94a3b8' : '#2563eb');
       nameBox.style.textShadow = isLight ? '0 0 8px rgba(0,0,0,0.8)' : 'none';
@@ -497,22 +500,43 @@ function previewGuest(guest) {
       if (fontSize) nameBox.style.fontSize = fontSize.value + "px";
       if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
     } else {
-      nameBox.innerHTML = ''; nameBox.style.display = 'none'; nameBox.style.opacity = '0';
+      nameBox.innerHTML = '';
+      nameBox.style.display = 'none';
+      nameBox.style.opacity = '0';
     }
   }
+  
   resizeQRBox();
   qrBox.innerHTML = "";
+  
   const qrSize = qrBox.clientWidth || 110;
   const selectedQrColor = qrColor ? qrColor.value : "#000000";
-  qrBox.style.backgroundColor = 'transparent';
-  qrBox.style.border = '2px dashed #cbd5e1';
+  const isLight = isColorLight(selectedQrColor);
+  
+  if (isLight) {
+    // ✅ معاينة تطابق التصدير: خلفية داكنة + إطار أبيض
+    qrBox.style.backgroundColor = '#1e293b';
+    qrBox.style.border = '2px solid rgba(255,255,255,0.6)';
+    qrBox.style.borderRadius = '4px';
+    qrBox.style.padding = '6px';
+    qrBox.style.boxSizing = 'content-box';
+  } else {
+    // ✅ لون داكن: شفاف تماماً
+    qrBox.style.backgroundColor = 'transparent';
+    qrBox.style.border = '2px dashed #cbd5e1';
+    qrBox.style.borderRadius = '8px';
+    qrBox.style.padding = '0';
+  }
+  
   new QRCode(qrBox, {
-    text: getQrText(guest), width: qrSize, height: qrSize,
-    colorDark: selectedQrColor, colorLight: "#ffffff",
+    text: getQrText(guest),
+    width: qrSize,
+    height: qrSize,
+    colorDark: selectedQrColor,
+    colorLight: isLight ? '#1e293b' : '#ffffff',
     correctLevel: QRCode.CorrectLevel.H
   });
 }
-
 // ============================================
 // عرض الجداول
 // ============================================
