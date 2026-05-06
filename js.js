@@ -157,9 +157,8 @@ function resizeQRBox() {
   qrBox.style.width = scaledSize + 'px';
   qrBox.style.height = scaledSize + 'px';
   qrBox.style.aspectRatio = '1/1';
-  const selectedQrColor = qrColor ? qrColor.value : "#000000";
-  const isLight = isColorLight(selectedQrColor);
-  qrBox.style.backgroundColor = isLight ? '#1e293b' : '#ffffff';
+  qrBox.style.backgroundColor = 'transparent';
+  qrBox.style.border = '2px dashed #94a3b8';
 }
 
 function updateQRPlaceholderStyle() {
