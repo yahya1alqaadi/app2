@@ -477,14 +477,16 @@ function previewGuest(guest) {
   if (nameBox) {
     if (showName) {
       nameBox.innerHTML = guest.name;
-      nameBox.style.display = 'flex'; nameBox.style.opacity = '1';
-      nameBox.style.backgroundColor = 'transparent'; nameBox.style.border = 'none';
+      nameBox.style.display = 'flex';
+      nameBox.style.backgroundColor = 'transparent';
+      nameBox.style.border = 'none';
       if (fontFamily) nameBox.style.fontFamily = fontFamily.value;
       if (fontSize) nameBox.style.fontSize = fontSize.value + "px";
       if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
       if (fontColor) nameBox.style.color = fontColor.value;
     } else {
-      nameBox.innerHTML = ''; nameBox.style.display = 'none'; nameBox.style.opacity = '0';
+      nameBox.innerHTML = '';
+      nameBox.style.display = 'none';
     }
   }
   
