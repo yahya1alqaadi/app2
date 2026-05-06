@@ -1052,11 +1052,15 @@ function createQrImage(text) {
     
     const qrSize = 600;
     const selectedQrColor = qrColor ? qrColor.value : "#000000";
+    const isLight = isColorLight(selectedQrColor);
     
+    // ✅ إنشاء QR مع خلفية مناسبة
     new QRCode(tempDiv, {
-      text, width: qrSize, height: qrSize,
+      text,
+      width: qrSize,
+      height: qrSize,
       colorDark: selectedQrColor,
-      colorLight: "#ffffff",
+      colorLight: isLight ? "#000000" : "#ffffff", // ✅ خلفية سوداء للألوان الفاتحة
       correctLevel: QRCode.CorrectLevel.H
     });
     
@@ -1068,8 +1072,31 @@ function createQrImage(text) {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       
-      for (let i = 0; i < data.length; i += 4) {
-        if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240) data[i+3] = 0;
+      if (isLight) {
+        // ✅ للألوان الفاتحة: نجعل الخلفية السوداء شفافة ونبقي QR الفاتح
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          
+          // إذا كان البكسل أسود (خلفية) ← نجعله شفاف
+          if (r < 30 && g < 30 && b < 30) {
+            data[i + 3] = 0;
+          }
+          // بكسل QR الفاتح يبقى كما هو
+        }
+      } else {
+        // ✅ للألوان الداكنة: نجعل الخلفية البيضاء شفافة
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          
+          // إذا كان البكسل أبيض (خلفية) ← نجعله شفاف
+          if (r > 240 && g > 240 && b > 240) {
+            data[i + 3] = 0;
+          }
+        }
       }
       
       ctx.putImageData(imageData, 0, 0);
