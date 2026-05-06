@@ -488,12 +488,12 @@ function previewGuest(guest) {
       nameBox.style.display = 'flex';
       nameBox.style.opacity = '1';
       nameBox.style.backgroundColor = 'transparent';
-      nameBox.style.color = fontColor ? fontColor.value : "#000000";
       nameBox.style.border = 'none';
       nameBox.style.textShadow = 'none';
       if (fontFamily) nameBox.style.fontFamily = fontFamily.value;
       if (fontSize) nameBox.style.fontSize = fontSize.value + "px";
       if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
+      if (fontColor) nameBox.style.color = fontColor.value;
     } else {
       nameBox.innerHTML = '';
       nameBox.style.display = 'none';
@@ -509,6 +509,7 @@ function previewGuest(guest) {
   
   qrBox.style.backgroundColor = 'transparent';
   qrBox.style.border = 'none';
+  qrBox.style.boxShadow = 'none';
   
   new QRCode(qrBox, {
     text: getQrText(guest),
