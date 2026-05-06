@@ -157,14 +157,16 @@ function resizeQRBox() {
   qrBox.style.aspectRatio = '1/1';
   qrBox.style.backgroundColor = 'transparent';
   qrBox.style.border = 'none';
+  qrBox.style.boxShadow = 'none';
+  qrBox.style.outline = 'none';
 }
-
 function updateQRPlaceholderStyle() {
   if (!qrBox) return;
   resizeQRBox();
   qrBox.style.backgroundColor = 'transparent';
   qrBox.style.border = 'none';
-  qrBox.innerHTML = '<i class="fas fa-qrcode"></i>';
+  qrBox.style.boxShadow = 'none';
+  qrBox.innerHTML = '';
 }
 
 function updateNameBoxAppearance() {
