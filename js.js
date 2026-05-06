@@ -631,6 +631,7 @@ function getQrText(guest) {
 
 function previewGuest(guest) {
   if (!guest || !qrBox) return;
+  
   if (nameBox) {
     if (showName) {
       nameBox.innerHTML = guest.name;
@@ -650,20 +651,25 @@ function previewGuest(guest) {
       nameBox.style.opacity = '0';
     }
   }
+  
   resizeQRBox();
   qrBox.innerHTML = "";
+  
   const qrSize = qrBox.clientWidth || 110;
   const selectedQrColor = qrColor ? qrColor.value : "#000000";
   const isLight = isColorLight(selectedQrColor);
-  const bgColor = isLight ? '#1e293b' : '#ffffff';
-  qrBox.style.backgroundColor = bgColor;
-  qrBox.style.border = isLight ? '2px dashed #64748b' : '2px dashed #2563eb';
+  
+  // ✅ خلفية الصندوق تكون مخططة فقط للتمييز
+  qrBox.style.backgroundColor = 'transparent';
+  qrBox.style.border = '2px dashed #94a3b8';
+  
+  // ✅ إنشاء QR بخلفية بيضاء في المعاينة فقط للرؤية
   new QRCode(qrBox, {
     text: getQrText(guest),
     width: qrSize,
     height: qrSize,
     colorDark: selectedQrColor,
-    colorLight: bgColor,
+    colorLight: "#ffffff",
     correctLevel: QRCode.CorrectLevel.H
   });
 }
