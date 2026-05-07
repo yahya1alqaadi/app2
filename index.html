@@ -219,26 +219,36 @@
       </section>
 
       <!-- قسم قائمة الضيوف -->
-      <section class="card">
-        <div class="card-header">
-          <h2><i class="fas fa-users"></i> قائمة الضيوف</h2>
-          <span id="guestCount" class="card-badge">0 ضيف</span>
-        </div>
-        <div class="table-wrapper">
-          <table>
-           <thead>
-  <tr>
-    <th><i class="fas fa-user"></i> الاسم</th>
-    <th><i class="fas fa-phone"></i> الجوال</th>
-    <th><i class="fas fa-check-circle"></i> الدخول</th>
-    <th><i class="fas fa-image"></i> الدعوة</th>
-    <th><i class="fas fa-cog"></i> إجراءات</th>
-  </tr>
-</thead>
-            <tbody id="guestTable"></tbody>
-          </table>
-        </div>
-      </section>
+    <section class="card">
+    <div class="card-header">
+      <h2><i class="fas fa-users"></i> قائمة الضيوف</h2>
+      <span id="guestCount" class="card-badge">0 ضيف</span>
+    </div>
+    
+    <!-- ✅ حقل البحث الجديد -->
+    <div class="search-box" style="margin-bottom:15px;">
+      <div style="position:relative;">
+        <i class="fas fa-search" style="position:absolute;top:50%;right:14px;transform:translateY(-50%);color:#94a3b8;"></i>
+        <input type="text" id="guestSearchInput" placeholder="🔍 بحث عن ضيف بالاسم أو رقم الجوال..." style="width:100%;padding:12px 40px 12px 15px;border:2px solid #e2e8f0;border-radius:12px;font-size:0.95rem;font-family:inherit;" />
+        <button id="clearSearchBtn" style="position:absolute;top:50%;left:10px;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;display:none;font-size:1.1rem;" title="مسح البحث">&times;</button>
+      </div>
+    </div>
+    
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th><i class="fas fa-user"></i> الاسم</th>
+            <th><i class="fas fa-phone"></i> الجوال</th>
+            <th><i class="fas fa-check-circle"></i> الدخول</th>
+            <th><i class="fas fa-image"></i> الدعوة</th>
+            <th><i class="fas fa-cog"></i> إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="guestTable"></tbody>
+      </table>
+    </div>
+</section>
 
       <!-- قسم الدعوات المولدة -->
       <section class="card" id="invitationsCard">
