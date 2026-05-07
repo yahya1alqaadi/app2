@@ -65,6 +65,10 @@ let searchQuery = "";
 // ============================================
 // عناصر DOM
 // ============================================
+// ✅ Pagination
+let currentPage = 1;
+let itemsPerPage = 10; // عدد الضيوف في الصفحة الواحدة
+
 
 function getElement(id) { return document.getElementById(id); }
 
@@ -1197,6 +1201,117 @@ function initSettings() {
     });
   }
 }
+// ============================================
+// ✅ Pagination
+// ============================================
+
+function paginateGuests() {
+  var filtered = getFilteredGuests();
+  var totalPages = Math.ceil(filtered.length / itemsPerPage);
+  
+  if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+  
+  var start = (currentPage - 1) * itemsPerPage;
+  var end = Math.min(start + itemsPerPage, filtered.length);
+  var pageGuests = filtered.slice(start, end);
+  
+  renderGuestRows(pageGuests);
+  updatePaginationButtons(totalPages);
+}
+
+function getFilteredGuests() {
+  var query = (document.getElementById("guestSearchInput")?.value || "").trim().toLowerCase();
+  
+  if (!query) return guests;
+  
+  return guests.filter(function(g) {
+    var name = (g.name || "").toLowerCase();
+    var phone = (g.phone || "").toLowerCase();
+    return name.indexOf(query) !== -1 || phone.indexOf(query) !== -1;
+  });
+}
+
+function renderGuestRows(pageGuests) {
+  if (!guestTable) return;
+  
+  guestTable.innerHTML = "";
+  
+  if (pageGuests.length === 0) {
+    guestTable.innerHTML = '<tr><td colspan="6">ℹ️ لا يوجد ضيوف</td></tr>';
+    return;
+  }
+  
+  pageGuests.forEach(function(guest) {
+    var originalIndex = guests.findIndex(function(g) { return g.id === guest.id; });
+    var row = document.createElement("tr");
+    row.style.cursor = "pointer";
+    var hasInv = guest.invitation || guest.invitationPNG;
+    var remaining = Math.max(0, (guest.maxScans || 1) - (guest.scanCount || 0));
+    var maxed = remaining <= 0;
+    
+    row.innerHTML = '<td><strong>' + escapeHtml(guest.name) + '</strong></td><td dir="ltr">' + escapeHtml(guest.phone) + '</td><td><span class="status-badge" style="background:' + (maxed ? '#fee2e2' : (guest.scanCount > 0 ? '#fef3c7' : '#f1f5f9')) + ';color:' + (maxed ? '#991b1b' : (guest.scanCount > 0 ? '#92400e' : '#475569')) + ';">' + (maxed ? '🚫 منتهي' : (guest.scanCount || 0) + '/' + (guest.maxScans || 1)) + '</span></td><td>' + (hasInv ? '<span style="color:#10b981;">✅ PDF</span>' : '<span style="color:#94a3b8;">—</span>') + '</td><td><button class="edit-btn"><i class="fas fa-edit"></i></button> <button class="delete-btn"><i class="fas fa-trash"></i></button></td>';
+    
+    row.addEventListener("click", function(e) { if (e.target.closest("button")) return; previewGuest(guest); });
+    var eb = row.querySelector(".edit-btn"); var db = row.querySelector(".delete-btn");
+    if (eb) eb.addEventListener("click", function(e) { e.stopPropagation(); editGuest(originalIndex); });
+    if (db) db.addEventListener("click", function(e) { e.stopPropagation(); deleteGuest(originalIndex); });
+    guestTable.appendChild(row);
+  });
+}
+
+function updatePaginationButtons(totalPages) {
+  var prevBtn = document.getElementById("prevPageBtn");
+  var nextBtn = document.getElementById("nextPageBtn");
+  var pageInfo = document.getElementById("pageInfo");
+  
+  if (pageInfo) pageInfo.textContent = 'صفحة ' + currentPage + ' من ' + Math.max(1, totalPages);
+  if (prevBtn) prevBtn.disabled = (currentPage <= 1);
+  if (nextBtn) nextBtn.disabled = (currentPage >= totalPages);
+}
+
+// ✅ تعديل renderGuests لاستخدام pagination
+var originalRenderGuests = renderGuests;
+renderGuests = function() {
+  if (guestCount) guestCount.textContent = guests.length + " ضيف";
+  updateStatistics();
+  paginateGuests();
+  renderInvitationTable();
+  setTimeout(filterGuests, 100);
+};
+
+// ربط أزرار pagination
+setTimeout(function() {
+  var prevBtn = document.getElementById("prevPageBtn");
+  var nextBtn = document.getElementById("nextPageBtn");
+  
+  if (prevBtn) {
+    prevBtn.addEventListener("click", function() {
+      if (currentPage > 1) {
+        currentPage--;
+        paginateGuests();
+      }
+    });
+  }
+  
+  if (nextBtn) {
+    nextBtn.addEventListener("click", function() {
+      var filtered = getFilteredGuests();
+      var totalPages = Math.ceil(filtered.length / itemsPerPage);
+      if (currentPage < totalPages) {
+        currentPage++;
+        paginateGuests();
+      }
+    });
+  }
+  
+  // إعادة تعيين الصفحة عند البحث
+  var searchInput = document.getElementById("guestSearchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", function() {
+      currentPage = 1;
+    });
+  }
+}, 1200);
 
 // تشغيل الإعدادات
 setTimeout(initSettings, 800);
