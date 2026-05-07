@@ -1011,20 +1011,26 @@ async function checkInGuest(qrText) {
   var maxScans = guest.maxScans || 1;
   var currentScans = guest.scanCount || 0;
   
-  // ✅ فقط نتحقق من maxScans
-  if (currentScans >= maxScans) { showToast("🚫 منتهي", "error", 4000); return; }
-  
-  try {
-    var result = await callScript({ action: "attendance", eventId: currentEventId, id: guest.id, name: guest.name, phone: guest.phone, time: new Date().toLocaleString("ar-SA") });
-    if (result.status === "success") {
-      await loadGuestsFromSheet();
-      var updated = guests.find(function(g) { return String(g.id) === String(guest.id); });
-      var newCount = updated ? updated.scanCount : (currentScans + 1);
-      var remaining = maxScans - newCount;
-      if (remaining <= 0) { showToast("🚫 اكتمل", "warning", 4000); } else { showToast("✅ (" + newCount + "/" + maxScans + ")", "success", 4000); }
+ // ✅ فقط نتحقق من maxScans
+if (currentScans >= maxScans) { showToast("🚫 منتهي", "error", 4000); return; }
+
+try {
+  var result = await callScript({ action: "attendance", eventId: currentEventId, id: guest.id, name: guest.name, phone: guest.phone, time: new Date().toLocaleString("ar-SA") });
+  if (result.status === "success") {
+    await loadGuestsFromSheet();
+    var updated = guests.find(function(g) { return String(g.id) === String(guest.id); });
+    var newCount = updated ? updated.scanCount : (currentScans + 1);
+    var remaining = maxScans - newCount;
+    
+    if (maxScans === 1 && newCount === 1) {
+      showToast("✅ أهلاً وسهلاً " + guest.name, "success", 4000);
+    } else if (remaining > 0) {
+      showToast("✅ (" + newCount + "/" + maxScans + ")", "success", 4000);
+    } else {
+      showToast("🚫 اكتمل", "warning", 4000);
     }
-  } catch (e) { showToast("❌ فشل", "error", 3500); }
-}
+  }
+} catch (e) { showToast("❌ فشل", "error", 3500); }
 
 // ============================================
 // ربط الأحداث
