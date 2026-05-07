@@ -1339,3 +1339,44 @@ body.dark-mode #reader {
 body.dark-mode .status-message {
   color: #93c5fd;
 }
+/* تصحيح ألوان الإحصائيات في الوضع الداكن */
+body.dark-mode .stat-card-2[style*="background"] {
+  background: #1e293b !important;
+  border: 1px solid #334155;
+}
+
+body.dark-mode .stat-card-2 .stat-icon {
+  opacity: 0.9;
+}
+
+/* إحصائية إجمالي الضيوف */
+body.dark-mode .stat-card-2:nth-child(1) {
+  background: linear-gradient(135deg, #1e3a5f, #1a365d) !important;
+}
+body.dark-mode .stat-card-2:nth-child(1) .stat-icon {
+  background: #3b82f6 !important;
+}
+
+/* إحصائية تم تسجيلهم */
+body.dark-mode .stat-card-2:nth-child(2) {
+  background: linear-gradient(135deg, #064e3b, #065f46) !important;
+}
+body.dark-mode .stat-card-2:nth-child(2) .stat-icon {
+  background: #10b981 !important;
+}
+
+/* إحصائية لم يحضروا */
+body.dark-mode .stat-card-2:nth-child(3) {
+  background: linear-gradient(135deg, #450a0a, #7f1d1d) !important;
+}
+body.dark-mode .stat-card-2:nth-child(3) .stat-icon {
+  background: #ef4444 !important;
+}
+
+/* إحصائية النسبة */
+body.dark-mode .stat-card-2:nth-child(4) {
+  background: linear-gradient(135deg, #78350f, #92400e) !important;
+}
+body.dark-mode .stat-card-2:nth-child(4) .stat-icon {
+  background: #f59e0b !important;
+}
