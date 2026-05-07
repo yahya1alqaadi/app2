@@ -208,15 +208,31 @@ function addQRSizeControl() {
   var toggleNameBtn = document.getElementById('toggleNameBtn');
   var numberInput = document.getElementById('qrSizeInput');
 
-  if (slider && valueDisplay) {
-    slider.addEventListener('input', function() {
-      qrScalePercent = parseInt(this.value);
-      valueDisplay.textContent = qrScalePercent + '%';
+if (slider && valueDisplay) {
+  slider.addEventListener('input', function() {
+    qrScalePercent = parseInt(this.value);
+    valueDisplay.textContent = qrScalePercent + '%';
+    if (numberInput) numberInput.value = this.value;
+    localStorage.setItem("qrScalePercent", qrScalePercent);
+    resizeQRBox();
+    if (guests.length > 0) previewGuest(guests[0]);
+  });
+  
+  if (numberInput) {
+    numberInput.addEventListener('input', function() {
+      var val = parseInt(this.value);
+      if (isNaN(val)) val = 100;
+      if (val < 50) val = 50;
+      if (val > 200) val = 200;
+      qrScalePercent = val;
+      slider.value = val;
+      valueDisplay.textContent = val + '%';
       localStorage.setItem("qrScalePercent", qrScalePercent);
       resizeQRBox();
       if (guests.length > 0) previewGuest(guests[0]);
     });
   }
+}
 
   if (toggleNameBtn) {
     toggleNameBtn.addEventListener('click', function() {
