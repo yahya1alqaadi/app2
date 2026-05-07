@@ -890,7 +890,24 @@ async function checkInGuest(qrText) {
 // ربط الأحداث
 // ============================================
 
-if (eventSelect) eventSelect.onchange = async function() { currentEventId = eventSelect.value; localStorage.setItem("currentEventId", currentEventId); updateEventStatus(); updateHeaderBadge(); await loadGuestsFromSheet(); };
+if (eventSelect) eventSelect.onchange = async function() {
+  currentEventId = eventSelect.value;
+  localStorage.setItem("currentEventId", currentEventId);
+  updateEventStatus();
+  updateHeaderBadge();
+  
+  // ✅ لا نوقف الكاميرا - فقط نحدث البيانات
+  await loadGuestsFromSheet();
+  
+  // إذا الكاميرا شغالة، نوقف المسح مؤقتاً 3 ثواني فقط لتحديث البيانات
+  if (scanner) {
+    isScanningPaused = true;
+    showToast("🔄 تم تغيير المناسبة - جاهز للمسح", "info", 2000);
+    setTimeout(function() {
+      isScanningPaused = false;
+    }, 3000);
+  }
+};
 if (addEventBtn) addEventBtn.onclick = addEvent;
 if (toggleEventBtn) toggleEventBtn.onclick = toggleCurrentEvent;
 if (addGuestBtn) addGuestBtn.onclick = addGuest;
