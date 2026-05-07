@@ -966,4 +966,44 @@ setTimeout(function() {
 // واجعله:
 // renderInvitationTable();
 // setTimeout(filterGuests, 100);
+// ============================================
+// ✅ تحديث الإحصائيات
+// ============================================
+
+function updateStatistics() {
+  const total = guests.length;
+  const checkedIn = guests.filter(function(g) { return g.checkedIn || g.scanCount > 0; }).length;
+  const pending = total - checkedIn;
+  const percent = total > 0 ? Math.round((checkedIn / total) * 100) : 0;
+  
+  const statTotal = document.getElementById("statTotal");
+  const statCheckedIn = document.getElementById("statCheckedIn");
+  const statPending = document.getElementById("statPending");
+  const statPercent = document.getElementById("statPercent");
+  const statProgressBar = document.getElementById("statProgressBar");
+  
+  if (statTotal) statTotal.textContent = total;
+  if (statCheckedIn) statCheckedIn.textContent = checkedIn;
+  if (statPending) statPending.textContent = pending;
+  if (statPercent) statPercent.textContent = percent + "%";
+  
+  if (statProgressBar) {
+    statProgressBar.style.width = percent + "%";
+    
+    // تغيير لون الشريط حسب النسبة
+    if (percent >= 80) {
+      statProgressBar.style.background = "linear-gradient(90deg, #10b981, #34d399)";
+    } else if (percent >= 50) {
+      statProgressBar.style.background = "linear-gradient(90deg, #f59e0b, #fbbf24)";
+    } else if (percent > 0) {
+      statProgressBar.style.background = "linear-gradient(90deg, #ef4444, #f87171)";
+    } else {
+      statProgressBar.style.background = "#e2e8f0";
+    }
+  }
+  
+  // ✅ تحديث كل 30 ثانية تلقائياً
+  clearTimeout(window._statsInterval);
+  window._statsInterval = setTimeout(updateStatistics, 30000);
+}
 loadEvents();
