@@ -1011,7 +1011,7 @@ async function checkInGuest(qrText) {
   var maxScans = guest.maxScans || 1;
   var currentScans = guest.scanCount || 0;
   
- // ✅ فقط نتحقق من maxScans
+// ✅ فقط نتحقق من maxScans
 if (currentScans >= maxScans) { showToast("🚫 منتهي", "error", 4000); return; }
 
 try {
@@ -1031,7 +1031,7 @@ try {
     }
   }
 } catch (e) { showToast("❌ فشل", "error", 3500); }
-
+  
 // ============================================
 // ربط الأحداث
 // ============================================
