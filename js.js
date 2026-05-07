@@ -60,6 +60,13 @@ let scanner = null;
 let isScanningPaused = false;
 let qrScalePercent = parseInt(localStorage.getItem("qrScalePercent") || "100");
 let showName = localStorage.getItem("showName") !== "false";
+// ✅ Pagination + تحديد
+let currentPage = 1;
+let itemsPerPage = parseInt(localStorage.getItem("itemsPerPage") || "25");
+let invCurrentPage = 1;
+let attCurrentPage = 1;
+let itemsPerPageSmall = 15;
+let selectedGuests = new Set();
 // متغير البحث
 let searchQuery = "";
 // ============================================
