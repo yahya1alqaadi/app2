@@ -1022,6 +1022,7 @@ async function checkInGuest(qrText) {
   var newCount = updated ? updated.scanCount : (currentScans + 1);
   var remaining = maxScans - newCount;
   
+  // ✅ دائماً أخضر ما دام مسموح
   if (maxScans === 1) {
     showToast("✅ أهلاً وسهلاً " + guest.name + " (1/1)", "success", 4000);
   } else if (remaining > 0) {
