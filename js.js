@@ -1022,12 +1022,12 @@ async function checkInGuest(qrText) {
   var newCount = updated ? updated.scanCount : (currentScans + 1);
   var remaining = maxScans - newCount;
   
-  if (maxScans === 1 && newCount === 1) {
-    showToast("✅ أهلاً وسهلاً " + guest.name, "success", 4000);
+  if (maxScans === 1) {
+    showToast("✅ أهلاً وسهلاً " + guest.name + " (1/1)", "success", 4000);
   } else if (remaining > 0) {
-    showToast("✅ (" + newCount + "/" + maxScans + ")", "success", 4000);
+    showToast("✅ (" + newCount + "/" + maxScans + ") متبقي " + remaining, "success", 4000);
   } else {
-    showToast("🚫 اكتمل", "warning", 4000);
+    showToast("✅ اكتمل (" + maxScans + "/" + maxScans + ")", "success", 4000);
   }
 }
   } catch (e) { showToast("❌ فشل", "error", 3500); }
