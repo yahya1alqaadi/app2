@@ -556,31 +556,6 @@ function renderGuests() {
     if (db) db.addEventListener("click", function(e) { e.stopPropagation(); deleteGuest(index); });
     guestTable.appendChild(row);
   });
-  renderGuests = function() {
-  // ... الكود الموجود ...
-  
-  // ✅ أضف هذا السطر قبل renderInvitationTable()
-  updateStatistics();
-  
-  renderInvitationTable();
-  setTimeout(filterGuests, 100);
-};
- renderInvitationTable();
-setTimeout(filterGuests, 100);
-}
-
-function renderInvitationTable() {
-  if (!invitationTable) return;
-  invitationTable.innerHTML = "";
-  var withInv = guests.filter(function(g) { return g.invitation || g.invitationPNG; });
-  if (withInv.length === 0) { invitationTable.innerHTML = '<tr><td colspan="3">ℹ️ لا توجد دعوات</td></tr>'; return; }
-  withInv.forEach(function(guest) {
-    var row = document.createElement("tr");
-    row.innerHTML = '<td><strong>' + escapeHtml(guest.name) + '</strong></td><td><span style="font-size:2rem;">📄</span></td><td><button class="btn btn-primary download-pdf-btn"><i class="fas fa-download"></i> PDF</button></td>';
-    var btn = row.querySelector('.download-pdf-btn');
-    if (btn) { btn.addEventListener('click', function(e) { e.stopPropagation(); var a = document.createElement('a'); a.href = guest.invitation || guest.invitationPNG; a.download = 'دعوة_' + sanitizeFileName(guest.name) + '.pdf'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }); }
-    invitationTable.appendChild(row);
-  });
 }
 
 // ============================================
