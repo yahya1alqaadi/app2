@@ -474,20 +474,29 @@ async function checkGuest(qrText) {
   var time = new Date().toLocaleString("ar-SA", { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
   try {
     var data = await callScript({ action: "attendance", eventId: currentEventId, id: guest.id, name: guest.name, phone: guest.phone, time: time });
-    if (data.status === "success") {
-      await loadGuests();
-      var updatedGuest = guests.find(function(g) { return String(g.id) === String(guest.id); });
-      var newCount = updatedGuest ? (updatedGuest.scanCount || 0) : (currentScans + 1);
-      var remaining = maxScans - newCount;
-      if (remaining <= 0) {
-        showToast("🚫 " + guest.name + " اكتمل (" + maxScans + "/" + maxScans + ")", "warning", 4000);
-        showWarning("🚫 " + guest.name + " مكتمل");
-      } else {
-        showToast("✅ " + guest.name + " (" + newCount + "/" + maxScans + ") متبقي " + remaining, "success", 4000);
-        showSuccess("✅ " + guest.name + " (" + newCount + "/" + maxScans + ")");
-      }
-      playSuccessSound(); return;
-    }
+  if (data.status === "success") {
+  await loadGuests();
+  var updatedGuest = guests.find(function(g) { return String(g.id) === String(guest.id); });
+  var newCount = updatedGuest ? (updatedGuest.scanCount || 0) : (currentScans + 1);
+  var remaining = maxScans - newCount;
+  
+  // ✅ إذا maxScans = 1: دايم نعرض ترحيب أخضر للمرة الأولى
+  if (maxScans === 1 && newCount === 1) {
+    showToast("✅ أهلاً وسهلاً " + guest.name, "success", 4000);
+    showSuccess("✅ مرحباً " + guest.name);
+  }
+  // ✅ إذا maxScans > 1 والعدد ما اكتمل
+  else if (remaining > 0) {
+    showToast("✅ " + guest.name + " (" + newCount + "/" + maxScans + ") متبقي " + remaining, "success", 4000);
+    showSuccess("✅ " + guest.name + " (" + newCount + "/" + maxScans + ")");
+  }
+  // ✅ إذا اكتمل العدد
+  else {
+    showToast("🚫 " + guest.name + " اكتمل (" + maxScans + "/" + maxScans + ")", "warning", 4000);
+    showWarning("🚫 " + guest.name + " مكتمل");
+  }
+  playSuccessSound(); return;
+}
     showToast("❌ خطأ في التسجيل", "error", 3500);
     playErrorSound();
   } catch (e) { showToast("❌ فشل الاتصال", "error", 3500); playErrorSound(); }
