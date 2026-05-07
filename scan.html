@@ -282,230 +282,249 @@
 
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
-    let events = [], guests = [];
-    let currentEventId = localStorage.getItem("scanCurrentEventId") || "";
-    let scanner = null, paused = false;
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
+let events = [], guests = [];
+let currentEventId = "";
+let scanner = null, paused = false;
 
-    const eventSelect = document.getElementById("eventSelect");
-    const scanBtn = document.getElementById("scanBtn");
-    const scanResult = document.getElementById("scanResult");
-    const resultBox = document.getElementById("resultBox");
-    const totalGuestsEl = document.getElementById("totalGuests");
-    const checkedInCountEl = document.getElementById("checkedInCount");
-    const toastContainer = document.getElementById("toastContainer");
+// ✅ قراءة eventId من الرابط
+const urlParams = new URLSearchParams(window.location.search);
+const linkEventId = urlParams.get("event");
 
-    // ========== Toast Notification ==========
-    function showToast(message, type = 'success', duration = 4000) {
-      const colors = {
-        success: { bg: 'rgba(16, 185, 129, 0.97)', icon: '✅', border: '#059669' },
-        error: { bg: 'rgba(239, 68, 68, 0.97)', icon: '❌', border: '#dc2626' },
-        warning: { bg: 'rgba(245, 158, 11, 0.97)', icon: '⚠️', border: '#d97706' },
-        info: { bg: 'rgba(59, 130, 246, 0.97)', icon: 'ℹ️', border: '#2563eb' }
-      };
-      const color = colors[type] || colors.info;
-      toastContainer.innerHTML = '';
-      const overlay = document.createElement('div');
-      overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;pointer-events:auto;animation:fadeInOverlay 0.3s ease;';
-      const card = document.createElement('div');
-      card.style.cssText = 'background:' + color.bg + ';color:white;padding:50px 35px;border-radius:28px;text-align:center;box-shadow:0 30px 70px rgba(0,0,0,0.5);border:4px solid ' + color.border + ';max-width:480px;width:92%;animation:scaleIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275);direction:rtl;font-family:Cairo,Tajawal,sans-serif;';
-      card.innerHTML = '<div style="font-size:5rem;margin-bottom:15px;animation:bounce 0.7s ease;">' + color.icon + '</div><div style="font-size:2rem;font-weight:800;margin-bottom:12px;line-height:1.4;">' + message + '</div><div style="margin-top:20px;font-size:0.9rem;opacity:0.7;">سيتم الإغلاق تلقائياً...</div>';
-      overlay.appendChild(card);
-      toastContainer.appendChild(overlay);
-      toastContainer.style.display = 'block';
-      document.body.style.overflow = 'hidden';
-      setTimeout(() => {
-        overlay.style.opacity = '0';
-        overlay.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => { toastContainer.style.display = 'none'; toastContainer.innerHTML = ''; document.body.style.overflow = ''; }, 300);
-      }, duration);
-    }
+const eventSelect = document.getElementById("eventSelect");
+const scanBtn = document.getElementById("scanBtn");
+const scanResult = document.getElementById("scanResult");
+const resultBox = document.getElementById("resultBox");
+const totalGuestsEl = document.getElementById("totalGuests");
+const checkedInCountEl = document.getElementById("checkedInCount");
+const toastContainer = document.getElementById("toastContainer");
 
-    function callScript(params) {
-      return new Promise((resolve, reject) => {
-        const cb = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 999999);
-        params.callback = cb;
-        const q = new URLSearchParams(params).toString();
-        const s = document.createElement("script");
-        window[cb] = d => { resolve(d); delete window[cb]; s.remove(); };
-        s.onerror = () => { reject(); delete window[cb]; s.remove(); };
-        s.src = SCRIPT_URL + "?" + q;
-        document.body.appendChild(s);
-      });
-    }
+// ========== Toast Notification ==========
+function showToast(message, type = 'success', duration = 4000) {
+  const colors = {
+    success: { bg: 'rgba(16, 185, 129, 0.97)', icon: '✅', border: '#059669' },
+    error: { bg: 'rgba(239, 68, 68, 0.97)', icon: '❌', border: '#dc2626' },
+    warning: { bg: 'rgba(245, 158, 11, 0.97)', icon: '⚠️', border: '#d97706' },
+    info: { bg: 'rgba(59, 130, 246, 0.97)', icon: 'ℹ️', border: '#2563eb' }
+  };
+  const color = colors[type] || colors.info;
+  toastContainer.innerHTML = '';
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;pointer-events:auto;animation:fadeInOverlay 0.3s ease;';
+  const card = document.createElement('div');
+  card.style.cssText = 'background:' + color.bg + ';color:white;padding:50px 35px;border-radius:28px;text-align:center;box-shadow:0 30px 70px rgba(0,0,0,0.5);border:4px solid ' + color.border + ';max-width:480px;width:92%;animation:scaleIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275);direction:rtl;font-family:Cairo,Tajawal,sans-serif;';
+  card.innerHTML = '<div style="font-size:5rem;margin-bottom:15px;animation:bounce 0.7s ease;">' + color.icon + '</div><div style="font-size:2rem;font-weight:800;margin-bottom:12px;line-height:1.4;">' + message + '</div><div style="margin-top:20px;font-size:0.9rem;opacity:0.7;">سيتم الإغلاق تلقائياً...</div>';
+  overlay.appendChild(card);
+  toastContainer.appendChild(overlay);
+  toastContainer.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => {
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => { toastContainer.style.display = 'none'; toastContainer.innerHTML = ''; document.body.style.overflow = ''; }, 300);
+  }, duration);
+}
 
-    async function loadEvents() {
-      try {
-        const data = await callScript({ action: "events" });
-        if (data.status !== "success") { showError("❌ فشل تحميل المناسبات"); return; }
-        events = data.events || [];
-        if (events.length === 0) {
-          eventSelect.innerHTML = '<option value="">لا توجد مناسبات</option>';
-          showWarning("⚠️ لا توجد مناسبات ظاهرة");
-          return;
-        }
-        if (!currentEventId || !events.find(e => String(e.eventId) === String(currentEventId))) {
-          currentEventId = events[0].eventId;
-          localStorage.setItem("scanCurrentEventId", currentEventId);
-        }
-        renderEventSelect();
+function callScript(params) {
+  return new Promise((resolve, reject) => {
+    const cb = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 999999);
+    params.callback = cb;
+    const q = new URLSearchParams(params).toString();
+    const s = document.createElement("script");
+    window[cb] = d => { resolve(d); delete window[cb]; s.remove(); };
+    s.onerror = () => { reject(); delete window[cb]; s.remove(); };
+    s.src = SCRIPT_URL + "?" + q;
+    document.body.appendChild(s);
+  });
+}
+
+async function loadEvents() {
+  try {
+    const data = await callScript({ action: "events" });
+    if (data.status !== "success") { showError("❌ فشل تحميل المناسبات"); return; }
+    events = data.events || [];
+    
+    // ✅ إذا فيه eventId في الرابط
+    if (linkEventId) {
+      const found = events.find(e => String(e.eventId) === String(linkEventId));
+      if (found) {
+        currentEventId = linkEventId;
+        // إخفاء قائمة المناسبات
+        document.querySelector(".select-group").style.display = "none";
+        // إظهار اسم المناسبة
+        document.querySelector(".header .subtitle").textContent = found.eventName;
         await loadGuests();
-      } catch (e) { showError("❌ فشل الاتصال"); }
-    }
-
-    function renderEventSelect() {
-      eventSelect.innerHTML = "";
-      events.forEach(ev => {
-        const opt = document.createElement("option");
-        opt.value = ev.eventId;
-        opt.textContent = '📌 ' + ev.eventName;
-        if (String(ev.eventId) === String(currentEventId)) opt.selected = true;
-        eventSelect.appendChild(opt);
-      });
-    }
-
-    async function loadGuests() {
-      if (!currentEventId) { showWarning("⚠️ اختر مناسبة"); return; }
-      showLoading("⏳ جاري تحميل بيانات الضيوف...");
-      try {
-        const data = await callScript({ action: "guests", eventId: currentEventId });
-        if (data.status !== "success") { showError("❌ فشل التحميل"); return; }
-        guests = data.guests || [];
-        const checkedIn = guests.filter(g => g.checkedIn || g.scanCount > 0).length;
-        showSuccess("✅ جاهز للمسح");
-        totalGuestsEl.textContent = guests.length;
-        checkedInCountEl.textContent = checkedIn;
-      } catch (e) { showError("❌ فشل الاتصال"); }
-    }
-
-    function parseQrText(text) {
-      const v = String(text || "").trim();
-      if (v.includes("|")) { const p = v.split("|"); return { eventId: p[0], guestId: p[1] }; }
-      return { eventId: currentEventId, guestId: v };
-    }
-
-    function startScanner() {
-      if (!currentEventId) { showToast("⚠️ اختر مناسبة أولاً", "warning", 2500); return; }
-      if (scanner) { showToast("⚠️ الكاميرا تعمل بالفعل", "warning", 2500); return; }
-
-      scanBtn.disabled = true;
-      scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التشغيل...';
-      scanner = new Html5Qrcode("reader");
-
-      scanner.start(
-        { facingMode: "environment" },
-        { fps: 30, qrbox: { width: 200, height: 200 } },
-        qrText => {
-          if (paused) return;
-          paused = true;
-          checkGuest(qrText);
-          setTimeout(() => { paused = false; }, 4500);
-        },
-        () => {}
-      ).then(() => {
-        scanBtn.innerHTML = '<i class="fas fa-check-circle"></i> الكاميرا تعمل';
-        scanBtn.className = 'btn btn-success';
-        showSuccess("✅ الكاميرا تعمل – وجهها على QR");
-      }).catch(() => {
-        showError("❌ لم يتم تشغيل الكاميرا");
-        scanBtn.disabled = false;
-        scanBtn.innerHTML = '<i class="fas fa-camera"></i> تشغيل الكاميرا';
-        scanBtn.className = 'btn btn-primary';
-        scanner = null;
-      });
-    }
-
-    async function checkGuest(qrText) {
-      var parsed = parseQrText(qrText);
-      if (String(parsed.eventId) !== String(currentEventId)) {
-        showToast("❌ هذا QR تابع لمناسبة أخرى", "error", 3500);
-        showError("❌ QR تابع لمناسبة أخرى");
-        playErrorSound(); return;
+        return;
+      } else {
+        showError("❌ المناسبة غير موجودة");
+        return;
       }
-      var guest = guests.find(function(g) { return String(g.id) === String(parsed.guestId); });
-      if (!guest) {
-        showToast("❌ QR غير معروف", "error", 3500);
-        showError("❌ QR غير معروف"); playErrorSound(); return;
-      }
-      var maxScans = guest.maxScans || 1;
-      var currentScans = guest.scanCount || 0;
-      if (currentScans >= maxScans) {
-        showToast("🚫 " + guest.name + " استنفذ الحد الأقصى (" + maxScans + "/" + maxScans + ")", "error", 4000);
-        showError("🚫 " + guest.name + " منتهي (" + maxScans + "/" + maxScans + ")");
-        playErrorSound(); return;
-      }
-      var time = new Date().toLocaleString("ar-SA", { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
-      try {
-        var data = await callScript({ action: "attendance", eventId: currentEventId, id: guest.id, name: guest.name, phone: guest.phone, time: time });
-        if (data.status === "success") {
-          await loadGuests();
-          var updatedGuest = guests.find(function(g) { return String(g.id) === String(guest.id); });
-          var newCount = updatedGuest ? (updatedGuest.scanCount || 0) : (currentScans + 1);
-          var remaining = maxScans - newCount;
-          if (remaining <= 0) {
-            showToast("🚫 " + guest.name + " اكتمل (" + maxScans + "/" + maxScans + ")", "warning", 4000);
-            showWarning("🚫 " + guest.name + " مكتمل");
-          } else {
-            showToast("✅ " + guest.name + " (" + newCount + "/" + maxScans + ") متبقي " + remaining, "success", 4000);
-            showSuccess("✅ " + guest.name + " (" + newCount + "/" + maxScans + ")");
-          }
-          playSuccessSound(); return;
-        }
-        showToast("❌ خطأ في التسجيل", "error", 3500);
-        playErrorSound();
-      } catch (e) { showToast("❌ فشل الاتصال", "error", 3500); playErrorSound(); }
     }
+    
+    // ✅ إذا ما فيه eventId في الرابط (الطريقة القديمة)
+    if (events.length === 0) {
+      eventSelect.innerHTML = '<option value="">لا توجد مناسبات</option>';
+      showWarning("⚠️ لا توجد مناسبات ظاهرة");
+      return;
+    }
+    
+    currentEventId = localStorage.getItem("scanCurrentEventId") || events[0].eventId;
+    renderEventSelect();
+    await loadGuests();
+  } catch (e) { showError("❌ فشل الاتصال"); }
+}
 
-    function playSuccessSound() { try { new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg").play().catch(()=>{}); } catch(e){} }
-    function playErrorSound() { try { new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg").play().catch(()=>{}); } catch(e){} }
+function renderEventSelect() {
+  eventSelect.innerHTML = "";
+  events.forEach(ev => {
+    const opt = document.createElement("option");
+    opt.value = ev.eventId;
+    opt.textContent = '📌 ' + ev.eventName;
+    if (String(ev.eventId) === String(currentEventId)) opt.selected = true;
+    eventSelect.appendChild(opt);
+  });
+}
 
-    function showSuccess(m) { scanResult.textContent = m; scanResult.style.color = "#065f46"; resultBox.style.background = "#d1fae5"; }
-    function showError(m) { scanResult.textContent = m; scanResult.style.color = "#991b1b"; resultBox.style.background = "#fee2e2"; }
-    function showWarning(m) { scanResult.textContent = m; scanResult.style.color = "#92400e"; resultBox.style.background = "#fef3c7"; }
-    function showLoading(m) { scanResult.textContent = m; scanResult.style.color = "#1e40af"; resultBox.style.background = "#dbeafe"; }
+async function loadGuests() {
+  if (!currentEventId) { showWarning("⚠️ اختر مناسبة"); return; }
+  showLoading("⏳ جاري تحميل بيانات الضيوف...");
+  try {
+    const data = await callScript({ action: "guests", eventId: currentEventId });
+    if (data.status !== "success") { showError("❌ فشل التحميل"); return; }
+    guests = data.guests || [];
+    const checkedIn = guests.filter(g => g.checkedIn || g.scanCount > 0).length;
+    showSuccess("✅ جاهز للمسح");
+    totalGuestsEl.textContent = guests.length;
+    checkedInCountEl.textContent = checkedIn;
+  } catch (e) { showError("❌ فشل الاتصال"); }
+}
 
-    eventSelect.onchange = async function() {
-      currentEventId = eventSelect.value;
-      localStorage.setItem("scanCurrentEventId", currentEventId);
+function parseQrText(text) {
+  const v = String(text || "").trim();
+  if (v.includes("|")) { const p = v.split("|"); return { eventId: p[0], guestId: p[1] }; }
+  return { eventId: currentEventId, guestId: v };
+}
+
+function startScanner() {
+  if (!currentEventId) { showToast("⚠️ اختر مناسبة أولاً", "warning", 2500); return; }
+  if (scanner) { showToast("⚠️ الكاميرا تعمل بالفعل", "warning", 2500); return; }
+
+  scanBtn.disabled = true;
+  scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التشغيل...';
+  scanner = new Html5Qrcode("reader");
+
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 30, qrbox: { width: 200, height: 200 } },
+    qrText => {
+      if (paused) return;
+      paused = true;
+      checkGuest(qrText);
+      setTimeout(() => { paused = false; }, 4500);
+    },
+    () => {}
+  ).then(() => {
+    scanBtn.innerHTML = '<i class="fas fa-check-circle"></i> الكاميرا تعمل';
+    scanBtn.className = 'btn btn-success';
+    showSuccess("✅ الكاميرا تعمل – وجهها على QR");
+  }).catch(() => {
+    showError("❌ لم يتم تشغيل الكاميرا");
+    scanBtn.disabled = false;
+    scanBtn.innerHTML = '<i class="fas fa-camera"></i> تشغيل الكاميرا';
+    scanBtn.className = 'btn btn-primary';
+    scanner = null;
+  });
+}
+
+async function checkGuest(qrText) {
+  var parsed = parseQrText(qrText);
+  if (String(parsed.eventId) !== String(currentEventId)) {
+    showToast("❌ هذا QR تابع لمناسبة أخرى", "error", 3500);
+    showError("❌ QR تابع لمناسبة أخرى");
+    playErrorSound(); return;
+  }
+  var guest = guests.find(function(g) { return String(g.id) === String(parsed.guestId); });
+  if (!guest) {
+    showToast("❌ QR غير معروف", "error", 3500);
+    showError("❌ QR غير معروف"); playErrorSound(); return;
+  }
+  var maxScans = guest.maxScans || 1;
+  var currentScans = guest.scanCount || 0;
+  if (currentScans >= maxScans) {
+    showToast("🚫 " + guest.name + " استنفذ الحد الأقصى (" + maxScans + "/" + maxScans + ")", "error", 4000);
+    showError("🚫 " + guest.name + " منتهي (" + maxScans + "/" + maxScans + ")");
+    playErrorSound(); return;
+  }
+  var time = new Date().toLocaleString("ar-SA", { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+  try {
+    var data = await callScript({ action: "attendance", eventId: currentEventId, id: guest.id, name: guest.name, phone: guest.phone, time: time });
+    if (data.status === "success") {
       await loadGuests();
-      if (scanner) {
-        paused = true;
-        showToast("🔄 تم تغيير المناسبة", "info", 2000);
-        setTimeout(function() { paused = false; }, 2500);
+      var updatedGuest = guests.find(function(g) { return String(g.id) === String(guest.id); });
+      var newCount = updatedGuest ? (updatedGuest.scanCount || 0) : (currentScans + 1);
+      var remaining = maxScans - newCount;
+      if (remaining <= 0) {
+        showToast("🚫 " + guest.name + " اكتمل (" + maxScans + "/" + maxScans + ")", "warning", 4000);
+        showWarning("🚫 " + guest.name + " مكتمل");
+      } else {
+        showToast("✅ " + guest.name + " (" + newCount + "/" + maxScans + ") متبقي " + remaining, "success", 4000);
+        showSuccess("✅ " + guest.name + " (" + newCount + "/" + maxScans + ")");
       }
-    };
+      playSuccessSound(); return;
+    }
+    showToast("❌ خطأ في التسجيل", "error", 3500);
+    playErrorSound();
+  } catch (e) { showToast("❌ فشل الاتصال", "error", 3500); playErrorSound(); }
+}
 
-    scanBtn.onclick = startScanner;
+function playSuccessSound() { try { new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg").play().catch(()=>{}); } catch(e){} }
+function playErrorSound() { try { new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg").play().catch(()=>{}); } catch(e){} }
 
-    // ========== Dark Mode Toggle ==========
-    (function() {
-      if (localStorage.getItem("scanDarkMode") === "enabled") {
-        document.body.classList.add("dark-mode");
-      }
-      var darkBtn = document.getElementById("darkModeToggle");
-      if (!darkBtn) return;
-      updateIcon();
-      darkBtn.addEventListener("click", function() {
-        document.body.classList.toggle("dark-mode");
-        if (document.body.classList.contains("dark-mode")) {
-          localStorage.setItem("scanDarkMode", "enabled");
-        } else {
-          localStorage.setItem("scanDarkMode", "disabled");
-        }
-        updateIcon();
-      });
-      function updateIcon() {
-        if (document.body.classList.contains("dark-mode")) {
-          darkBtn.innerHTML = '<i class="fas fa-sun"></i>';
-          darkBtn.title = "الوضع الفاتح";
-        } else {
-          darkBtn.innerHTML = '<i class="fas fa-moon"></i>';
-          darkBtn.title = "الوضع الليلي";
-        }
-      }
-    })();
+function showSuccess(m) { scanResult.textContent = m; scanResult.style.color = "#065f46"; resultBox.style.background = "#d1fae5"; }
+function showError(m) { scanResult.textContent = m; scanResult.style.color = "#991b1b"; resultBox.style.background = "#fee2e2"; }
+function showWarning(m) { scanResult.textContent = m; scanResult.style.color = "#92400e"; resultBox.style.background = "#fef3c7"; }
+function showLoading(m) { scanResult.textContent = m; scanResult.style.color = "#1e40af"; resultBox.style.background = "#dbeafe"; }
 
-    loadEvents();
-  </script>
+// ✅ تغيير المناسبة (فقط إذا ما فيه eventId في الرابط)
+if (!linkEventId) {
+  eventSelect.onchange = async function() {
+    currentEventId = eventSelect.value;
+    localStorage.setItem("scanCurrentEventId", currentEventId);
+    await loadGuests();
+    if (scanner) {
+      paused = true;
+      showToast("🔄 تم تغيير المناسبة", "info", 2000);
+      setTimeout(function() { paused = false; }, 2500);
+    }
+  };
+}
+
+scanBtn.onclick = startScanner;
+
+// ========== Dark Mode Toggle ==========
+(function() {
+  if (localStorage.getItem("scanDarkMode") === "enabled") {
+    document.body.classList.add("dark-mode");
+  }
+  var darkBtn = document.getElementById("darkModeToggle");
+  if (!darkBtn) return;
+  updateIcon();
+  darkBtn.addEventListener("click", function() {
+    document.body.classList.toggle("dark-mode");
+    localStorage.setItem("scanDarkMode", document.body.classList.contains("dark-mode") ? "enabled" : "disabled");
+    updateIcon();
+  });
+  function updateIcon() {
+    if (document.body.classList.contains("dark-mode")) {
+      darkBtn.innerHTML = '<i class="fas fa-sun"></i>';
+      darkBtn.title = "الوضع الفاتح";
+    } else {
+      darkBtn.innerHTML = '<i class="fas fa-moon"></i>';
+      darkBtn.title = "الوضع الليلي";
+    }
+  }
+})();
+
+loadEvents();  </script>
 </body>
 </html>
