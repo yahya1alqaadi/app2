@@ -1367,3 +1367,100 @@ body.dark-mode .stat-percent { background:linear-gradient(135deg, #78350f, #9240
 body.dark-mode .stat-number-2 { color:#f1f5f9 !important; }
 body.dark-mode .stat-label-2 { color:#94a3b8 !important; }
 body.dark-mode .progress-bg { background:#1e293b !important; }
+
+/* ============================================
+   تصحيح تباين الوضع الفاتح
+   ============================================ */
+
+/* تأكيد الألوان في الوضع الفاتح */
+input, select, textarea {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+input::placeholder {
+  color: #94a3b8;
+}
+
+/* تصحيح حقل البحث */
+.search-box input {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* تصحيح select في التصميم */
+.design-controls select,
+.design-controls input {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* تصحيح أزرار pagination */
+#pagination .btn-outline {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+#pagination .btn-outline:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* تصحيح روابط المسح */
+#scanLinkBox input {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* ============================================
+   Dark Mode - التعديلات فقط
+   ============================================ */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode input::placeholder {
+  color: #64748b !important;
+}
+
+body.dark-mode .search-box input {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode .design-controls select,
+body.dark-mode .design-controls input {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode #pagination .btn-outline {
+  background: #334155;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+body.dark-mode #scanLinkBox {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+body.dark-mode #scanLinkBox input {
+  background: #334155 !important;
+  color: #e2e8f0 !important;
+  border-color: #475569 !important;
+}
+
+body.dark-mode #scanLinkBox span {
+  color: #e2e8f0 !important;
+}
