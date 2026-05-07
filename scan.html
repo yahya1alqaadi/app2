@@ -475,25 +475,24 @@ async function checkGuest(qrText) {
   try {
     var data = await callScript({ action: "attendance", eventId: currentEventId, id: guest.id, name: guest.name, phone: guest.phone, time: time });
     if (data.status === "success") {
-      await loadGuests();
-      var updatedGuest = guests.find(function(g) { return String(g.id) === String(guest.id); });
-      var newCount = updatedGuest ? (updatedGuest.scanCount || 0) : (currentScans + 1);
-      var remaining = maxScans - newCount;
-      
-      // ✅ دائماً أخضر ما دامت العملية نجحت
-      if (maxScans === 1) {
-        showToast("✅ أهلاً وسهلاً " + guest.name + " (1/1)", "success", 4000);
-        showSuccess("✅ مرحباً " + guest.name + " (1/1)");
-      } else if (remaining > 0) {
-        showToast("✅ " + guest.name + " (" + newCount + "/" + maxScans + ") متبقي " + remaining, "success", 4000);
-        showSuccess("✅ " + guest.name + " (" + newCount + "/" + maxScans + ")");
-      } else {
-        // آخر مسحة (اكتمل)
-        showToast("✅ " + guest.name + " اكتمل (" + maxScans + "/" + maxScans + ")", "success", 4000);
-        showSuccess("✅ " + guest.name + " اكتمل (" + maxScans + "/" + maxScans + ")");
-      }
-      playSuccessSound();
-      return;
+  await loadGuests();
+  var updatedGuest = guests.find(function(g) { return String(g.id) === String(guest.id); });
+  var newCount = updatedGuest ? (updatedGuest.scanCount || 0) : (currentScans + 1);
+  var remaining = maxScans - newCount;
+  
+  // ✅ دائماً أخضر ما دام مسموح
+  if (maxScans === 1) {
+    showToast("✅ أهلاً وسهلاً " + guest.name + " (1/1)", "success", 4000);
+    showSuccess("✅ مرحباً " + guest.name + " (1/1)");
+  } else if (remaining > 0) {
+    showToast("✅ " + guest.name + " (" + newCount + "/" + maxScans + ") متبقي " + remaining, "success", 4000);
+    showSuccess("✅ " + guest.name + " (" + newCount + "/" + maxScans + ")");
+  } else {
+    showToast("✅ " + guest.name + " اكتمل (" + maxScans + "/" + maxScans + ")", "success", 4000);
+    showSuccess("✅ " + guest.name + " اكتمل (" + maxScans + "/" + maxScans + ")");
+  }
+  playSuccessSound();
+  return;
     }
     showToast("❌ خطأ في التسجيل", "error", 3500);
     playErrorSound();
