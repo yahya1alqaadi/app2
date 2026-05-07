@@ -1297,6 +1297,24 @@ row.innerHTML = '<td><input type="checkbox" class="guest-checkbox" data-id="' + 
     if (eb) eb.addEventListener("click", function(e) { e.stopPropagation(); editGuest(originalIndex); });
     if (db) db.addEventListener("click", function(e) { e.stopPropagation(); deleteGuest(originalIndex); });
     guestTable.appendChild(row);
+    // ربط checkbox
+var checkbox = row.querySelector('.guest-checkbox');
+if (checkbox) {
+  checkbox.addEventListener('click', function(e) {
+    e.stopPropagation();
+    toggleGuestSelection(guest.id);
+    paginateGuests();
+  });
+}
+
+// ربط زر التوليد الفردي
+var singleBtn = row.querySelector('.generate-single-btn');
+if (singleBtn) {
+  singleBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    generateSingleInvitation(guest.id);
+  });
+}
   });
 }
 
