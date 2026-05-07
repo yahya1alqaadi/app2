@@ -522,6 +522,37 @@ function renderEventSelect() {
     if (String(ev.eventId) === String(currentEventId)) o.selected = true;
     eventSelect.appendChild(o);
   });
+  
+  // ✅ عرض رابط المسح للمناسبة الحالية
+  updateScanLink();
+}
+
+function updateScanLink() {
+  var existingLink = document.getElementById("scanLinkBox");
+  if (existingLink) existingLink.remove();
+  
+  var ev = getCurrentEvent();
+  if (!ev) return;
+  
+  var scanUrl = window.location.origin + window.location.pathname.replace("index.html", "scan.html") + "?event=" + ev.eventId;
+  
+  var linkBox = document.createElement("div");
+  linkBox.id = "scanLinkBox";
+  linkBox.style.cssText = "margin-top:12px;padding:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;";
+  linkBox.innerHTML = '<span style="font-weight:700;color:#166534;font-size:0.85rem;">🔗 رابط المسح:</span><input type="text" value="' + scanUrl + '" readonly style="flex:1;min-width:200px;padding:8px;border:1px solid #86efac;border-radius:6px;font-size:0.8rem;background:white;color:#166534;" /><button id="copyScanLinkBtn" class="btn btn-outline" type="button" style="padding:0.4rem 0.8rem;font-size:0.8rem;background:#10b981;color:white;border:none;"><i class="fas fa-copy"></i> نسخ</button>';
+  
+  eventStatus.parentNode.appendChild(linkBox);
+  
+  document.getElementById("copyScanLinkBtn").addEventListener("click", function() {
+    var input = linkBox.querySelector("input");
+    input.select();
+    document.execCommand("copy");
+    showToast("✅ تم نسخ رابط المسح", "success", 2000);
+  });
+}
+    // في renderEventSelect، أضف هذا بعد السطر اللي فيه eventSelect.appendChild(option);
+// موجود تحت في الكود الكامل
+  });
 }
 
 function updateEventStatus() {
