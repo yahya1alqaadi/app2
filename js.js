@@ -1521,6 +1521,76 @@ function renderInvitationTable() {
   if (prevBtn) prevBtn.disabled = (invCurrentPage <= 1);
   if (nextBtn) nextBtn.disabled = (invCurrentPage >= totalPages);
 }
+
+// ============================================
+// ✅ ربط جميع أزرار Pagination مرة واحدة
+// ============================================
+
+setTimeout(function() {
+  // --- Pagination الضيوف ---
+  document.getElementById("firstPageBtn")?.addEventListener("click", function() {
+    currentPage = 1; paginateGuests();
+  });
+  document.getElementById("prevPageBtn")?.addEventListener("click", function() {
+    if (currentPage > 1) { currentPage--; paginateGuests(); }
+  });
+  document.getElementById("nextPageBtn")?.addEventListener("click", function() {
+    var total = Math.ceil(getFilteredGuests().length / itemsPerPage);
+    if (currentPage < total) { currentPage++; paginateGuests(); }
+  });
+  document.getElementById("lastPageBtn")?.addEventListener("click", function() {
+    currentPage = Math.ceil(getFilteredGuests().length / itemsPerPage);
+    paginateGuests();
+  });
+
+  // تغيير عدد العناصر بالصفحة
+  var itemsSelect = document.getElementById("itemsPerPageSelect");
+  if (itemsSelect) {
+    itemsSelect.value = itemsPerPage;
+    itemsSelect.addEventListener("change", function() {
+      itemsPerPage = parseInt(this.value);
+      localStorage.setItem("itemsPerPage", itemsPerPage);
+      currentPage = 1;
+      paginateGuests();
+    });
+  }
+
+  // --- Pagination الدعوات ---
+  document.getElementById("invPrevPageBtn")?.addEventListener("click", function() {
+    if (invCurrentPage > 1) { invCurrentPage--; renderInvitationTable(); }
+  });
+  document.getElementById("invNextPageBtn")?.addEventListener("click", function() {
+    var filtered = guests.filter(function(g) { return g.invitation || g.invitationPNG; });
+    var total = Math.ceil(filtered.length / itemsPerPageSmall);
+    if (invCurrentPage < total) { invCurrentPage++; renderInvitationTable(); }
+  });
+
+  // --- Pagination سجل الحضور ---
+  document.getElementById("attPrevPageBtn")?.addEventListener("click", function() {
+    if (attCurrentPage > 1) { attCurrentPage--; renderAttendanceLogs(); }
+  });
+  document.getElementById("attNextPageBtn")?.addEventListener("click", function() {
+    var total = Math.ceil(attendanceLogs.length / itemsPerPageSmall);
+    if (attCurrentPage < total) { attCurrentPage++; renderAttendanceLogs(); }
+  });
+
+  // --- البحث يعيد للصفحة الأولى ---
+  var searchInput = document.getElementById("guestSearchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", function() { currentPage = 1; });
+  }
+
+  // --- تحديد الكل ---
+  var selectAllBox = document.getElementById("selectAllCheckbox");
+  if (selectAllBox) {
+    selectAllBox.addEventListener("click", function() {
+      selectAllGuests();
+      this.checked = (selectedGuests.size === guests.length);
+    });
+  }
+
+}, 1500);
+
 // تشغيل الإعدادات
 setTimeout(initSettings, 800);
 
