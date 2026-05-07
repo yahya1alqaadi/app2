@@ -644,23 +644,49 @@ async function deleteGuest(index) {
 
 function getQrText(guest) { return String(guest.id); }
 
+function previewGuest(guest) {
+  if (!guest || !qrBox) return;
+  
+  if (nameBox) {
+    if (showName) {
+      nameBox.innerHTML = guest.name;
+      nameBox.style.display = 'flex';
+      nameBox.style.backgroundColor = 'transparent';
+      nameBox.style.border = 'none';
+      if (fontFamily) nameBox.style.fontFamily = fontFamily.value;
+      if (fontSize) nameBox.style.fontSize = fontSize.value + 'px';
+      if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
+      if (fontColor) nameBox.style.color = fontColor.value;
+    } else {
+      nameBox.innerHTML = '';
+      nameBox.style.display = 'none';
+    }
+  }
   
   resizeQRBox();
-  qrBox.innerHTML = "";
-  qrBox.style.backgroundColor = 'transparent';
-  qrBox.style.border = 'none';
+  qrBox.innerHTML = '';
   
   var qrSize = qrBox.clientWidth || 110;
-  var selectedQrColor = qrColor ? qrColor.value : "#000000";
+  var selectedQrColor = qrColor ? qrColor.value : '#000000';
   
-  new QRCode(qrBox, {
-    text: getQrText(guest),
+  qrBox.style.backgroundColor = 'transparent';
+  qrBox.style.border = 'none';
+  qrBox.style.boxShadow = 'none';
+  
+  if (qrCodeInstance) { qrCodeInstance = null; }
+  
+  qrCodeInstance = new QRCodeStyling({
     width: qrSize,
     height: qrSize,
-    colorDark: selectedQrColor,
-    colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.M
+    type: "canvas",
+    data: getQrText(guest),
+    dotsOptions: { color: selectedQrColor, type: "square" },
+    backgroundOptions: { color: "rgba(0, 0, 0, 0)" },
+    cornersSquareOptions: { color: selectedQrColor, type: "square" },
+    cornersDotOptions: { color: selectedQrColor, type: "square" }
   });
+  
+  qrCodeInstance.append(qrBox);
 }
 // ============================================
 // عرض الجداول
