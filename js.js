@@ -1611,3 +1611,4 @@ function saveInvitationToDB(guestId, pdfData, pngData) {
 })();
 
 loadEvents();
+}
