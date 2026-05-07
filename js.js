@@ -661,7 +661,7 @@ function getQrText(guest) { return String(guest.id); }
     colorLight: "#ffffff",
     correctLevel: QRCode.CorrectLevel.M
   });
-
+}
 // ============================================
 // عرض الجداول
 // ============================================
