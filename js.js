@@ -530,6 +530,15 @@ function renderGuests() {
     if (db) db.addEventListener("click", function(e) { e.stopPropagation(); deleteGuest(index); });
     guestTable.appendChild(row);
   });
+  renderGuests = function() {
+  // ... الكود الموجود ...
+  
+  // ✅ أضف هذا السطر قبل renderInvitationTable()
+  updateStatistics();
+  
+  renderInvitationTable();
+  setTimeout(filterGuests, 100);
+};
  renderInvitationTable();
 setTimeout(filterGuests, 100);
 }
