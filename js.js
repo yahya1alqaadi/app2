@@ -834,31 +834,7 @@ function loadJSPDF() {
   
   return jsPDFPromise;
 }
-    
-    setTimeout(function() {
-      var canvas = qrDiv.querySelector("canvas");
-      if (!canvas) { document.body.removeChild(qrDiv); resolve(null); return; }
-      
-      var ctx = canvas.getContext("2d");
-      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      var data = imageData.data;
-      
-      // نجعل الخلفية البيضاء شفافة
-      for (var i = 0; i < data.length; i += 4) {
-        if (data[i] > 240 && data[i+1] > 240 && data[i+2] > 240 && data[i+3] > 0) {
-          data[i+3] = 0;
-        }
-      }
-      
-      ctx.putImageData(imageData, 0, 0);
-      
-      var img = new Image();
-      img.onload = function() { document.body.removeChild(qrDiv); resolve(img); };
-      img.onerror = function() { document.body.removeChild(qrDiv); resolve(null); };
-      img.src = canvas.toDataURL("image/png");
-    }, 500);
-  });
-}
+  
 
 async function updateGuestInvitationInSheet(guestId) {
   try { await callScript({ action: "updateInvitation", eventId: currentEventId, id: guestId, invitationGenerated: "yes" }); } catch (e) {}
