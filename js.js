@@ -67,8 +67,8 @@ let searchQuery = "";
 // ============================================
 // ✅ Pagination
 let currentPage = 1;
-let itemsPerPage = parseInt(localStorage.getItem("itemsPerPage") || "10"); عدد الضيوف في الصفحة الواحدة
-
+// عدد الضيوف في الصفحة الواحدة
+let itemsPerPage = parseInt(localStorage.getItem("itemsPerPage") || "10");
 
 function getElement(id) { return document.getElementById(id); }
 
