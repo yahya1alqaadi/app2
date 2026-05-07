@@ -72,6 +72,12 @@ let itemsPerPage = parseInt(localStorage.getItem("itemsPerPage") || "10");
 
 // ✅ تحديد الضيوف للتوليد
 let selectedGuests = new Set();
+// Pagination لجميع الجداول
+let currentPage = 1;
+let itemsPerPage = 25; // 25 عنصر لكل صفحة (أفضل من 10 لـ 1000 ضيف)
+let invCurrentPage = 1;
+let attCurrentPage = 1;
+let itemsPerPageSmall = 15; // للدعوات وسجل الحضور
 
 function getElement(id) { return document.getElementById(id); }
 
