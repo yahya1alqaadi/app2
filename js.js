@@ -78,6 +78,10 @@ let itemsPerPage = 25; // 25 عنصر لكل صفحة (أفضل من 10 لـ 100
 let invCurrentPage = 1;
 let attCurrentPage = 1;
 let itemsPerPageSmall = 15; // للدعوات وسجل الحضور
+// Pagination الدعوات وسجل الحضور
+let invCurrentPage = 1;
+let attCurrentPage = 1;
+let itemsPerPageSmall = 15;
 
 function getElement(id) { return document.getElementById(id); }
 
@@ -1465,7 +1469,58 @@ if (selectAllBox) {
     this.checked = (selectedGuests.size === guests.length);
   });
 }
+// ============================================
+// ✅ جدول الدعوات المولدة مع Pagination
+// ============================================
 
+function renderInvitationTable() {
+  if (!invitationTable) return;
+  
+  var withInv = guests.filter(function(g) { return g.invitation || g.invitationPNG; });
+  var totalPages = Math.ceil(withInv.length / itemsPerPageSmall);
+  
+  if (invCurrentPage > totalPages) invCurrentPage = Math.max(1, totalPages);
+  
+  var start = (invCurrentPage - 1) * itemsPerPageSmall;
+  var end = Math.min(start + itemsPerPageSmall, withInv.length);
+  var pageItems = withInv.slice(start, end);
+  
+  invitationTable.innerHTML = "";
+  
+  if (pageItems.length === 0) {
+    invitationTable.innerHTML = '<tr><td colspan="3">ℹ️ لا توجد دعوات</td></tr>';
+  } else {
+    pageItems.forEach(function(guest) {
+      var row = document.createElement("tr");
+      var safeName = sanitizeFileName(guest.name);
+      row.innerHTML = '<td><strong>' + escapeHtml(guest.name) + '</strong></td><td><span style="font-size:2rem;">📄</span></td><td><button class="btn btn-primary download-single-btn"><i class="fas fa-download"></i> PDF</button></td>';
+      
+      var btn = row.querySelector('.download-single-btn');
+      if (btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var a = document.createElement('a');
+          a.href = guest.invitation || guest.invitationPNG;
+          a.download = 'دعوة_' + safeName + '.pdf';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        });
+      }
+      
+      invitationTable.appendChild(row);
+    });
+  }
+  
+  // تحديث أزرار pagination
+  var prevBtn = document.getElementById("invPrevPageBtn");
+  var nextBtn = document.getElementById("invNextPageBtn");
+  var pageInfo = document.getElementById("invPageInfo");
+  
+  if (pageInfo) pageInfo.textContent = 'صفحة ' + invCurrentPage + ' من ' + Math.max(1, totalPages);
+  if (prevBtn) prevBtn.disabled = (invCurrentPage <= 1);
+  if (nextBtn) nextBtn.disabled = (invCurrentPage >= totalPages);
+}
 // تشغيل الإعدادات
 setTimeout(initSettings, 800);
 
