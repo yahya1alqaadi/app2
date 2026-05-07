@@ -375,10 +375,20 @@
                 <th>تحميل</th>
               </tr>
             </thead>
-            <tbody id="invitationTable"></tbody>
-          </table>
-        </div>
-      </section>
+           <tbody id="invitationTable"></tbody>
+</table>
+</div>
+<!-- Pagination الدعوات -->
+<div id="invitationPagination" style="display:flex;justify-content:center;align-items:center;gap:6px;margin-top:12px;flex-wrap:wrap;">
+  <button id="invPrevPageBtn" class="btn btn-outline" type="button" style="padding:0.4rem 0.8rem;font-size:0.75rem;" disabled>
+    <i class="fas fa-chevron-right"></i> السابق
+  </button>
+  <span id="invPageInfo" style="font-weight:600;font-size:0.8rem;color:#475569;">صفحة 1 من 1</span>
+  <button id="invNextPageBtn" class="btn btn-outline" type="button" style="padding:0.4rem 0.8rem;font-size:0.75rem;" disabled>
+    التالي <i class="fas fa-chevron-left"></i>
+  </button>
+</div>
+</section>
 
 <!-- قسم سجل الحضور -->
 <section class="card">
@@ -391,7 +401,7 @@
       </button>
     </div>
   </div>
-  <div class="table-wrapper" style="max-height:300px;overflow-y:auto;">
+  <div class="table-wrapper" style="max-height:400px;overflow-y:auto;">
     <table>
       <thead>
         <tr>
@@ -405,6 +415,16 @@
         <tr><td colspan="4">ℹ️ لا يوجد سجل حضور بعد</td></tr>
       </tbody>
     </table>
+  </div>
+  <!-- Pagination سجل الحضور -->
+  <div id="attendancePagination" style="display:flex;justify-content:center;align-items:center;gap:6px;margin-top:12px;flex-wrap:wrap;">
+    <button id="attPrevPageBtn" class="btn btn-outline" type="button" style="padding:0.4rem 0.8rem;font-size:0.75rem;" disabled>
+      <i class="fas fa-chevron-right"></i> السابق
+    </button>
+    <span id="attPageInfo" style="font-weight:600;font-size:0.8rem;color:#475569;">صفحة 1 من 1</span>
+    <button id="attNextPageBtn" class="btn btn-outline" type="button" style="padding:0.4rem 0.8rem;font-size:0.75rem;" disabled>
+      التالي <i class="fas fa-chevron-left"></i>
+    </button>
   </div>
 </section>
       
