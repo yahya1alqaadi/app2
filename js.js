@@ -1286,17 +1286,6 @@ if (singleBtn) {
   });
 }
 
-// ============================================
-// ✅ Pagination + دعوات + سجل + تحديد - موحد
-// ============================================
-
-let currentPage = 1;
-let itemsPerPage = parseInt(localStorage.getItem("itemsPerPage") || "25");
-let invCurrentPage = 1;
-let attCurrentPage = 1;
-let itemsPerPageSmall = 15;
-let selectedGuests = new Set();
-
 // تحديث أزرار pagination
 function updatePaginationButtons(totalPages) {
   var prevBtn = document.getElementById("prevPageBtn");
