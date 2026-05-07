@@ -193,7 +193,7 @@ function addQRSizeControl() {
   var qrControlGroup = document.createElement('div');
   qrControlGroup.className = 'control-group';
   qrControlGroup.id = 'qrSizeControl';
-  qrControlGroup.innerHTML = '<label><i class="fas fa-expand-arrows-alt"></i> حجم QR</label><div style="display:flex;align-items:center;gap:8px;"><input type="range" id="qrSizeSlider" min="50" max="200" value="' + qrScalePercent + '" step="5" style="flex:1;" /><span id="qrSizeValue" style="font-weight:700;font-size:0.85rem;min-width:45px;text-align:center;">' + qrScalePercent + '%</span></div>';
+  qrControlGroup.innerHTML = '<label><i class="fas fa-expand-arrows-alt"></i> حجم QR</label><div style="display:flex;align-items:center;gap:6px;"><input type="range" id="qrSizeSlider" min="50" max="200" value="' + qrScalePercent + '" step="5" style="flex:1;" /><input type="number" id="qrSizeInput" min="50" max="200" value="' + qrScalePercent + '" step="1" style="width:60px;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;text-align:center;font-size:0.85rem;font-family:inherit;" /><span id="qrSizeValue" style="font-weight:700;font-size:0.85rem;">%</span></div>';
   designControls.appendChild(qrControlGroup);
 
   var nameControlGroup = document.createElement('div');
@@ -206,6 +206,7 @@ function addQRSizeControl() {
   var slider = document.getElementById('qrSizeSlider');
   var valueDisplay = document.getElementById('qrSizeValue');
   var toggleNameBtn = document.getElementById('toggleNameBtn');
+  var numberInput = document.getElementById('qrSizeInput');
 
   if (slider && valueDisplay) {
     slider.addEventListener('input', function() {
