@@ -530,7 +530,8 @@ function renderGuests() {
     if (db) db.addEventListener("click", function(e) { e.stopPropagation(); deleteGuest(index); });
     guestTable.appendChild(row);
   });
-  renderInvitationTable();
+ renderInvitationTable();
+setTimeout(filterGuests, 100);
 }
 
 function renderInvitationTable() {
