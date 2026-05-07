@@ -1149,3 +1149,13 @@ tr:hover td {
 #attendanceLogTable tr:first-child td {
   color: #64748b;
 }
+/* Pagination */
+#pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+#pagination button:not(:disabled):hover {
+  background: #2563eb;
+  color: white;
+}
