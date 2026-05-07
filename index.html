@@ -237,9 +237,14 @@
         </div>
 
         <div class="action-buttons">
-          <button id="generateBtn" class="btn btn-primary btn-lg" type="button">
-            <i class="fas fa-magic"></i> توليد الدعوات
-          </button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+  <button id="generateBtn" class="btn btn-primary btn-lg" type="button" style="flex:1;">
+    <i class="fas fa-magic"></i> توليد الكل
+  </button>
+  <button id="generateSelectedBtn" class="btn btn-outline btn-lg" type="button" style="flex:1;" disabled>
+    <i class="fas fa-check-square"></i> توليد المحدد (<span id="selectedCount">0</span>)
+  </button>
+</div>
           <button id="downloadAllBtn" class="btn btn-warning btn-lg" type="button">
             <i class="fas fa-download"></i> تحميل كل الدعوات
           </button>
