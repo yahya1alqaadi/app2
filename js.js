@@ -1473,6 +1473,18 @@ function generateSingleInvitation(guestId) {
   generateSelectedInvitations();
 }
 
+if (generateSelectedBtn) {
+  generateSelectedBtn.addEventListener('click', generateSelectedInvitations);
+}
+
+var selectAllBox = document.getElementById("selectAllCheckbox");
+if (selectAllBox) {
+  selectAllBox.addEventListener("click", function() {
+    selectAllGuests();
+    this.checked = (selectedGuests.size === guests.length);
+  });
+}
+
 // تشغيل الإعدادات
 setTimeout(initSettings, 800);
 
