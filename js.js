@@ -53,8 +53,8 @@ let guests = [];
 let currentEventId = localStorage.getItem("currentEventId") || "";
 let uploadedImage = localStorage.getItem("uploadedImage") || "";
 
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/1jfezjcRo8FOjUy15GZ_KG51SdUQo0AzD_TaoAM4QxlY/edit?gid=2071692041#gid=2071692041";
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
+var SHEET_URL = localStorage.getItem("customSheetUrl") || "https://docs.google.com/spreadsheets/d/1Q4_xHS5CXKYIxElTz8YCyBjnWydxGdKIh8yJZtYTB8A/edit";
+var SCRIPT_URL = localStorage.getItem("customScriptUrl") || "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
 
 let scanner = null;
 let isScanningPaused = false;
@@ -1129,4 +1129,76 @@ setTimeout(function() {
   // بدء التحديث التلقائي
   startAttendancePolling();
 }, 1500);
+// ============================================
+// ✅ الإعدادات
+// ============================================
+
+function initSettings() {
+  // تحميل الإعدادات المخزنة
+  var savedSheet = localStorage.getItem("customSheetUrl");
+  var savedScript = localStorage.getItem("customScriptUrl");
+  
+  if (savedSheet) window.SHEET_URL = savedSheet;
+  if (savedScript) window.SCRIPT_URL = savedScript;
+  
+  var sheetInput = document.getElementById("sheetUrlInput");
+  var scriptInput = document.getElementById("scriptUrlInput");
+  
+  if (sheetInput) sheetInput.value = window.SHEET_URL;
+  if (scriptInput) scriptInput.value = window.SCRIPT_URL;
+  
+  // زر فتح الإعدادات
+  var openBtn = document.getElementById("openSettingsBtn");
+  var closeBtn = document.getElementById("closeSettingsBtn");
+  var settingsCard = document.getElementById("settingsCard");
+  var saveBtn = document.getElementById("saveSettingsBtn");
+  
+  if (openBtn && settingsCard) {
+    openBtn.addEventListener("click", function() {
+      settingsCard.style.display = settingsCard.style.display === "none" ? "" : "none";
+      if (settingsCard.style.display !== "none") {
+        settingsCard.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  }
+  
+  if (closeBtn && settingsCard) {
+    closeBtn.addEventListener("click", function() {
+      settingsCard.style.display = "none";
+    });
+  }
+  
+  if (saveBtn) {
+    saveBtn.addEventListener("click", function() {
+      var newSheet = (document.getElementById("sheetUrlInput")?.value || "").trim();
+      var newScript = (document.getElementById("scriptUrlInput")?.value || "").trim();
+      
+      if (newSheet) {
+        localStorage.setItem("customSheetUrl", newSheet);
+        window.SHEET_URL = newSheet;
+      }
+      
+      if (newScript) {
+        localStorage.setItem("customScriptUrl", newScript);
+        window.SCRIPT_URL = newScript;
+      }
+      
+      showToast("✅ تم حفظ الإعدادات", "success", 2500);
+      
+      // إخفاء الإعدادات
+      if (settingsCard) settingsCard.style.display = "none";
+      
+      // إعادة تحميل
+      setTimeout(function() {
+        if (confirm("تم تغيير الإعدادات. هل تريد إعادة تحميل الصفحة لتطبيق التغييرات؟")) {
+          location.reload();
+        }
+      }, 1000);
+    });
+  }
+}
+
+// تشغيل الإعدادات
+setTimeout(initSettings, 800);
+
 loadEvents();
