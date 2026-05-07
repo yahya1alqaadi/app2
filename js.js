@@ -534,9 +534,15 @@ function updateScanLink() {
   var ev = getCurrentEvent();
   if (!ev) return;
   
-  var baseUrl = window.location.origin + window.location.pathname.replace("index.html", "scan.html");
-  var employeeUrl = baseUrl + "?event=" + ev.eventId;
-  var adminUrl = baseUrl + "?event=" + ev.eventId + "&admin=yes";
+  // ✅ الحصول على الرابط الأساسي بشكل صحيح
+  var baseUrl = window.location.origin + window.location.pathname;
+  // إزالة index.html أو أي ملف HTML من النهاية
+  baseUrl = baseUrl.replace(/\/[^\/]*\.html$/, "/");
+  // إضافة scan.html
+  var scanBase = baseUrl + "scan.html";
+  
+  var employeeUrl = scanBase + "?event=" + ev.eventId;
+  var adminUrl = scanBase + "?event=" + ev.eventId + "&admin=yes";
   
   var linkBox = document.createElement("div");
   linkBox.id = "scanLinkBox";
@@ -560,14 +566,12 @@ function updateScanLink() {
   
   eventStatus.parentNode.appendChild(linkBox);
   
-  // نسخ رابط الموظف
   linkBox.querySelector(".copy-btn-employee").addEventListener("click", function() {
     linkBox.querySelectorAll("input")[0].select();
     document.execCommand("copy");
     showToast("✅ نسخ رابط الموظف", "success", 2000);
   });
   
-  // نسخ رابط المشرف
   linkBox.querySelector(".copy-btn-admin").addEventListener("click", function() {
     linkBox.querySelectorAll("input")[1].select();
     document.execCommand("copy");
