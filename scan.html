@@ -453,7 +453,6 @@ function startScanner() {
 }
 
 async function checkGuest(qrText) {
-        alert("maxScans=" + maxScans + " newCount=" + newCount + " remaining=" + remaining);
   var parsed = parseQrText(qrText);
   if (String(parsed.eventId) !== String(currentEventId)) {
     showToast("❌ هذا QR تابع لمناسبة أخرى", "error", 3500);
