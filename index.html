@@ -315,6 +315,34 @@
         </div>
       </section>
 
+<!-- قسم سجل الحضور -->
+<section class="card">
+  <div class="card-header">
+    <h2><i class="fas fa-history"></i> سجل الحضور</h2>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span id="logCount" class="card-badge">0 تسجيل</span>
+      <button id="refreshLogBtn" class="btn btn-outline" type="button" style="padding:0.4rem 0.8rem;font-size:0.8rem;">
+        <i class="fas fa-sync-alt"></i> تحديث
+      </button>
+    </div>
+  </div>
+  <div class="table-wrapper" style="max-height:300px;overflow-y:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th><i class="fas fa-user"></i> الضيف</th>
+          <th><i class="fas fa-phone"></i> الجوال</th>
+          <th><i class="fas fa-clock"></i> وقت الدخول</th>
+          <th><i class="fas fa-hashtag"></i> رقم المحاولة</th>
+        </tr>
+      </thead>
+      <tbody id="attendanceLogTable">
+        <tr><td colspan="4">ℹ️ لا يوجد سجل حضور بعد</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+      
       <!-- قسم تسجيل الدخول بالمسح -->
       <section class="card">
         <div class="card-header">
