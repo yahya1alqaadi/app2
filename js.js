@@ -1303,6 +1303,18 @@ if (singleBtn) {
   });
 }
 
+// ============================================
+// ✅ Pagination + دعوات + سجل + تحديد - موحد
+// ============================================
+
+let currentPage = 1;
+let itemsPerPage = parseInt(localStorage.getItem("itemsPerPage") || "25");
+let invCurrentPage = 1;
+let attCurrentPage = 1;
+let itemsPerPageSmall = 15;
+let selectedGuests = new Set();
+
+// تحديث أزرار pagination
 function updatePaginationButtons(totalPages) {
   var prevBtn = document.getElementById("prevPageBtn");
   var nextBtn = document.getElementById("nextPageBtn");
@@ -1317,99 +1329,24 @@ function updatePaginationButtons(totalPages) {
   if (lastBtn) lastBtn.disabled = (currentPage >= totalPages);
 }
 
-// ✅ تعديل renderGuests لاستخدام pagination
-var originalRenderGuests = renderGuests;
+// renderGuests رئيسي
 renderGuests = function() {
   if (guestCount) guestCount.textContent = guests.length + " ضيف";
   updateStatistics();
   paginateGuests();
   renderInvitationTable();
-  setTimeout(filterGuests, 100);
 };
 
-// ربط أزرار pagination
-setTimeout(function() {
-  var prevBtn = document.getElementById("prevPageBtn");
-  var nextBtn = document.getElementById("nextPageBtn");
-  var firstBtn = document.getElementById("firstPageBtn");
-  var lastBtn = document.getElementById("lastPageBtn");
-  var itemsSelect = document.getElementById("itemsPerPageSelect");
-  
-  if (firstBtn) {
-    firstBtn.addEventListener("click", function() {
-      currentPage = 1;
-      paginateGuests();
-    });
-  }
-  
-  if (prevBtn) {
-    prevBtn.addEventListener("click", function() {
-      if (currentPage > 1) {
-        currentPage--;
-        paginateGuests();
-      }
-    });
-  }
-  
-  if (nextBtn) {
-    nextBtn.addEventListener("click", function() {
-      var filtered = getFilteredGuests();
-      var totalPages = Math.ceil(filtered.length / itemsPerPage);
-      if (currentPage < totalPages) {
-        currentPage++;
-        paginateGuests();
-      }
-    });
-  }
-  
-  if (lastBtn) {
-    lastBtn.addEventListener("click", function() {
-      var filtered = getFilteredGuests();
-      var totalPages = Math.ceil(filtered.length / itemsPerPage);
-      currentPage = totalPages;
-      paginateGuests();
-    });
-  }
-  
-  // تغيير عدد العناصر في الصفحة
-  if (itemsSelect) {
-    itemsSelect.value = itemsPerPage;
-    itemsSelect.addEventListener("change", function() {
-      itemsPerPage = parseInt(this.value);
-      localStorage.setItem("itemsPerPage", itemsPerPage);
-      currentPage = 1;
-      paginateGuests();
-    });
-  }
-  
-  // إعادة تعيين الصفحة عند البحث
-  var searchInput = document.getElementById("guestSearchInput");
-  if (searchInput) {
-    searchInput.addEventListener("input", function() {
-      currentPage = 1;
-    });
-  }
-}, 1200);
-
-// ============================================
-// ✅ تحديد ضيوف للتوليد
-// ============================================
-
+// تحديد ضيوف
 function toggleGuestSelection(guestId) {
-  if (selectedGuests.has(guestId)) {
-    selectedGuests.delete(guestId);
-  } else {
-    selectedGuests.add(guestId);
-  }
+  if (selectedGuests.has(guestId)) { selectedGuests.delete(guestId); }
+  else { selectedGuests.add(guestId); }
   updateSelectionUI();
 }
 
 function selectAllGuests() {
-  if (selectedGuests.size === guests.length) {
-    selectedGuests.clear();
-  } else {
-    guests.forEach(function(g) { selectedGuests.add(g.id); });
-  }
+  if (selectedGuests.size === guests.length) { selectedGuests.clear(); }
+  else { guests.forEach(function(g) { selectedGuests.add(g.id); }); }
   updateSelectionUI();
   paginateGuests();
 }
@@ -1417,28 +1354,15 @@ function selectAllGuests() {
 function updateSelectionUI() {
   var btn = document.getElementById("generateSelectedBtn");
   var countSpan = document.getElementById("selectedCount");
-  
-  if (btn) {
-    btn.disabled = (selectedGuests.size === 0);
-  }
-  if (countSpan) {
-    countSpan.textContent = selectedGuests.size;
-  }
+  if (btn) btn.disabled = (selectedGuests.size === 0);
+  if (countSpan) countSpan.textContent = selectedGuests.size;
 }
 
 function generateSelectedInvitations() {
-  if (selectedGuests.size === 0) {
-    showToast("⚠️ حدد ضيف واحد على الأقل", "warning");
-    return;
-  }
-  
+  if (selectedGuests.size === 0) { showToast("⚠️ حدد ضيف واحد على الأقل", "warning"); return; }
   var selectedList = guests.filter(function(g) { return selectedGuests.has(g.id); });
-  
-  // تخزين مؤقت للقائمة الأصلية
   var originalGuests = guests;
   guests = selectedList;
-  
-  // توليد الدعوات للمحددين فقط
   generateInvitations().then(function() {
     guests = originalGuests;
     selectedGuests.clear();
@@ -1451,42 +1375,23 @@ function generateSelectedInvitations() {
 function generateSingleInvitation(guestId) {
   var guest = guests.find(function(g) { return g.id === guestId; });
   if (!guest) return;
-  
   selectedGuests.clear();
   selectedGuests.add(guestId);
   updateSelectionUI();
   generateSelectedInvitations();
 }
 
-if (generateSelectedBtn) {
-  generateSelectedBtn.addEventListener('click', generateSelectedInvitations);
-}
-
-var selectAllBox = document.getElementById("selectAllCheckbox");
-if (selectAllBox) {
-  selectAllBox.addEventListener("click", function() {
-    selectAllGuests();
-    this.checked = (selectedGuests.size === guests.length);
-  });
-}
-// ============================================
-// ✅ جدول الدعوات المولدة مع Pagination
-// ============================================
-
+// جدول الدعوات المولدة
 function renderInvitationTable() {
   if (!invitationTable) return;
-  
   var withInv = guests.filter(function(g) { return g.invitation || g.invitationPNG; });
   var totalPages = Math.ceil(withInv.length / itemsPerPageSmall);
-  
   if (invCurrentPage > totalPages) invCurrentPage = Math.max(1, totalPages);
-  
   var start = (invCurrentPage - 1) * itemsPerPageSmall;
   var end = Math.min(start + itemsPerPageSmall, withInv.length);
   var pageItems = withInv.slice(start, end);
   
   invitationTable.innerHTML = "";
-  
   if (pageItems.length === 0) {
     invitationTable.innerHTML = '<tr><td colspan="3">ℹ️ لا توجد دعوات</td></tr>';
   } else {
@@ -1494,7 +1399,6 @@ function renderInvitationTable() {
       var row = document.createElement("tr");
       var safeName = sanitizeFileName(guest.name);
       row.innerHTML = '<td><strong>' + escapeHtml(guest.name) + '</strong></td><td><span style="font-size:2rem;">📄</span></td><td><button class="btn btn-primary download-single-btn"><i class="fas fa-download"></i> PDF</button></td>';
-      
       var btn = row.querySelector('.download-single-btn');
       if (btn) {
         btn.addEventListener('click', function(e) {
@@ -1502,94 +1406,61 @@ function renderInvitationTable() {
           var a = document.createElement('a');
           a.href = guest.invitation || guest.invitationPNG;
           a.download = 'دعوة_' + safeName + '.pdf';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
         });
       }
-      
       invitationTable.appendChild(row);
     });
   }
   
-  // تحديث أزرار pagination
   var prevBtn = document.getElementById("invPrevPageBtn");
   var nextBtn = document.getElementById("invNextPageBtn");
   var pageInfo = document.getElementById("invPageInfo");
-  
   if (pageInfo) pageInfo.textContent = 'صفحة ' + invCurrentPage + ' من ' + Math.max(1, totalPages);
   if (prevBtn) prevBtn.disabled = (invCurrentPage <= 1);
   if (nextBtn) nextBtn.disabled = (invCurrentPage >= totalPages);
 }
 
-// ============================================
-// ✅ ربط جميع أزرار Pagination مرة واحدة
-// ============================================
-
+// ربط جميع الأزرار
 setTimeout(function() {
-  // --- Pagination الضيوف ---
-  document.getElementById("firstPageBtn")?.addEventListener("click", function() {
-    currentPage = 1; paginateGuests();
-  });
-  document.getElementById("prevPageBtn")?.addEventListener("click", function() {
-    if (currentPage > 1) { currentPage--; paginateGuests(); }
-  });
-  document.getElementById("nextPageBtn")?.addEventListener("click", function() {
-    var total = Math.ceil(getFilteredGuests().length / itemsPerPage);
-    if (currentPage < total) { currentPage++; paginateGuests(); }
-  });
-  document.getElementById("lastPageBtn")?.addEventListener("click", function() {
-    currentPage = Math.ceil(getFilteredGuests().length / itemsPerPage);
-    paginateGuests();
-  });
-
-  // تغيير عدد العناصر بالصفحة
+  document.getElementById("firstPageBtn")?.addEventListener("click", function() { currentPage = 1; paginateGuests(); });
+  document.getElementById("prevPageBtn")?.addEventListener("click", function() { if (currentPage > 1) { currentPage--; paginateGuests(); } });
+  document.getElementById("nextPageBtn")?.addEventListener("click", function() { var total = Math.ceil(getFilteredGuests().length / itemsPerPage); if (currentPage < total) { currentPage++; paginateGuests(); } });
+  document.getElementById("lastPageBtn")?.addEventListener("click", function() { currentPage = Math.ceil(getFilteredGuests().length / itemsPerPage); paginateGuests(); });
+  
   var itemsSelect = document.getElementById("itemsPerPageSelect");
-  if (itemsSelect) {
-    itemsSelect.value = itemsPerPage;
-    itemsSelect.addEventListener("change", function() {
-      itemsPerPage = parseInt(this.value);
-      localStorage.setItem("itemsPerPage", itemsPerPage);
-      currentPage = 1;
-      paginateGuests();
-    });
-  }
-
-  // --- Pagination الدعوات ---
-  document.getElementById("invPrevPageBtn")?.addEventListener("click", function() {
-    if (invCurrentPage > 1) { invCurrentPage--; renderInvitationTable(); }
-  });
-  document.getElementById("invNextPageBtn")?.addEventListener("click", function() {
-    var filtered = guests.filter(function(g) { return g.invitation || g.invitationPNG; });
-    var total = Math.ceil(filtered.length / itemsPerPageSmall);
-    if (invCurrentPage < total) { invCurrentPage++; renderInvitationTable(); }
-  });
-
-  // --- Pagination سجل الحضور ---
-  document.getElementById("attPrevPageBtn")?.addEventListener("click", function() {
-    if (attCurrentPage > 1) { attCurrentPage--; renderAttendanceLogs(); }
-  });
-  document.getElementById("attNextPageBtn")?.addEventListener("click", function() {
-    var total = Math.ceil(attendanceLogs.length / itemsPerPageSmall);
-    if (attCurrentPage < total) { attCurrentPage++; renderAttendanceLogs(); }
-  });
-
-  // --- البحث يعيد للصفحة الأولى ---
+  if (itemsSelect) { itemsSelect.value = itemsPerPage; itemsSelect.addEventListener("change", function() { itemsPerPage = parseInt(this.value); localStorage.setItem("itemsPerPage", itemsPerPage); currentPage = 1; paginateGuests(); }); }
+  
+  document.getElementById("invPrevPageBtn")?.addEventListener("click", function() { if (invCurrentPage > 1) { invCurrentPage--; renderInvitationTable(); } });
+  document.getElementById("invNextPageBtn")?.addEventListener("click", function() { var filtered = guests.filter(function(g) { return g.invitation || g.invitationPNG; }); var total = Math.ceil(filtered.length / itemsPerPageSmall); if (invCurrentPage < total) { invCurrentPage++; renderInvitationTable(); } });
+  
+  document.getElementById("attPrevPageBtn")?.addEventListener("click", function() { if (attCurrentPage > 1) { attCurrentPage--; renderAttendanceLogs(); } });
+  document.getElementById("attNextPageBtn")?.addEventListener("click", function() { var total = Math.ceil(attendanceLogs.length / itemsPerPageSmall); if (attCurrentPage < total) { attCurrentPage++; renderAttendanceLogs(); } });
+  
   var searchInput = document.getElementById("guestSearchInput");
-  if (searchInput) {
-    searchInput.addEventListener("input", function() { currentPage = 1; });
-  }
-
-  // --- تحديد الكل ---
+  if (searchInput) { searchInput.addEventListener("input", function() { currentPage = 1; }); }
+  
   var selectAllBox = document.getElementById("selectAllCheckbox");
-  if (selectAllBox) {
-    selectAllBox.addEventListener("click", function() {
-      selectAllGuests();
-      this.checked = (selectedGuests.size === guests.length);
-    });
-  }
-
+  if (selectAllBox) { selectAllBox.addEventListener("click", function() { selectAllGuests(); this.checked = (selectedGuests.size === guests.length); }); }
+  
+  var generateSelectedBtn = document.getElementById("generateSelectedBtn");
+  if (generateSelectedBtn) { generateSelectedBtn.addEventListener('click', generateSelectedInvitations); }
+  
+  var refreshLogBtn = document.getElementById("refreshLogBtn");
+  if (refreshLogBtn) { refreshLogBtn.addEventListener("click", function() { loadAttendanceLogs(); }); }
 }, 1500);
+
+// IndexedDB
+var dbPromise = new Promise(function(resolve, reject) {
+  var request = indexedDB.open("QRInvitationsDB", 1);
+  request.onupgradeneeded = function(e) { var db = e.target.result; if (!db.objectStoreNames.contains("invitations")) { db.createObjectStore("invitations", { keyPath: "guestId" }); } };
+  request.onsuccess = function(e) { resolve(e.target.result); };
+  request.onerror = function(e) { reject(e.target.error); };
+});
+
+function saveInvitationToDB(guestId, pdfData, pngData) {
+  dbPromise.then(function(db) { var tx = db.transaction("invitations", "readwrite"); var store = tx.objectStore("invitations"); store.put({ guestId: guestId, pdf: pdfData, png: pngData, timestamp: Date.now() }); }).catch(function() {});
+}
 
 // تشغيل الإعدادات
 setTimeout(initSettings, 800);
