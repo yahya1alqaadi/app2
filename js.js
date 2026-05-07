@@ -1016,4 +1016,82 @@ function updateStatistics() {
   clearTimeout(window._statsInterval);
   window._statsInterval = setTimeout(updateStatistics, 30000);
 }
+// ============================================
+// ✅ سجل الحضور
+// ============================================
+
+let attendanceLogs = [];
+let attendancePollingInterval = null;
+
+async function loadAttendanceLogs() {
+  if (!currentEventId) return;
+  
+  try {
+    const result = await callScript({ action: "attendanceLogs", eventId: currentEventId });
+    if (result.status === "success") {
+      attendanceLogs = result.logs || [];
+      renderAttendanceLogs();
+    }
+  } catch (error) {
+    console.log("فشل تحميل سجل الحضور:", error);
+  }
+}
+
+function renderAttendanceLogs() {
+  const tbody = document.getElementById("attendanceLogTable");
+  const logCount = document.getElementById("logCount");
+  
+  if (!tbody) return;
+  
+  if (attendanceLogs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4">ℹ️ لا يوجد سجل حضور بعد</td></tr>';
+    if (logCount) logCount.textContent = "0 تسجيل";
+    return;
+  }
+  
+  // عرض آخر 50 تسجيل (الأحدث أولاً)
+  const recent = attendanceLogs.slice(-50).reverse();
+  
+  tbody.innerHTML = recent.map(function(log) {
+    return `
+      <tr>
+        <td><strong>${escapeHtml(log.name || "")}</strong></td>
+        <td dir="ltr">${escapeHtml(log.phone || "")}</td>
+        <td>${escapeHtml(log.time || "")}</td>
+        <td><span class="status-badge" style="background:#dbeafe;color:#1e40af;">#${log.scanNumber || 1}</span></td>
+      </tr>
+    `;
+  }).join("");
+  
+  if (logCount) logCount.textContent = attendanceLogs.length + " تسجيل";
+}
+
+// بدء التحديث التلقائي
+function startAttendancePolling() {
+  stopAttendancePolling();
+  loadAttendanceLogs();
+  attendancePollingInterval = setInterval(loadAttendanceLogs, 10000); // كل 10 ثواني
+}
+
+function stopAttendancePolling() {
+  if (attendancePollingInterval) {
+    clearInterval(attendancePollingInterval);
+    attendancePollingInterval = null;
+  }
+}
+
+// ربط زر التحديث
+setTimeout(function() {
+  const refreshLogBtn = document.getElementById("refreshLogBtn");
+  if (refreshLogBtn) {
+    refreshLogBtn.addEventListener("click", function() {
+      loadAttendanceLogs();
+      this.innerHTML = '<i class="fas fa-check"></i> تم';
+      setTimeout(() => { this.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث'; }, 1500);
+    });
+  }
+  
+  // بدء التحديث التلقائي
+  startAttendancePolling();
+}, 1500);
 loadEvents();
