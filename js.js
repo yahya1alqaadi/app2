@@ -60,7 +60,8 @@ let scanner = null;
 let isScanningPaused = false;
 let qrScalePercent = parseInt(localStorage.getItem("qrScalePercent") || "100");
 let showName = localStorage.getItem("showName") !== "false";
-
+// متغير البحث
+let searchQuery = "";
 // ============================================
 // عناصر DOM
 // ============================================
@@ -871,5 +872,97 @@ if (scanBtn) scanBtn.onclick = startScanner;
 // ============================================
 // بدء التطبيق
 // ============================================
+// ============================================
+// ✅ وظيفة البحث في جدول الضيوف
+// ============================================
 
+function filterGuests() {
+  searchQuery = (document.getElementById("guestSearchInput")?.value || "").trim().toLowerCase();
+  
+  if (!guestTable) return;
+  
+  const rows = guestTable.querySelectorAll("tr");
+  let visibleCount = 0;
+  let filteredGuests = [];
+  
+  rows.forEach(function(row, index) {
+    const nameCell = row.querySelector("td:first-child");
+    const phoneCell = row.querySelector("td:nth-child(2)");
+    
+    if (!nameCell) return;
+    
+    const name = (nameCell.textContent || "").toLowerCase();
+    const phone = (phoneCell ? phoneCell.textContent || "" : "").toLowerCase();
+    
+    if (searchQuery === "" || name.indexOf(searchQuery) !== -1 || phone.indexOf(searchQuery) !== -1) {
+      row.style.display = "";
+      visibleCount++;
+      
+      // نجمع الضيوف المطابقين
+      const originalIndex = guests.findIndex(function(g) {
+        return g.name === nameCell.textContent.trim() || g.phone === (phoneCell?.textContent?.trim() || "");
+      });
+      if (originalIndex >= 0) filteredGuests.push(guests[originalIndex]);
+    } else {
+      row.style.display = "none";
+    }
+  });
+  
+  // تحديث العداد
+  if (guestCount) {
+    if (searchQuery) {
+      guestCount.textContent = visibleCount + "/" + guests.length + " ضيف";
+    } else {
+      guestCount.textContent = guests.length + " ضيف";
+    }
+  }
+  
+  // إظهار/إخفاء زر المسح
+  const clearBtn = document.getElementById("clearSearchBtn");
+  if (clearBtn) {
+    clearBtn.style.display = searchQuery ? "block" : "none";
+  }
+  
+  return filteredGuests;
+}
+
+// ربط أحداث البحث
+setTimeout(function() {
+  const searchInput = document.getElementById("guestSearchInput");
+  const clearBtn = document.getElementById("clearSearchBtn");
+  
+  if (searchInput) {
+    searchInput.addEventListener("input", function() {
+      filterGuests();
+    });
+    
+    // البحث عند الضغط Enter
+    searchInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        filterGuests();
+        // التركيز على أول نتيجة
+        const firstVisible = guestTable?.querySelector("tr[style='']");
+        if (firstVisible) firstVisible.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+  }
+  
+  if (clearBtn) {
+    clearBtn.addEventListener("click", function() {
+      if (searchInput) {
+        searchInput.value = "";
+        searchQuery = "";
+        filterGuests();
+        searchInput.focus();
+      }
+    });
+  }
+}, 1000);
+
+// ✅ تعديل renderGuests لاستدعاء filterGuests بعد العرض
+// ابحث عن السطر الأخير في renderGuests:
+// renderInvitationTable();
+// واجعله:
+// renderInvitationTable();
+// setTimeout(filterGuests, 100);
 loadEvents();
