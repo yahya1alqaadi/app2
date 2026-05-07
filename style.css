@@ -1141,3 +1141,11 @@ tr:hover td {
     font-size: 1.4rem;
   }
 }
+/* سجل الحضور */
+#attendanceLogTable td {
+  font-size: 0.85rem;
+}
+
+#attendanceLogTable tr:first-child td {
+  color: #64748b;
+}
