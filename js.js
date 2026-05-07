@@ -67,7 +67,7 @@ let searchQuery = "";
 // ============================================
 // ✅ Pagination
 let currentPage = 1;
-let itemsPerPage = 10; // عدد الضيوف في الصفحة الواحدة
+let itemsPerPage = parseInt(localStorage.getItem("itemsPerPage") || "10"); عدد الضيوف في الصفحة الواحدة
 
 
 function getElement(id) { return document.getElementById(id); }
@@ -1299,11 +1299,15 @@ function renderGuestRows(pageGuests) {
 function updatePaginationButtons(totalPages) {
   var prevBtn = document.getElementById("prevPageBtn");
   var nextBtn = document.getElementById("nextPageBtn");
+  var firstBtn = document.getElementById("firstPageBtn");
+  var lastBtn = document.getElementById("lastPageBtn");
   var pageInfo = document.getElementById("pageInfo");
   
   if (pageInfo) pageInfo.textContent = 'صفحة ' + currentPage + ' من ' + Math.max(1, totalPages);
   if (prevBtn) prevBtn.disabled = (currentPage <= 1);
   if (nextBtn) nextBtn.disabled = (currentPage >= totalPages);
+  if (firstBtn) firstBtn.disabled = (currentPage <= 1);
+  if (lastBtn) lastBtn.disabled = (currentPage >= totalPages);
 }
 
 // ✅ تعديل renderGuests لاستخدام pagination
@@ -1320,6 +1324,16 @@ renderGuests = function() {
 setTimeout(function() {
   var prevBtn = document.getElementById("prevPageBtn");
   var nextBtn = document.getElementById("nextPageBtn");
+  var firstBtn = document.getElementById("firstPageBtn");
+  var lastBtn = document.getElementById("lastPageBtn");
+  var itemsSelect = document.getElementById("itemsPerPageSelect");
+  
+  if (firstBtn) {
+    firstBtn.addEventListener("click", function() {
+      currentPage = 1;
+      paginateGuests();
+    });
+  }
   
   if (prevBtn) {
     prevBtn.addEventListener("click", function() {
@@ -1338,6 +1352,26 @@ setTimeout(function() {
         currentPage++;
         paginateGuests();
       }
+    });
+  }
+  
+  if (lastBtn) {
+    lastBtn.addEventListener("click", function() {
+      var filtered = getFilteredGuests();
+      var totalPages = Math.ceil(filtered.length / itemsPerPage);
+      currentPage = totalPages;
+      paginateGuests();
+    });
+  }
+  
+  // تغيير عدد العناصر في الصفحة
+  if (itemsSelect) {
+    itemsSelect.value = itemsPerPage;
+    itemsSelect.addEventListener("change", function() {
+      itemsPerPage = parseInt(this.value);
+      localStorage.setItem("itemsPerPage", itemsPerPage);
+      currentPage = 1;
+      paginateGuests();
     });
   }
   
