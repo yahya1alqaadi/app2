@@ -1159,3 +1159,197 @@ tr:hover td {
   background: #2563eb;
   color: white;
 }
+
+/* ============================================
+   Dark Mode - تلقائي
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #0f172a;
+    color: #e2e8f0;
+  }
+
+  /* البطاقات */
+  .card {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+  }
+
+  .card-header {
+    border-bottom-color: #334155;
+  }
+
+  .card-header h2 {
+    color: #f1f5f9;
+  }
+
+  .card-header h2 i {
+    background: #1e3a5f;
+    color: #60a5fa;
+  }
+
+  .card-badge {
+    background: #334155;
+    color: #94a3b8;
+  }
+
+  /* الهيدر */
+  .dashboard-header {
+    background: rgba(15, 23, 42, 0.95);
+    border-bottom-color: #334155;
+  }
+
+  .logo-area h1 {
+    color: #f1f5f9;
+  }
+
+  .event-badge {
+    background: #1e3a5f;
+    color: #93c5fd;
+  }
+
+  /* الحقول */
+  input, select, textarea {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+  }
+
+  input::placeholder {
+    color: #64748b !important;
+  }
+
+  input:focus, select:focus {
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.15) !important;
+  }
+
+  /* الأزرار */
+  .btn-outline {
+    background: #334155;
+    border-color: #475569;
+    color: #cbd5e1;
+  }
+
+  .btn-outline:hover {
+    background: #475569;
+    color: #f1f5f9;
+  }
+
+  .btn-primary {
+    background: #3b82f6;
+  }
+
+  .btn-primary:hover {
+    background: #2563eb;
+  }
+
+  /* الجداول */
+  table {
+    background: #1e293b;
+  }
+
+  thead {
+    background: #334155;
+  }
+
+  th {
+    color: #94a3b8;
+    border-bottom-color: #475569;
+  }
+
+  td {
+    border-bottom-color: #334155;
+    color: #cbd5e1;
+  }
+
+  tr:hover td {
+    background: #334155;
+  }
+
+  .table-wrapper {
+    border-color: #334155;
+  }
+
+  /* المحرر */
+  .editor {
+    background: #1e293b;
+    border-color: #475569;
+  }
+
+  /* التصميم كونترول */
+  .design-controls {
+    background: #0f172a;
+    border-color: #334155;
+  }
+
+  .control-group label {
+    color: #94a3b8;
+  }
+
+  /* السحب والإفلات */
+  .draggable {
+    background: rgba(30, 41, 59, 0.95);
+    border-color: #60a5fa;
+    color: #e2e8f0;
+  }
+
+  /* أزرار التعديل والحذف */
+  .edit-btn {
+    background: #1e3a5f;
+    color: #93c5fd;
+  }
+
+  .delete-btn {
+    background: #450a0a;
+    color: #fca5a5;
+  }
+
+  /* البحث */
+  .search-box input {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+  }
+
+  /* الإحصائيات */
+  .stat-card-2 .stat-number-2 {
+    color: #f1f5f9;
+  }
+
+  .stat-card-2 .stat-label-2 {
+    color: #94a3b8;
+  }
+
+  /* الباجينيشن */
+  #pagination {
+    background: #1e293b;
+  }
+
+  #pageInfo {
+    color: #e2e8f0;
+  }
+
+  /* الفوتر */
+  .footer {
+    color: #64748b;
+  }
+
+  /* سجل الحضور */
+  #attendanceLogTable td {
+    color: #cbd5e1;
+  }
+
+  /* رفع الصورة */
+  .upload-label {
+    background: #1e3a5f;
+    color: #93c5fd;
+    border-color: #3b82f6;
+  }
+
+  .upload-label:hover {
+    background: #1e40af;
+  }
+}
