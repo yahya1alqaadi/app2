@@ -1065,3 +1065,13 @@ tr:hover td {
 #qrBox img {
   display: none;
 }
+/* حقل البحث */
+.search-box input:focus {
+  outline: none;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+#clearSearchBtn:hover {
+  color: #ef4444;
+}
