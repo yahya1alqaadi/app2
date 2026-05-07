@@ -421,6 +421,37 @@ function parseQrText(text) {
   return { eventId: currentEventId, guestId: v };
 }
 
+function startScanner() {
+  if (!currentEventId) { showToast("⚠️ اختر مناسبة أولاً", "warning", 2500); return; }
+  if (scanner) { showToast("⚠️ الكاميرا تعمل بالفعل", "warning", 2500); return; }
+
+  scanBtn.disabled = true;
+  scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التشغيل...';
+  scanner = new Html5Qrcode("reader");
+
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 30, qrbox: { width: 200, height: 200 } },
+    qrText => {
+      if (paused) return;
+      paused = true;
+      checkGuest(qrText);
+      setTimeout(() => { paused = false; }, 4500);
+    },
+    () => {}
+  ).then(() => {
+    scanBtn.innerHTML = '<i class="fas fa-check-circle"></i> الكاميرا تعمل';
+    scanBtn.className = 'btn btn-success';
+    showSuccess("✅ الكاميرا تعمل – وجهها على QR");
+  }).catch(() => {
+    showError("❌ لم يتم تشغيل الكاميرا");
+    scanBtn.disabled = false;
+    scanBtn.innerHTML = '<i class="fas fa-camera"></i> تشغيل الكاميرا';
+    scanBtn.className = 'btn btn-primary';
+    scanner = null;
+  });
+}
+
 async function checkGuest(qrText) {
   var parsed = parseQrText(qrText);
   if (String(parsed.eventId) !== String(currentEventId)) {
@@ -448,26 +479,18 @@ async function checkGuest(qrText) {
       var updatedGuest = guests.find(function(g) { return String(g.id) === String(guest.id); });
       var newCount = updatedGuest ? (updatedGuest.scanCount || 0) : (currentScans + 1);
       var remaining = maxScans - newCount;
-      
-      if (maxScans === 1 && newCount === 1) {
-        showToast("✅ أهلاً وسهلاً " + guest.name, "success", 4000);
-        showSuccess("✅ مرحباً " + guest.name);
-      } else if (remaining > 0) {
-        showToast("✅ " + guest.name + " (" + newCount + "/" + maxScans + ") متبقي " + remaining, "success", 4000);
-        showSuccess("✅ " + guest.name + " (" + newCount + "/" + maxScans + ")");
-      } else {
+      if (remaining <= 0) {
         showToast("🚫 " + guest.name + " اكتمل (" + maxScans + "/" + maxScans + ")", "warning", 4000);
         showWarning("🚫 " + guest.name + " مكتمل");
+      } else {
+        showToast("✅ " + guest.name + " (" + newCount + "/" + maxScans + ") متبقي " + remaining, "success", 4000);
+        showSuccess("✅ " + guest.name + " (" + newCount + "/" + maxScans + ")");
       }
-      playSuccessSound();
-      return;
+      playSuccessSound(); return;
     }
     showToast("❌ خطأ في التسجيل", "error", 3500);
     playErrorSound();
-  } catch (e) {
-    showToast("❌ فشل الاتصال", "error", 3500);
-    playErrorSound();
-  }
+  } catch (e) { showToast("❌ فشل الاتصال", "error", 3500); playErrorSound(); }
 }
 
 function playSuccessSound() { try { new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg").play().catch(()=>{}); } catch(e){} }
