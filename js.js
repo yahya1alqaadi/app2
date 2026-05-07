@@ -517,6 +517,7 @@ function renderGuests() {
   if (!guestTable) return;
   guestTable.innerHTML = "";
   if (guestCount) guestCount.textContent = guests.length + " ضيف";
+  updateStatistics();
   if (guests.length === 0) { guestTable.innerHTML = '<tr><td colspan="6">ℹ️ لا يوجد ضيوف</td></tr>'; renderInvitationTable(); return; }
   guests.forEach(function(guest, index) {
     var row = document.createElement("tr"); row.style.cursor = "pointer";
