@@ -415,6 +415,7 @@ async function loadGuestsFromSheet() {
     if (result.status !== "success") { guestTable.innerHTML = '<tr><td colspan="6">❌ فشل</td></tr>'; return; }
     guests = (result.guests || []).map(function(g) { return { id: String(g.id), name: g.name || "", phone: g.phone || "", checkedIn: g.checkedIn || false, scanCount: parseInt(g.scanCount) || 0, maxScans: parseInt(g.maxScans) || 1, invitation: g.invitation || "", invitationPNG: g.invitationPNG || "" }; });
     renderGuests();
+loadAttendanceLogs();
     if (guests.length > 0) { try { previewGuest(guests[0]); } catch (e) {} } else { if (nameBox) nameBox.innerHTML = ''; updateQRPlaceholderStyle(); }
   } catch (error) { guestTable.innerHTML = '<tr><td colspan="6">❌ فشل</td></tr>'; }
 }
