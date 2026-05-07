@@ -1507,6 +1507,48 @@ function saveInvitationToDB(guestId, pdfData, pngData) {
   dbPromise.then(function(db) { var tx = db.transaction("invitations", "readwrite"); var store = tx.objectStore("invitations"); store.put({ guestId: guestId, pdf: pdfData, png: pngData, timestamp: Date.now() }); }).catch(function() {});
 }
 
+// ============================================
+// ✅ Dark Mode Toggle
+// ============================================
+
+(function() {
+  // تحميل الوضع المحفوظ
+  var savedMode = localStorage.getItem("darkMode");
+  if (savedMode === "enabled") {
+    document.body.classList.add("dark-mode");
+  }
+  
+  setTimeout(function() {
+    var darkBtn = document.getElementById("darkModeToggle");
+    if (!darkBtn) return;
+    
+    // تحديث الأيقونة
+    updateDarkIcon(darkBtn);
+    
+    darkBtn.addEventListener("click", function() {
+      document.body.classList.toggle("dark-mode");
+      
+      if (document.body.classList.contains("dark-mode")) {
+        localStorage.setItem("darkMode", "enabled");
+      } else {
+        localStorage.setItem("darkMode", "disabled");
+      }
+      
+      updateDarkIcon(darkBtn);
+    });
+  }, 500);
+  
+  function updateDarkIcon(btn) {
+    if (document.body.classList.contains("dark-mode")) {
+      btn.innerHTML = '<i class="fas fa-sun"></i>';
+      btn.title = "الوضع الفاتح";
+    } else {
+      btn.innerHTML = '<i class="fas fa-moon"></i>';
+      btn.title = "الوضع الليلي";
+    }
+  }
+})();
+
 // تشغيل الإعدادات
 setTimeout(initSettings, 800);
 
