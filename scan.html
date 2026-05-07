@@ -344,22 +344,38 @@ async function loadEvents() {
     if (data.status !== "success") { showError("❌ فشل تحميل المناسبات"); return; }
     events = data.events || [];
     
-    // ✅ إذا فيه eventId في الرابط
-    if (linkEventId) {
-      const found = events.find(e => String(e.eventId) === String(linkEventId));
-      if (found) {
-        currentEventId = linkEventId;
-        // إخفاء قائمة المناسبات
-        document.querySelector(".select-group").style.display = "none";
-        // إظهار اسم المناسبة
-        document.querySelector(".header .subtitle").textContent = found.eventName;
-        await loadGuests();
-        return;
-      } else {
-        showError("❌ المناسبة غير موجودة");
-        return;
-      }
+   // ✅ التحقق من صلاحية المشرف
+const isAdmin = urlParams.get("admin") === "yes";
+
+// ✅ إذا فيه eventId في الرابط
+if (linkEventId) {
+  const found = events.find(e => String(e.eventId) === String(linkEventId));
+  if (found) {
+    currentEventId = linkEventId;
+    
+    if (isAdmin) {
+      // المشرف: يظهر له قائمة المناسبات ويقدر يبدل
+      document.querySelector(".select-group").style.display = "";
+      renderEventSelect();
+      document.querySelector(".header .subtitle").textContent = "وضع المشرف - " + found.eventName;
+    } else {
+      // الموظف: ما يشوف قائمة المناسبات
+      document.querySelector(".select-group").style.display = "none";
+      document.querySelector(".header .subtitle").textContent = found.eventName;
     }
+    
+    await loadGuests();
+    return;
+  } else {
+    showError("❌ المناسبة غير موجودة");
+    return;
+  }
+}
+
+// ✅ إذا ما فيه eventId (الطريقة القديمة - تلقائياً مشرف)
+if (!linkEventId) {
+  document.querySelector(".header .subtitle").textContent = "وضع المشرف - جميع المناسبات";
+}
     
     // ✅ إذا ما فيه eventId في الرابط (الطريقة القديمة)
     if (events.length === 0) {
