@@ -217,7 +217,53 @@
           </button>
         </div>
       </section>
-
+<!-- قسم الإحصائيات -->
+<section class="card">
+  <div class="card-header">
+    <h2><i class="fas fa-chart-bar"></i> إحصائيات المناسبة</h2>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card-2" style="background:linear-gradient(135deg, #eff6ff, #dbeafe);">
+      <div class="stat-icon" style="background:#2563eb;">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-number-2" id="statTotal">0</div>
+        <div class="stat-label-2">إجمالي الضيوف</div>
+      </div>
+    </div>
+    <div class="stat-card-2" style="background:linear-gradient(135deg, #f0fdf4, #d1fae5);">
+      <div class="stat-icon" style="background:#10b981;">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-number-2" id="statCheckedIn">0</div>
+        <div class="stat-label-2">تم تسجيلهم</div>
+      </div>
+    </div>
+    <div class="stat-card-2" style="background:linear-gradient(135deg, #fef2f2, #fee2e2);">
+      <div class="stat-icon" style="background:#ef4444;">
+        <i class="fas fa-clock"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-number-2" id="statPending">0</div>
+        <div class="stat-label-2">لم يحضروا بعد</div>
+      </div>
+    </div>
+    <div class="stat-card-2" style="background:linear-gradient(135deg, #fffbeb, #fef3c7);">
+      <div class="stat-icon" style="background:#f59e0b;">
+        <i class="fas fa-percentage"></i>
+      </div>
+      <div class="stat-info">
+        <div class="stat-number-2" id="statPercent">0%</div>
+        <div class="stat-label-2">نسبة الحضور</div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:20px;background:#f8fafc;border-radius:12px;height:16px;overflow:hidden;">
+    <div id="statProgressBar" style="height:100%;background:linear-gradient(90deg, #10b981, #34d399);border-radius:12px;transition:width 0.5s ease;width:0%;"></div>
+  </div>
+</section>
       <!-- قسم قائمة الضيوف -->
     <section class="card">
     <div class="card-header">
