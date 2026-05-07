@@ -1610,7 +1610,4 @@ function saveInvitationToDB(guestId, pdfData, pngData) {
   }
 })();
 
-// تشغيل الإعدادات
-setTimeout(initSettings, 800);
-
 loadEvents();
