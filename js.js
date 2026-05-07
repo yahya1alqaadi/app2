@@ -53,7 +53,7 @@ let guests = [];
 let currentEventId = localStorage.getItem("currentEventId") || "";
 let uploadedImage = localStorage.getItem("uploadedImage") || "";
 
-var SHEET_URL = localStorage.getItem("customSheetUrl") || "https://docs.google.com/spreadsheets/d/1Q4_xHS5CXKYIxElTz8YCyBjnWydxGdKIh8yJZtYTB8A/edit";
+var SHEET_URL = localStorage.getItem("customSheetUrl") || "https://docs.google.com/spreadsheets/d/1jfezjcRo8FOjUy15GZ_KG51SdUQo0AzD_TaoAM4QxlY/edit";
 var SCRIPT_URL = localStorage.getItem("customScriptUrl") || "https://script.google.com/macros/s/AKfycbw5mMSGr3cizcvh8U3pJfkwynCI9fe7DziZ7PWrFqndc6KlfKtBz6l1kQhY5CniI12MQA/exec";
 
 let scanner = null;
