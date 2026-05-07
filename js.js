@@ -659,15 +659,52 @@ if (pickQrColorBtn) pickQrColorBtn.onclick = function() { pickColor(qrColor); };
 // مكتبة jsPDF
 // ============================================
 
+// ============================================
+// ✅ jsPDF Lazy Loading
+// ============================================
+
+let jsPDFLoaded = false;
+let jsPDFLoading = false;
+let jsPDFPromise = null;
+
 function loadJSPDF() {
-  return new Promise(function(resolve, reject) {
-    if (window.jspdf && window.jspdf.jsPDF) { resolve(window.jspdf.jsPDF); return; }
-    var s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    s.onload = function() { if (window.jspdf && window.jspdf.jsPDF) resolve(window.jspdf.jsPDF); else reject(new Error('فشل')); };
-    s.onerror = function() { reject(new Error('فشل')); };
-    document.head.appendChild(s);
+  // إذا تم تحميلها مسبقاً
+  if (window.jspdf && window.jspdf.jsPDF) {
+    return Promise.resolve(window.jspdf.jsPDF);
+  }
+  
+  // إذا كان التحميل قيد التنفيذ
+  if (jsPDFLoading && jsPDFPromise) {
+    return jsPDFPromise;
+  }
+  
+  jsPDFLoading = true;
+  
+  jsPDFPromise = new Promise(function(resolve, reject) {
+    var script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    script.async = true;
+    
+    script.onload = function() {
+      jsPDFLoading = false;
+      jsPDFLoaded = true;
+      
+      if (window.jspdf && window.jspdf.jsPDF) {
+        resolve(window.jspdf.jsPDF);
+      } else {
+        reject(new Error('فشل تحميل مكتبة PDF'));
+      }
+    };
+    
+    script.onerror = function() {
+      jsPDFLoading = false;
+      reject(new Error('فشل تحميل مكتبة PDF - تأكد من الاتصال بالإنترنت'));
+    };
+    
+    document.head.appendChild(script);
   });
+  
+  return jsPDFPromise;
 }
 
 // ============================================
