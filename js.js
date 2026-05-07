@@ -155,6 +155,15 @@ function createEventId(name) {
 // ============================================
 // دوال QR
 // ============================================
+// ============================================
+// ✅ دوال QR الجديدة (qr-code-styling) - شفاف تماماً
+// ============================================
+
+let qrCodeInstance = null;
+
+function getQrText(guest) {
+  return String(guest.id);
+}
 
 function resizeQRBox() {
   if (!qrBox) return;
@@ -164,14 +173,152 @@ function resizeQRBox() {
   qrBox.style.height = scaledSize + 'px';
   qrBox.style.backgroundColor = 'transparent';
   qrBox.style.border = 'none';
+  qrBox.style.boxShadow = 'none';
+  qrBox.style.outline = 'none';
 }
 
 function updateQRPlaceholderStyle() {
   if (!qrBox) return;
   resizeQRBox();
+  qrBox.innerHTML = '';
+}
+
+// ✅ معاينة QR بدون خلفية
+function previewGuest(guest) {
+  if (!guest || !qrBox) return;
+  
+  if (nameBox) {
+    if (showName) {
+      nameBox.innerHTML = guest.name;
+      nameBox.style.display = 'flex';
+      nameBox.style.backgroundColor = 'transparent';
+      nameBox.style.border = 'none';
+      nameBox.style.textShadow = 'none';
+      if (fontFamily) nameBox.style.fontFamily = fontFamily.value;
+      if (fontSize) nameBox.style.fontSize = fontSize.value + 'px';
+      if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
+      if (fontColor) nameBox.style.color = fontColor.value;
+    } else {
+      nameBox.innerHTML = '';
+      nameBox.style.display = 'none';
+    }
+  }
+  
+  resizeQRBox();
+  qrBox.innerHTML = '';
+  
+  var qrSize = qrBox.clientWidth || 110;
+  var selectedQrColor = qrColor ? qrColor.value : '#000000';
+  
   qrBox.style.backgroundColor = 'transparent';
   qrBox.style.border = 'none';
-  qrBox.innerHTML = '';
+  qrBox.style.boxShadow = 'none';
+  
+  // ✅ إنشاء QR بدون أي خلفية
+  if (qrCodeInstance) {
+    qrCodeInstance = null;
+  }
+  
+  qrCodeInstance = new QRCodeStyling({
+    width: qrSize,
+    height: qrSize,
+    type: "canvas",
+    data: getQrText(guest),
+    dotsOptions: {
+      color: selectedQrColor,
+      type: "square"
+    },
+    backgroundOptions: {
+      color: "rgba(0, 0, 0, 0)" // ✅ شفاف تماماً
+    },
+    cornersSquareOptions: {
+      color: selectedQrColor,
+      type: "square"
+    },
+    cornersDotOptions: {
+      color: selectedQrColor,
+      type: "square"
+    }
+  });
+  
+  qrCodeInstance.append(qrBox);
+}
+
+function refreshQrPreview() {
+  if (guests.length > 0) {
+    previewGuest(guests[0]);
+  } else {
+    updateQRPlaceholderStyle();
+  }
+}
+
+// ✅ تصدير QR كصورة شفافة
+function createQrImage(text) {
+  return new Promise(function(resolve) {
+    var selectedQrColor = qrColor ? qrColor.value : '#000000';
+    var qrSize = 600;
+    
+    var tempQr = new QRCodeStyling({
+      width: qrSize,
+      height: qrSize,
+      type: "canvas",
+      data: text,
+      dotsOptions: {
+        color: selectedQrColor,
+        type: "square"
+      },
+      backgroundOptions: {
+        color: "rgba(0, 0, 0, 0)" // ✅ شفاف
+      },
+      cornersSquareOptions: {
+        color: selectedQrColor,
+        type: "square"
+      },
+      cornersDotOptions: {
+        color: selectedQrColor,
+        type: "square"
+      }
+    });
+    
+    tempQr.getRawData("png").then(function(blob) {
+      if (!blob) { resolve(null); return; }
+      var url = URL.createObjectURL(blob);
+      var img = new Image();
+      img.onload = function() {
+        URL.revokeObjectURL(url);
+        resolve(img);
+      };
+      img.onerror = function() {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      };
+      img.src = url;
+    }).catch(function() {
+      resolve(null);
+    });
+  });
+}
+
+// ✅ حساب موقع QR على الصورة
+function getPositionOnImage(box, canvasWidth, canvasHeight) {
+  if (!box || !inviteImage) return { x: 0, y: 0, w: 200, h: 200 };
+  
+  var imageRect = inviteImage.getBoundingClientRect();
+  var boxRect = box.getBoundingClientRect();
+  
+  if (!imageRect.width || !imageRect.height) return { x: 100, y: 100, w: 200, h: 200 };
+  
+  var scaleX = canvasWidth / imageRect.width;
+  var scaleY = canvasHeight / imageRect.height;
+  
+  var x = (boxRect.left - imageRect.left) * scaleX;
+  var y = (boxRect.top - imageRect.top) * scaleY;
+  var w = boxRect.width * scaleX;
+  var h = boxRect.height * scaleY;
+  
+  var size = Math.round(Math.min(w, h));
+  
+  return { x: Math.round(x), y: Math.round(y), w: size, h: size };
 }
 
 function updateNameBoxAppearance() {
@@ -497,24 +644,6 @@ async function deleteGuest(index) {
 
 function getQrText(guest) { return String(guest.id); }
 
-function previewGuest(guest) {
-  if (!guest || !qrBox) return;
-  
-  if (nameBox) {
-    if (showName) {
-      nameBox.innerHTML = guest.name;
-      nameBox.style.display = 'flex';
-      nameBox.style.backgroundColor = 'transparent';
-      nameBox.style.border = 'none';
-      if (fontFamily) nameBox.style.fontFamily = fontFamily.value;
-      if (fontSize) nameBox.style.fontSize = fontSize.value + "px";
-      if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
-      if (fontColor) nameBox.style.color = fontColor.value;
-    } else {
-      nameBox.innerHTML = '';
-      nameBox.style.display = 'none';
-    }
-  }
   
   resizeQRBox();
   qrBox.innerHTML = "";
@@ -570,10 +699,6 @@ function updateNamePreviewStyle() {
   if (fontColor) nameBox.style.color = fontColor.value;
   if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
   updateNameBoxAppearance();
-}
-
-function refreshQrPreview() {
-  if (guests.length > 0) { previewGuest(guests[0]); } else { updateQRPlaceholderStyle(); }
 }
 
 // ============================================
@@ -684,66 +809,6 @@ function loadJSPDF() {
   
   return jsPDFPromise;
 }
-
-// ============================================
-// ✅ دوال QR للتصدير - مبسطة
-// ============================================
-
-function getPositionOnImage(box, canvasWidth, canvasHeight) {
-  if (!box || !inviteImage) return { x: 0, y: 0, w: 200, h: 200 };
-  
-  var editorEl = document.getElementById("editor");
-  if (!editorEl) return { x: 100, y: 100, w: 200, h: 200 };
-  
-  var editorRect = editorEl.getBoundingClientRect();
-  var imageRect = inviteImage.getBoundingClientRect();
-  var boxRect = box.getBoundingClientRect();
-  
-  if (!imageRect.width || !imageRect.height) return { x: 100, y: 100, w: 200, h: 200 };
-  
-  // ✅ النسبة بين حجم الصورة الحقيقي وحجمها الظاهر على الشاشة
-  var scaleX = canvasWidth / imageRect.width;
-  var scaleY = canvasHeight / imageRect.height;
-  
-  // ✅ موقع الصندوق بالنسبة للصورة (وليس بالنسبة للشاشة)
-  var relativeX = boxRect.left - imageRect.left;
-  var relativeY = boxRect.top - imageRect.top;
-  
-  // ✅ تحويل إلى إحداثيات الصورة الحقيقية
-  var x = relativeX * scaleX;
-  var y = relativeY * scaleY;
-  var w = boxRect.width * scaleX;
-  var h = boxRect.height * scaleY;
-  
-  // ✅ جعله مربعاً متساوي الأضلاع
-  var size = Math.min(Math.round(w), Math.round(h));
-  
-  return {
-    x: Math.round(x),
-    y: Math.round(y),
-    w: size,
-    h: size
-  };
-}
-
-function createQrImage(text) {
-  return new Promise(function(resolve) {
-    var qrSize = 600;
-    var selectedQrColor = qrColor ? qrColor.value : "#000000";
-    
-    var qrDiv = document.createElement("div");
-    qrDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
-    document.body.appendChild(qrDiv);
-    
-    // ننشئ QR بخلفية بيضاء
-    new QRCode(qrDiv, {
-      text: text,
-      width: qrSize,
-      height: qrSize,
-      colorDark: selectedQrColor,
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.M
-    });
     
     setTimeout(function() {
       var canvas = qrDiv.querySelector("canvas");
