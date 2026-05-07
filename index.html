@@ -323,20 +323,38 @@
       </table>
             </table>
     </div>
-    <!-- ✅ أزرار التنقل بين الصفحات -->
-    <div id="pagination" style="display:flex;justify-content:center;align-items:center;gap:6px;margin-top:15px;flex-wrap:wrap;">
-      <button id="prevPageBtn" class="btn btn-outline" type="button" style="padding:0.4rem 0.8rem;font-size:0.8rem;" disabled>
-        <i class="fas fa-chevron-right"></i> السابق
-      </button>
-      <span id="pageInfo" style="font-weight:600;font-size:0.85rem;color:#475569;">صفحة 1 من 1</span>
-      <button id="nextPageBtn" class="btn btn-outline" type="button" style="padding:0.4rem 0.8rem;font-size:0.8rem;" disabled>
-        التالي <i class="fas fa-chevron-left"></i>
-      </button>
-    </div>
+ <!-- ✅ باجينيشن محسن -->
+<div id="pagination" style="display:flex;justify-content:space-between;align-items:center;margin-top:15px;flex-wrap:wrap;gap:10px;background:#f8fafc;padding:12px 16px;border-radius:12px;">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span style="font-size:0.8rem;color:#64748b;">عرض</span>
+    <select id="itemsPerPageSelect" style="padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;font-family:inherit;">
+      <option value="5">5</option>
+      <option value="10" selected>10</option>
+      <option value="25">25</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+    </select>
+    <span style="font-size:0.8rem;color:#64748b;">ضيف/صفحة</span>
   </div>
-</section>
-    </div>
-</section>
+  
+  <div style="display:flex;align-items:center;gap:6px;">
+    <button id="firstPageBtn" class="btn btn-outline" type="button" style="padding:0.4rem 0.6rem;font-size:0.75rem;" disabled>
+      <i class="fas fa-angle-double-right"></i>
+    </button>
+    <button id="prevPageBtn" class="btn btn-outline" type="button" style="padding:0.4rem 0.8rem;font-size:0.8rem;" disabled>
+      <i class="fas fa-chevron-right"></i> السابق
+    </button>
+    
+    <span id="pageInfo" style="font-weight:700;font-size:0.85rem;color:#0f172a;min-width:100px;text-align:center;">صفحة 1 من 1</span>
+    
+    <button id="nextPageBtn" class="btn btn-outline" type="button" style="padding:0.4rem 0.8rem;font-size:0.8rem;" disabled>
+      التالي <i class="fas fa-chevron-left"></i>
+    </button>
+    <button id="lastPageBtn" class="btn btn-outline" type="button" style="padding:0.4rem 0.6rem;font-size:0.75rem;" disabled>
+      <i class="fas fa-angle-double-left"></i>
+    </button>
+  </div>
+</div>
 
       <!-- قسم الدعوات المولدة -->
       <section class="card" id="invitationsCard">
