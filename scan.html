@@ -453,6 +453,7 @@ function startScanner() {
 }
 
 async function checkGuest(qrText) {
+        alert("maxScans=" + maxScans + " newCount=" + newCount + " remaining=" + remaining);
   var parsed = parseQrText(qrText);
   if (String(parsed.eventId) !== String(currentEventId)) {
     showToast("❌ هذا QR تابع لمناسبة أخرى", "error", 3500);
@@ -476,10 +477,10 @@ async function checkGuest(qrText) {
     var data = await callScript({ action: "attendance", eventId: currentEventId, id: guest.id, name: guest.name, phone: guest.phone, time: time });
     if (data.status === "success") {
       await loadGuests();
+      
       var updatedGuest = guests.find(function(g) { return String(g.id) === String(guest.id); });
       var newCount = updatedGuest ? (updatedGuest.scanCount || 0) : (currentScans + 1);
       var remaining = maxScans - newCount;
-      alert("maxScans=" + maxScans + " newCount=" + newCount + " remaining=" + remaining);
       if (maxScans === 1 && newCount === 1) {
         showToast("✅ أهلاً وسهلاً " + guest.name, "success", 4000);
         showSuccess("✅ مرحباً " + guest.name);
