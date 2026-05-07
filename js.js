@@ -70,6 +70,9 @@ let currentPage = 1;
 // عدد الضيوف في الصفحة الواحدة
 let itemsPerPage = parseInt(localStorage.getItem("itemsPerPage") || "10");
 
+// ✅ تحديد الضيوف للتوليد
+let selectedGuests = new Set();
+
 function getElement(id) { return document.getElementById(id); }
 
 const eventSelect = getElement("eventSelect");
@@ -1383,6 +1386,73 @@ setTimeout(function() {
     });
   }
 }, 1200);
+
+// ============================================
+// ✅ تحديد ضيوف للتوليد
+// ============================================
+
+function toggleGuestSelection(guestId) {
+  if (selectedGuests.has(guestId)) {
+    selectedGuests.delete(guestId);
+  } else {
+    selectedGuests.add(guestId);
+  }
+  updateSelectionUI();
+}
+
+function selectAllGuests() {
+  if (selectedGuests.size === guests.length) {
+    selectedGuests.clear();
+  } else {
+    guests.forEach(function(g) { selectedGuests.add(g.id); });
+  }
+  updateSelectionUI();
+  paginateGuests();
+}
+
+function updateSelectionUI() {
+  var btn = document.getElementById("generateSelectedBtn");
+  var countSpan = document.getElementById("selectedCount");
+  
+  if (btn) {
+    btn.disabled = (selectedGuests.size === 0);
+  }
+  if (countSpan) {
+    countSpan.textContent = selectedGuests.size;
+  }
+}
+
+function generateSelectedInvitations() {
+  if (selectedGuests.size === 0) {
+    showToast("⚠️ حدد ضيف واحد على الأقل", "warning");
+    return;
+  }
+  
+  var selectedList = guests.filter(function(g) { return selectedGuests.has(g.id); });
+  
+  // تخزين مؤقت للقائمة الأصلية
+  var originalGuests = guests;
+  guests = selectedList;
+  
+  // توليد الدعوات للمحددين فقط
+  generateInvitations().then(function() {
+    guests = originalGuests;
+    selectedGuests.clear();
+    updateSelectionUI();
+    renderGuests();
+    showToast("✅ تم توليد " + selectedList.length + " دعوة", "success");
+  });
+}
+
+function generateSingleInvitation(guestId) {
+  var guest = guests.find(function(g) { return g.id === guestId; });
+  if (!guest) return;
+  
+  selectedGuests.clear();
+  selectedGuests.add(guestId);
+  updateSelectionUI();
+  generateSelectedInvitations();
+}
 
 // تشغيل الإعدادات
 setTimeout(initSettings, 800);
