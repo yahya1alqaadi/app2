@@ -467,13 +467,22 @@
     function showWarning(m) { scanResult.textContent = m; scanResult.style.color = "#92400e"; resultBox.style.background = "#fef3c7"; }
     function showLoading(m) { scanResult.textContent = m; scanResult.style.color = "#1e40af"; resultBox.style.background = "#dbeafe"; }
 
-    eventSelect.onchange = async function() {
-      currentEventId = eventSelect.value;
-      localStorage.setItem("scanCurrentEventId", currentEventId);
-      if (scanner) { scanner.stop().then(()=>{scanner=null;scanBtn.disabled=false;scanBtn.innerHTML='<i class="fas fa-camera"></i> تشغيل الكاميرا';scanBtn.className='btn btn-primary';}).catch(()=>{scanner=null;}); }
-      await loadGuests();
-    };
-
+   eventSelect.onchange = async function() {
+  currentEventId = eventSelect.value;
+  localStorage.setItem("scanCurrentEventId", currentEventId);
+  
+  // ✅ تحديث البيانات بدون إيقاف الكاميرا
+  await loadGuests();
+  
+  // إشعار سريع
+  if (scanner) {
+    paused = true;
+    showToast("🔄 تم تغيير المناسبة", "info", 2000);
+    setTimeout(function() {
+      paused = false;
+    }, 2500);
+  }
+};
     scanBtn.onclick = startScanner;
     loadEvents();
   </script>
