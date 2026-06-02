@@ -1703,4 +1703,4 @@ makeDraggable(customTextBox);
 setTimeout(initSettings, 800);
 
 // بدء التطبيق
-loadEvents();
+loadEvents();}}
