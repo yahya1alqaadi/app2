@@ -353,55 +353,19 @@ function addQRSizeControl() {
   qrControlGroup.innerHTML = '<label><i class="fas fa-expand-arrows-alt"></i> حجم QR</label><div style="display:flex;align-items:center;gap:6px;"><input type="range" id="qrSizeSlider" min="50" max="200" value="' + qrScalePercent + '" step="5" style="flex:1;" /><input type="number" id="qrSizeInput" min="50" max="200" value="' + qrScalePercent + '" step="1" style="width:60px;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;text-align:center;font-size:0.85rem;font-family:inherit;" /><span id="qrSizeValue" style="font-weight:700;font-size:0.85rem;">%</span></div>';
   designControls.appendChild(qrControlGroup);
 
-  // ============================================
-// ✅ صف أزرار الاسم
-// ============================================
-var nameRow = document.createElement('div');
-nameRow.style.cssText = 'display:flex;gap:6px;width:100%;';
-
-var nameBtn = document.createElement('button');
-nameBtn.id = 'toggleNameBtn';
-nameBtn.type = 'button';
-nameBtn.className = 'btn ' + (showName ? 'btn-outline' : 'btn-warning');
-nameBtn.style.cssText = 'padding:0.4rem 0.6rem;font-size:0.75rem;flex:1;';
-nameBtn.innerHTML = '<i class="fas ' + (showName ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showName ? 'إخفاء الاسم' : 'إظهار الاسم');
-nameBtn.addEventListener('click', function() {
-  showName = !showName;
-  localStorage.setItem("showName", showName);
-  nameBtn.innerHTML = '<i class="fas ' + (showName ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showName ? 'إخفاء الاسم' : 'إظهار الاسم');
-  nameBtn.className = 'btn ' + (showName ? 'btn-outline' : 'btn-warning');
-  updateNameBoxAppearance();
-  if (guests.length > 0) previewGuest(guests[0]);
-});
-
-nameRow.appendChild(nameBtn);
-designControls.appendChild(nameRow);
-
-// ============================================
-// ✅ صف أزرار النص المخصص
-// ============================================
-var textRow = document.createElement('div');
-textRow.style.cssText = 'display:flex;gap:6px;width:100%;';
-
-var textBtn = document.createElement('button');
-textBtn.id = 'toggleCustomTextBtn';
-textBtn.type = 'button';
-textBtn.className = 'btn ' + (showCustomText ? 'btn-outline' : 'btn-warning');
-textBtn.style.cssText = 'padding:0.4rem 0.6rem;font-size:0.75rem;flex:1;';
-textBtn.innerHTML = '<i class="fas ' + (showCustomText ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showCustomText ? 'إخفاء النص' : 'إظهار النص');
-textBtn.addEventListener('click', toggleCustomText);
-
-var editTextBtn = document.createElement('button');
-editTextBtn.id = 'editCustomTextBtn';
-editTextBtn.type = 'button';
-editTextBtn.className = 'btn btn-outline';
-editTextBtn.style.cssText = 'padding:0.4rem 0.6rem;font-size:0.75rem;flex:1;';
-editTextBtn.innerHTML = '<i class="fas fa-edit"></i> تعديل النص';
-editTextBtn.addEventListener('click', editCustomText);
-
-textRow.appendChild(textBtn);
-textRow.appendChild(editTextBtn);
-designControls.appendChild(textRow);
+  var nameControlGroup = document.createElement('div');
+  nameControlGroup.className = 'control-group';
+  nameControlGroup.id = 'nameVisibilityControl';
+  nameControlGroup.style.cssText = 'display:flex;align-items:flex-end;';
+  nameControlGroup.innerHTML = '<button type="button" id="toggleNameBtn" class="btn ' + (showName ? 'btn-outline' : 'btn-warning') + '" style="padding:0.5rem 1rem;font-size:0.85rem;"><i class="fas ' + (showName ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showName ? 'إخفاء الاسم' : 'إظهار الاسم') + '</button>';
+  designControls.appendChild(nameControlGroup);
+  
+  var customTextControlGroup = document.createElement('div');
+customTextControlGroup.className = 'control-group';
+customTextControlGroup.id = 'customTextVisibilityControl';
+customTextControlGroup.style.cssText = 'display:flex;align-items:flex-end;flex-wrap:wrap;gap:4px;';
+customTextControlGroup.innerHTML = '<button type="button" id="editCustomTextBtn" class="btn btn-outline" style="padding:0.5rem 0.6rem;font-size:0.8rem;flex:1;"><i class="fas fa-edit"></i> تعديل النص</button><button type="button" id="toggleCustomTextBtn" class="btn ' + (showCustomText ? 'btn-outline' : 'btn-warning') + '" style="padding:0.5rem 0.6rem;font-size:0.8rem;flex:1;"><i class="fas ' + (showCustomText ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showCustomText ? 'إخفاء' : 'إظهار') + '</button>';
+designControls.appendChild(customTextControlGroup);
 
 var toggleCustomTextBtn = document.getElementById("toggleCustomTextBtn");
 if (toggleCustomTextBtn) {
@@ -442,6 +406,19 @@ if (slider && valueDisplay) {
     });
   }
 }
+
+  if (toggleNameBtn) {
+    toggleNameBtn.addEventListener('click', function() {
+      showName = !showName;
+      localStorage.setItem("showName", showName);
+      this.innerHTML = '<i class="fas ' + (showName ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showName ? 'إخفاء الاسم' : 'إظهار الاسم');
+      this.className = 'btn ' + (showName ? 'btn-outline' : 'btn-warning');
+      updateNameBoxAppearance();
+      if (guests.length > 0) previewGuest(guests[0]);
+    });
+  }
+}
+
 function addSheetButton() {
   var eventButtonsDiv = document.querySelector('.event-buttons');
   if (!eventButtonsDiv || document.getElementById('openSheetBtn')) return;
@@ -1702,5 +1679,4 @@ makeDraggable(customTextBox);
 // تشغيل الإعدادات
 setTimeout(initSettings, 800);
 
-// بدء التطبيق
-loadEvents();}}
+loadEvents();
