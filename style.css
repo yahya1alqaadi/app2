@@ -710,6 +710,21 @@ input[type="color"] {
   z-index: 10;
   touch-action: none;
 }
+#customTextBox {
+  position: absolute;
+  top: 250px;
+  left: 80px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  border: 2px dashed #10b981;
+  cursor: move;
+  font-weight: 700;
+  user-select: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
 
 .qr-placeholder {
   top: 40%;
