@@ -441,20 +441,6 @@ if (slider && valueDisplay) {
       if (guests.length > 0) previewGuest(guests[0]);
     });
   }
-}
-
-  if (toggleNameBtn) {
-    toggleNameBtn.addEventListener('click', function() {
-      showName = !showName;
-      localStorage.setItem("showName", showName);
-      this.innerHTML = '<i class="fas ' + (showName ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showName ? 'إخفاء الاسم' : 'إظهار الاسم');
-      this.className = 'btn ' + (showName ? 'btn-outline' : 'btn-warning');
-      updateNameBoxAppearance();
-      if (guests.length > 0) previewGuest(guests[0]);
-    });
-  }
-}
-
 function addSheetButton() {
   var eventButtonsDiv = document.querySelector('.event-buttons');
   if (!eventButtonsDiv || document.getElementById('openSheetBtn')) return;
