@@ -944,7 +944,16 @@ async function generateInvitations() {
         ctx.textAlign = "center"; ctx.textBaseline = "middle";
         ctx.fillText(guest.name, namePos.x + namePos.w/2, namePos.y + namePos.h/2);
       }
-
+// ✅ رسم النص المخصص
+if (showCustomText && customTextBox) {
+  var customPos = getPositionOnImage(customTextBox, baseImage.width, baseImage.height);
+  var customFontSize = Math.round((fontSize ? parseInt(fontSize.value) * 0.7 : 28) * (baseImage.width / imageRect.width));
+  ctx.font = (fontWeight ? fontWeight.value : "bold") + " " + customFontSize + "px " + (fontFamily ? fontFamily.value : "Arial");
+  ctx.fillStyle = fontColor ? fontColor.value : "#000000";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(customTextBox.textContent || "رقم التواصل: 05xxxxxxxx", customPos.x + customPos.w/2, customPos.y + customPos.h/2);
+}
       var qrImg = await createQrImage(getQrText(guest));
 if (qrImg && qrImg.width > 0) {
   ctx.drawImage(qrImg, qrPos.x, qrPos.y, qrPos.w, qrPos.h);
