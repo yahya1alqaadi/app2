@@ -441,6 +441,7 @@ if (slider && valueDisplay) {
       if (guests.length > 0) previewGuest(guests[0]);
     });
   }
+}
 function addSheetButton() {
   var eventButtonsDiv = document.querySelector('.event-buttons');
   if (!eventButtonsDiv || document.getElementById('openSheetBtn')) return;
