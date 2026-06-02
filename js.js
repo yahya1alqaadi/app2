@@ -364,12 +364,16 @@ function addQRSizeControl() {
 customTextControlGroup.className = 'control-group';
 customTextControlGroup.id = 'customTextVisibilityControl';
 customTextControlGroup.style.cssText = 'display:flex;align-items:flex-end;';
-customTextControlGroup.innerHTML = '<button type="button" id="toggleCustomTextBtn" class="btn ' + (showCustomText ? 'btn-outline' : 'btn-warning') + '" style="padding:0.5rem 1rem;font-size:0.85rem;"><i class="fas ' + (showCustomText ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showCustomText ? 'إخفاء النص' : 'إظهار النص') + '</button>';
+customTextControlGroup.innerHTML = '<button type="button" id="editCustomTextBtn" class="btn btn-outline" style="padding:0.5rem 0.6rem;font-size:0.8rem;flex:1;"><i class="fas fa-edit"></i> تعديل النص</button><button type="button" id="toggleCustomTextBtn" class="btn ' + (showCustomText ? 'btn-outline' : 'btn-warning') + '" style="padding:0.5rem 0.6rem;font-size:0.8rem;flex:1;"><i class="fas ' + (showCustomText ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showCustomText ? 'إخفاء' : 'إظهار') + '</button>';
 designControls.appendChild(customTextControlGroup);
 
 var toggleCustomTextBtn = document.getElementById("toggleCustomTextBtn");
 if (toggleCustomTextBtn) {
   toggleCustomTextBtn.addEventListener('click', toggleCustomText);
+}
+  var editCustomTextBtn = document.getElementById("editCustomTextBtn");
+if (editCustomTextBtn) {
+  editCustomTextBtn.addEventListener('click', editCustomText);
 }
 
   var slider = document.getElementById('qrSizeSlider');
@@ -1636,7 +1640,8 @@ function saveInvitationToDB(guestId, pdfData, pngData) {
 })();
 
 function updateCustomTextBoxAppearance() {
-  if (!customTextBox || !fontColor) return;
+  if (!customTextBox) return;
+  customTextBox.textContent = customTextContent;
   customTextBox.style.fontFamily = fontFamily ? fontFamily.value : "Arial";
   customTextBox.style.fontSize = (fontSize ? parseInt(fontSize.value) * 0.7 : 28) + "px";
   customTextBox.style.color = fontColor ? fontColor.value : "#000000";
