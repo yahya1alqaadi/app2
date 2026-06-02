@@ -13,6 +13,7 @@ const adminContent = document.getElementById("adminContent");
 const adminPasswordInput = document.getElementById("adminPasswordInput");
 const loginBtn = document.getElementById("loginBtn");
 const loginError = document.getElementById("loginError");
+const customTextBox = getElement("customTextBox");
 
 function showAdmin() {
   loginScreen.style.display = "none";
@@ -60,6 +61,7 @@ let scanner = null;
 let isScanningPaused = false;
 let qrScalePercent = parseInt(localStorage.getItem("qrScalePercent") || "100");
 let showName = localStorage.getItem("showName") !== "false";
+let showCustomText = localStorage.getItem("showCustomText") !== "false";
 // ✅ Pagination + تحديد
 let currentPage = 1;
 let itemsPerPage = parseInt(localStorage.getItem("itemsPerPage") || "25");
@@ -1611,6 +1613,33 @@ function saveInvitationToDB(guestId, pdfData, pngData) {
   }
 })();
 
+function updateCustomTextBoxAppearance() {
+  if (!customTextBox || !fontColor) return;
+  customTextBox.style.fontFamily = fontFamily ? fontFamily.value : "Arial";
+  customTextBox.style.fontSize = (fontSize ? parseInt(fontSize.value) * 0.7 : 28) + "px";
+  customTextBox.style.color = fontColor ? fontColor.value : "#000000";
+  customTextBox.style.fontWeight = fontWeight ? fontWeight.value : "bold";
+  
+  if (showCustomText) {
+    customTextBox.style.display = 'flex';
+    customTextBox.style.opacity = '1';
+  } else {
+    customTextBox.style.display = 'none';
+    customTextBox.style.opacity = '0';
+  }
+}
+
+function toggleCustomText() {
+  showCustomText = !showCustomText;
+  localStorage.setItem("showCustomText", showCustomText);
+  updateCustomTextBoxAppearance();
+  var btn = document.getElementById("toggleCustomTextBtn");
+  if (btn) {
+    btn.innerHTML = '<i class="fas ' + (showCustomText ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showCustomText ? 'إخفاء النص' : 'إظهار النص');
+    btn.className = 'btn ' + (showCustomText ? 'btn-outline' : 'btn-warning');
+  }
+}
+makeDraggable(customTextBox);
 // تشغيل الإعدادات
 setTimeout(initSettings, 800);
 
