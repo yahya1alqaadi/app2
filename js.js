@@ -363,7 +363,7 @@ function addQRSizeControl() {
   var customTextControlGroup = document.createElement('div');
 customTextControlGroup.className = 'control-group';
 customTextControlGroup.id = 'customTextVisibilityControl';
-customTextControlGroup.style.cssText = 'display:flex;align-items:flex-end;';
+customTextControlGroup.style.cssText = 'display:flex;align-items:flex-end;flex-wrap:wrap;gap:4px;';
 customTextControlGroup.innerHTML = '<button type="button" id="editCustomTextBtn" class="btn btn-outline" style="padding:0.5rem 0.6rem;font-size:0.8rem;flex:1;"><i class="fas fa-edit"></i> تعديل النص</button><button type="button" id="toggleCustomTextBtn" class="btn ' + (showCustomText ? 'btn-outline' : 'btn-warning') + '" style="padding:0.5rem 0.6rem;font-size:0.8rem;flex:1;"><i class="fas ' + (showCustomText ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showCustomText ? 'إخفاء' : 'إظهار') + '</button>';
 designControls.appendChild(customTextControlGroup);
 
