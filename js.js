@@ -1702,4 +1702,4 @@ makeDraggable(customTextBox);
 setTimeout(initSettings, 800);
 
 loadEvents();
-});
+}
