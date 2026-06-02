@@ -787,12 +787,12 @@ function renderGuests() {
 
 function updateNamePreviewStyle() {
   if (!nameBox) return;
-  if (!showName) { updateNameBoxAppearance(); return; }
   if (fontFamily) nameBox.style.fontFamily = fontFamily.value;
   if (fontSize) nameBox.style.fontSize = fontSize.value + "px";
   if (fontColor) nameBox.style.color = fontColor.value;
   if (fontWeight) nameBox.style.fontWeight = fontWeight.value;
   updateNameBoxAppearance();
+  updateCustomTextBoxAppearance();
 }
 
 // ============================================
