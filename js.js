@@ -71,6 +71,7 @@ let itemsPerPageSmall = 15;
 let selectedGuests = new Set();
 // متغير البحث
 let searchQuery = "";
+let customTextContent = localStorage.getItem("customTextContent") || "رقم التواصل: 05xxxxxxxx";
 // ============================================
 // عناصر DOM
 // ============================================
@@ -1658,6 +1659,15 @@ function toggleCustomText() {
   if (btn) {
     btn.innerHTML = '<i class="fas ' + (showCustomText ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showCustomText ? 'إخفاء النص' : 'إظهار النص');
     btn.className = 'btn ' + (showCustomText ? 'btn-outline' : 'btn-warning');
+  }
+}
+function editCustomText() {
+  var newText = prompt("أدخل النص المخصص:", customTextContent);
+  if (newText !== null && newText.trim() !== "") {
+    customTextContent = newText.trim();
+    localStorage.setItem("customTextContent", customTextContent);
+    if (customTextBox) customTextBox.textContent = customTextContent;
+    showToast("✅ تم تحديث النص", "success", 2000);
   }
 }
 makeDraggable(customTextBox);
