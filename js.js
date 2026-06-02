@@ -358,6 +358,18 @@ function addQRSizeControl() {
   nameControlGroup.style.cssText = 'display:flex;align-items:flex-end;';
   nameControlGroup.innerHTML = '<button type="button" id="toggleNameBtn" class="btn ' + (showName ? 'btn-outline' : 'btn-warning') + '" style="padding:0.5rem 1rem;font-size:0.85rem;"><i class="fas ' + (showName ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showName ? 'إخفاء الاسم' : 'إظهار الاسم') + '</button>';
   designControls.appendChild(nameControlGroup);
+  
+  var customTextControlGroup = document.createElement('div');
+customTextControlGroup.className = 'control-group';
+customTextControlGroup.id = 'customTextVisibilityControl';
+customTextControlGroup.style.cssText = 'display:flex;align-items:flex-end;';
+customTextControlGroup.innerHTML = '<button type="button" id="toggleCustomTextBtn" class="btn ' + (showCustomText ? 'btn-outline' : 'btn-warning') + '" style="padding:0.5rem 1rem;font-size:0.85rem;"><i class="fas ' + (showCustomText ? 'fa-eye-slash' : 'fa-eye') + '"></i> ' + (showCustomText ? 'إخفاء النص' : 'إظهار النص') + '</button>';
+designControls.appendChild(customTextControlGroup);
+
+var toggleCustomTextBtn = document.getElementById("toggleCustomTextBtn");
+if (toggleCustomTextBtn) {
+  toggleCustomTextBtn.addEventListener('click', toggleCustomText);
+}
 
   var slider = document.getElementById('qrSizeSlider');
   var valueDisplay = document.getElementById('qrSizeValue');
